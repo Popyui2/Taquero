@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #e74c3c;
+        }
+        .controls {
+            margin: 30px 0;
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .control-group {
+            margin: 15px 0;
+        }
+        label {
+            display: inline-block;
+            width: 150px;
+            text-align: right;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        input, select {
+            padding: 8px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+        input[type="color"] {
+            height: 40px;
+            width: 100px;
+        }
+        button {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #229954;
+        }
+        .preview {
+            margin: 30px 0;
+        }
+        canvas {
+            border: 2px solid #ddd;
+            margin: 10px;
+            border-radius: 10px;
+        }
+        .instructions {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .instructions ol {
+            margin: 10px 0 10px 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌶️ MPI Compliance PWA - Icon Generator</h1>
+
+    <div class="instructions">
+        <h3>Instructions:</h3>
+        <ol>
+            <li>Customize the icon using the controls below</li>
+            <li>Click "Generate Icons"</li>
+            <li>Right-click each icon and "Save image as..."</li>
+            <li>Save as <code>icon-192.png</code> and <code>icon-512.png</code></li>
+            <li>Upload both files to your <code>/icons/</code> folder</li>
+        </ol>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>Icon Text:</label>
+            <input type="text" id="iconText" value="MPI" maxlength="4">
+        </div>
+        <div class="control-group">
+            <label>Background Color:</label>
+            <input type="color" id="bgColor" value="#e74c3c">
+        </div>
+        <div class="control-group">
+            <label>Text Color:</label>
+            <input type="color" id="textColor" value="#ffffff">
+        </div>
+        <div class="control-group">
+            <label>Icon Style:</label>
+            <select id="iconStyle">
+                <option value="text">Text Only</option>
+                <option value="emoji">Emoji (🌶️)</option>
+                <option value="clipboard">Clipboard (📋)</option>
+            </select>
+        </div>
+        <button onclick="generateIcons()">Generate Icons</button>
+    </div>
+
+    <div class="preview">
+        <h3>Preview:</h3>
+        <div>
+            <p>192x192 (App Icon)</p>
+            <canvas id="canvas192" width="192" height="192"></canvas>
+        </div>
+        <div>
+            <p>512x512 (Splash Screen)</p>
+            <canvas id="canvas512" width="512" height="512"></canvas>
+        </div>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <button onclick="downloadIcon('canvas192', 'icon-192.png')">Download 192x192</button>
+        <button onclick="downloadIcon('canvas512', 'icon-512.png')">Download 512x512</button>
+    </div>
+
+    <script>
+        // Generate icons on page load
+        window.onload = () => {
+            generateIcons();
+        };
+
+        function generateIcons() {
+            generateIcon('canvas192', 192);
+            generateIcon('canvas512', 512);
+        }
+
+        function generateIcon(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+
+            const bgColor = document.getElementById('bgColor').value;
+            const textColor = document.getElementById('textColor').value;
+            const iconText = document.getElementById('iconText').value;
+            const iconStyle = document.getElementById('iconStyle').value;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, size, size);
+
+            // Draw background
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, size, size);
+
+            // Draw content based on style
+            if (iconStyle === 'emoji') {
+                // Draw chili emoji
+                ctx.font = `${size * 0.6}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('🌶️', size / 2, size / 2);
+            } else if (iconStyle === 'clipboard') {
+                // Draw clipboard emoji
+                ctx.font = `${size * 0.6}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('📋', size / 2, size / 2);
+            } else {
+                // Draw text
+                ctx.fillStyle = textColor;
+                ctx.font = `bold ${size * 0.35}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(iconText, size / 2, size / 2);
+            }
+
+            // Add subtle border
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.lineWidth = size * 0.02;
+            ctx.strokeRect(0, 0, size, size);
+        }
+
+        function downloadIcon(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Auto-regenerate on input change
+        document.getElementById('iconText').addEventListener('input', generateIcons);
+        document.getElementById('bgColor').addEventListener('input', generateIcons);
+        document.getElementById('textColor').addEventListener('input', generateIcons);
+        document.getElementById('iconStyle').addEventListener('change', generateIcons);
+    </script>
+</body>
+</html>

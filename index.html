@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="description" content="MPI Compliance Record Keeping System">
+
+    <title>MPI Compliance Records</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- Google Sign-In -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen active">
+        <div class="login-container">
+            <div class="logo">
+                <h1>🌶️ Hot Like A Mexican</h1>
+                <h2>MPI Compliance Records</h2>
+            </div>
+
+            <div id="g_id_onload"
+                 data-client_id="YOUR_GOOGLE_CLIENT_ID"
+                 data-callback="handleCredentialResponse"
+                 data-auto_prompt="false">
+            </div>
+
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-size="large"
+                 data-theme="outline"
+                 data-text="sign_in_with"
+                 data-shape="rectangular"
+                 data-logo_alignment="left">
+            </div>
+
+            <p class="login-info">Sign in with your work Google account</p>
+
+            <!-- Test Login (REMOVE IN PRODUCTION) -->
+            <div class="test-login-divider">
+                <span>OR FOR TESTING</span>
+            </div>
+
+            <form id="test-login-form" class="test-login-form">
+                <input type="password"
+                       id="test-password"
+                       placeholder="Enter test password"
+                       required
+                       autocomplete="off">
+                <button type="submit" class="btn-test-login">Test Login</button>
+            </form>
+            <p class="test-login-info">Password: 123456 (for preview only)</p>
+        </div>
+    </div>
+
+    <!-- Main App Screen -->
+    <div id="app-screen" class="screen">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1>MPI Compliance</h1>
+                <div class="user-info">
+                    <span id="user-name"></span>
+                    <button id="logout-btn" class="btn-logout">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="view active">
+                <div class="dashboard-grid">
+                    <div class="record-card" data-type="temperature">
+                        <div class="card-icon">🌡️</div>
+                        <h3>Temperature Logs</h3>
+                        <p>Fridge, freezer & hot holding temps</p>
+                    </div>
+
+                    <div class="record-card" data-type="cleaning">
+                        <div class="card-icon">🧹</div>
+                        <h3>Cleaning Checklist</h3>
+                        <p>Daily cleaning schedules</p>
+                    </div>
+
+                    <div class="record-card" data-type="delivery">
+                        <div class="card-icon">📦</div>
+                        <h3>Delivery Logs</h3>
+                        <p>Food receiving & supplier checks</p>
+                    </div>
+
+                    <div class="record-card" data-type="incident">
+                        <div class="card-icon">⚠️</div>
+                        <h3>Incident Reports</h3>
+                        <p>Issues & corrective actions</p>
+                    </div>
+
+                    <div class="record-card" data-type="staff">
+                        <div class="card-icon">👥</div>
+                        <h3>Staff Records</h3>
+                        <p>Training & certifications</p>
+                    </div>
+
+                    <div class="record-card" data-type="reports">
+                        <div class="card-icon">📊</div>
+                        <h3>View Reports</h3>
+                        <p>Search & export records</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Temperature Log Form -->
+            <div id="temperature-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back">← Back</button>
+                    <h2>Temperature Log</h2>
+                </div>
+
+                <form id="temperature-form" class="record-form">
+                    <div class="form-group">
+                        <label for="temp-type">Equipment Type</label>
+                        <select id="temp-type" required>
+                            <option value="">Select equipment...</option>
+                            <option value="fridge">Fridge</option>
+                            <option value="freezer">Freezer</option>
+                            <option value="hot-holding">Hot Holding</option>
+                            <option value="delivery">Food Delivery</option>
+                            <option value="cooling">Cooling Log</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="temp-location">Location/Equipment Name</label>
+                        <input type="text" id="temp-location" placeholder="e.g., Main Kitchen Fridge" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="temp-value">Temperature (°C)</label>
+                        <input type="number" id="temp-value" step="0.1" placeholder="e.g., 4.5" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="temp-notes">Notes (Optional)</label>
+                        <textarea id="temp-notes" rows="3" placeholder="Any issues or observations..."></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary btn-cancel">Cancel</button>
+                        <button type="submit" class="btn-primary">Save Record</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Other views will be added here -->
+            <div id="cleaning-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back">← Back</button>
+                    <h2>Cleaning Checklist</h2>
+                </div>
+                <p class="coming-soon">Coming soon...</p>
+            </div>
+
+            <div id="delivery-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back">← Back</button>
+                    <h2>Delivery Log</h2>
+                </div>
+                <p class="coming-soon">Coming soon...</p>
+            </div>
+
+            <div id="incident-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back">← Back</button>
+                    <h2>Incident Report</h2>
+                </div>
+                <p class="coming-soon">Coming soon...</p>
+            </div>
+
+            <div id="staff-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back">← Back</button>
+                    <h2>Staff Records</h2>
+                </div>
+                <p class="coming-soon">Coming soon...</p>
+            </div>
+
+            <div id="reports-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back">← Back</button>
+                    <h2>View Reports</h2>
+                </div>
+                <p class="coming-soon">Coming soon...</p>
+            </div>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay">
+            <div class="spinner"></div>
+            <p>Saving...</p>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toast-container" class="toast-container"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/auth.js"></script>
+    <script src="js/sheets.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

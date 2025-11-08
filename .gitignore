@@ -1,0 +1,24 @@
+# Sensitive files - NEVER commit these!
+config.php
+.env
+*.log
+
+# Database credentials
+db_config.php
+
+# Uploaded files
+uploads/*
+videos/*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.bak
+*~
