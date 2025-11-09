@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#635BFF">
     <meta name="description" content="MPI Compliance Record Keeping System">
 
-    <title>MPI Compliance Records</title>
+    <title>Taquero - Hot Like A Mexican</title>
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
@@ -70,7 +70,10 @@
         <!-- Header -->
         <header class="app-header">
             <div class="header-content">
-                <h1>MPI Compliance</h1>
+                <div class="header-left">
+                    <button id="home-btn" class="btn-home" style="display: none;">← Home</button>
+                    <h1 id="header-title">Taquero</h1>
+                </div>
                 <div class="user-info">
                     <span id="user-name"></span>
                     <button id="logout-btn" class="btn-logout">Logout</button>
@@ -80,128 +83,452 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Dashboard View -->
-            <div id="dashboard-view" class="view active">
+            <!-- Dashboard Selection View -->
+            <div id="dashboard-selection-view" class="view active">
+                <div class="dashboard-header">
+                    <h2>Select Dashboard</h2>
+                    <p>Choose which system you want to access</p>
+                </div>
                 <div class="dashboard-grid">
-                    <div class="record-card" data-type="temperature">
-                        <div class="card-icon">🌡️</div>
-                        <h3>Temperature Logs</h3>
-                        <p>Fridge, freezer & hot holding temps</p>
+                    <div class="record-card dashboard-selector" data-dashboard="restaurant">
+                        <div class="card-icon">🌮</div>
+                        <h3>Restaurant</h3>
+                        <p>FCP Records, Inventory, Events & Financial Data</p>
                     </div>
 
-                    <div class="record-card" data-type="cleaning">
-                        <div class="card-icon">🧹</div>
-                        <h3>Cleaning Checklist</h3>
-                        <p>Daily cleaning schedules</p>
+                    <div class="record-card dashboard-selector" data-dashboard="manufacturing">
+                        <div class="card-icon">🏭</div>
+                        <h3>Food Manufacturing</h3>
+                        <p>FCP Records, Traceability & B2B Sales</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Restaurant Dashboard -->
+            <div id="restaurant-dashboard-view" class="view">
+                <div class="dashboard-header">
+                    <h2>Restaurant Dashboard</h2>
+                    <p>Hot Like A Mexican - Wellington, NZ</p>
+                </div>
+                <div class="dashboard-grid">
+                    <!-- FCP Recordkeeping -->
+                    <div class="record-card" data-type="restaurant-fcp">
+                        <div class="card-icon">📋</div>
+                        <h3>FCP Recordkeeping</h3>
+                        <p>All 13 food control plan sections</p>
                     </div>
 
-                    <div class="record-card" data-type="delivery">
+                    <!-- Inventory Management -->
+                    <div class="record-card" data-type="inventory">
                         <div class="card-icon">📦</div>
-                        <h3>Delivery Logs</h3>
-                        <p>Food receiving & supplier checks</p>
+                        <h3>Inventory Management</h3>
+                        <p>Stocktaking & shopping lists</p>
                     </div>
 
-                    <div class="record-card" data-type="incident">
-                        <div class="card-icon">⚠️</div>
-                        <h3>Incident Reports</h3>
-                        <p>Issues & corrective actions</p>
+                    <!-- Financial Data -->
+                    <div class="record-card" data-type="financial">
+                        <div class="card-icon">💰</div>
+                        <h3>Financial Data</h3>
+                        <p>CSV intake & data visualization</p>
                     </div>
 
-                    <div class="record-card" data-type="staff">
-                        <div class="card-icon">👥</div>
-                        <h3>Staff Records</h3>
-                        <p>Training & certifications</p>
+                    <!-- Caravan Events -->
+                    <div class="record-card" data-type="events">
+                        <div class="card-icon">🚐</div>
+                        <h3>Caravan Events</h3>
+                        <p>Event management & scheduling</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manufacturing Dashboard -->
+            <div id="manufacturing-dashboard-view" class="view">
+                <div class="dashboard-header">
+                    <h2>Food Manufacturing Dashboard</h2>
+                    <p>Hot Like A Mexican - Wellington, NZ</p>
+                </div>
+                <div class="dashboard-grid">
+                    <!-- FCP Recordkeeping -->
+                    <div class="record-card" data-type="manufacturing-fcp">
+                        <div class="card-icon">📋</div>
+                        <h3>FCP Recordkeeping</h3>
+                        <p>All 13 food control plan sections</p>
                     </div>
 
-                    <div class="record-card" data-type="reports">
+                    <!-- Traceability System -->
+                    <div class="record-card" data-type="traceability">
+                        <div class="card-icon">🔍</div>
+                        <h3>Traceability System</h3>
+                        <p>Track ingredients & products</p>
+                    </div>
+
+                    <!-- B2B Sales Tracking -->
+                    <div class="record-card" data-type="b2b-sales">
                         <div class="card-icon">📊</div>
-                        <h3>View Reports</h3>
-                        <p>Search & export records</p>
+                        <h3>B2B Sales Tracking</h3>
+                        <p>Business-to-business orders</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Temperature Log Form -->
-            <div id="temperature-view" class="view">
+            <!-- Restaurant FCP Modules View -->
+            <div id="restaurant-fcp-view" class="view">
                 <div class="form-header">
-                    <button class="btn-back">← Back</button>
-                    <h2>Temperature Log</h2>
+                    <button class="btn-back" data-back="restaurant-dashboard">← Back to Restaurant</button>
+                    <h2>Restaurant FCP Records</h2>
                 </div>
+                <div class="modules-container">
+                    <!-- Shared Modules (5) -->
+                    <div class="module-section">
+                        <h3 class="section-title">Shared Records</h3>
+                        <div class="dashboard-grid">
+                            <div class="record-card" data-type="staff-training">
+                                <div class="card-icon">👥</div>
+                                <h3>Staff Training Records</h3>
+                                <p>Training logs & certifications</p>
+                            </div>
 
-                <form id="temperature-form" class="record-form">
-                    <div class="form-group">
-                        <label for="temp-type">Equipment Type</label>
-                        <select id="temp-type" required>
-                            <option value="">Select equipment...</option>
-                            <option value="fridge">Fridge</option>
-                            <option value="freezer">Freezer</option>
-                            <option value="hot-holding">Hot Holding</option>
-                            <option value="delivery">Food Delivery</option>
-                            <option value="cooling">Cooling Log</option>
-                        </select>
+                            <div class="record-card" data-type="personal-hygiene">
+                                <div class="card-icon">🧼</div>
+                                <h3>Personal Hygiene</h3>
+                                <p>Hygiene management & records</p>
+                            </div>
+
+                            <div class="record-card" data-type="fridge-temps">
+                                <div class="card-icon">🌡️</div>
+                                <h3>Fridge/Chiller Temps</h3>
+                                <p>Temperature monitoring logs</p>
+                            </div>
+
+                            <div class="record-card" data-type="cleaning-closing">
+                                <div class="card-icon">🧹</div>
+                                <h3>Cleaning & Closing</h3>
+                                <p>Daily cleaning schedules</p>
+                            </div>
+
+                            <div class="record-card" data-type="equipment-maintenance">
+                                <div class="card-icon">🔧</div>
+                                <h3>Equipment Maintenance</h3>
+                                <p>Facilities & water supply records</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="temp-location">Location/Equipment Name</label>
-                        <input type="text" id="temp-location" placeholder="e.g., Main Kitchen Fridge" required>
+                    <!-- Restaurant-Only Modules (8) -->
+                    <div class="module-section">
+                        <h3 class="section-title">Restaurant-Specific Records</h3>
+                        <div class="dashboard-grid">
+                            <div class="record-card" data-type="cooking-poultry-batch">
+                                <div class="card-icon">🍗</div>
+                                <h3>Cooking Poultry - Batch Checks</h3>
+                                <p>Batch checks for poultry, minced meat, liver</p>
+                            </div>
+
+                            <div class="record-card" data-type="proving-method">
+                                <div class="card-icon">✅</div>
+                                <h3>Proving the Method</h3>
+                                <p>Method validation records</p>
+                            </div>
+
+                            <div class="record-card" data-type="proving-reheating">
+                                <div class="card-icon">♨️</div>
+                                <h3>Proving Reheating Method</h3>
+                                <p>Reheating validation</p>
+                            </div>
+
+                            <div class="record-card" data-type="proving-time-temp">
+                                <div class="card-icon">⏱️</div>
+                                <h3>Proving Time/Temp Cooking</h3>
+                                <p>Time/temperature validation</p>
+                            </div>
+
+                            <div class="record-card" data-type="proving-cooling">
+                                <div class="card-icon">❄️</div>
+                                <h3>Proving Cooling Method</h3>
+                                <p>Cooling method validation</p>
+                            </div>
+
+                            <div class="record-card" data-type="cooling-batch">
+                                <div class="card-icon">🧊</div>
+                                <h3>Cooling Food - Batch Checks</h3>
+                                <p>Freshly cooked food cooling logs</p>
+                            </div>
+
+                            <div class="record-card" data-type="something-wrong">
+                                <div class="card-icon">⚠️</div>
+                                <h3>When Something Goes Wrong</h3>
+                                <p>Incident reports & corrective actions</p>
+                            </div>
+
+                            <div class="record-card" data-type="customer-complaints">
+                                <div class="card-icon">💬</div>
+                                <h3>Customer Complaints</h3>
+                                <p>Complaint tracking & resolution</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manufacturing FCP Modules View -->
+            <div id="manufacturing-fcp-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back" data-back="manufacturing-dashboard">← Back to Manufacturing</button>
+                    <h2>Manufacturing FCP Records</h2>
+                </div>
+                <div class="modules-container">
+                    <!-- Shared Modules (5) -->
+                    <div class="module-section">
+                        <h3 class="section-title">Shared Records</h3>
+                        <div class="dashboard-grid">
+                            <div class="record-card" data-type="staff-training">
+                                <div class="card-icon">👥</div>
+                                <h3>Staff Training Records</h3>
+                                <p>Training logs & certifications</p>
+                            </div>
+
+                            <div class="record-card" data-type="personal-hygiene">
+                                <div class="card-icon">🧼</div>
+                                <h3>Personal Hygiene</h3>
+                                <p>Hygiene management & records</p>
+                            </div>
+
+                            <div class="record-card" data-type="fridge-temps">
+                                <div class="card-icon">🌡️</div>
+                                <h3>Fridge/Chiller Temps</h3>
+                                <p>Temperature monitoring logs</p>
+                            </div>
+
+                            <div class="record-card" data-type="cleaning-closing">
+                                <div class="card-icon">🧹</div>
+                                <h3>Cleaning & Closing</h3>
+                                <p>Daily cleaning schedules</p>
+                            </div>
+
+                            <div class="record-card" data-type="equipment-maintenance">
+                                <div class="card-icon">🔧</div>
+                                <h3>Equipment Maintenance</h3>
+                                <p>Facilities & water supply records</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="temp-value">Temperature (°C)</label>
-                        <input type="number" id="temp-value" step="0.1" placeholder="e.g., 4.5" required>
+                    <!-- Manufacturing-Only Modules (8) -->
+                    <div class="module-section">
+                        <h3 class="section-title">Manufacturing-Specific Records</h3>
+                        <div class="dashboard-grid">
+                            <div class="record-card" data-type="cooking-poultry-batch">
+                                <div class="card-icon">🍗</div>
+                                <h3>Cooking Poultry - Batch Checks</h3>
+                                <p>Batch checks for poultry, minced meat, liver</p>
+                            </div>
+
+                            <div class="record-card" data-type="proving-method">
+                                <div class="card-icon">✅</div>
+                                <h3>Proving the Method</h3>
+                                <p>Method validation records</p>
+                            </div>
+
+                            <div class="record-card" data-type="proving-reheating">
+                                <div class="card-icon">♨️</div>
+                                <h3>Proving Reheating Method</h3>
+                                <p>Reheating validation</p>
+                            </div>
+
+                            <div class="record-card" data-type="proving-time-temp">
+                                <div class="card-icon">⏱️</div>
+                                <h3>Proving Time/Temp Cooking</h3>
+                                <p>Time/temperature validation</p>
+                            </div>
+
+                            <div class="record-card" data-type="proving-cooling">
+                                <div class="card-icon">❄️</div>
+                                <h3>Proving Cooling Method</h3>
+                                <p>Cooling method validation</p>
+                            </div>
+
+                            <div class="record-card" data-type="cooling-batch">
+                                <div class="card-icon">🧊</div>
+                                <h3>Cooling Food - Batch Checks</h3>
+                                <p>Freshly cooked food cooling logs</p>
+                            </div>
+
+                            <div class="record-card" data-type="processes-controls">
+                                <div class="card-icon">⚙️</div>
+                                <h3>Processes & Controls</h3>
+                                <p>Knowing your processes and controls</p>
+                            </div>
+
+                            <div class="record-card" data-type="selling-to-businesses">
+                                <div class="card-icon">🏢</div>
+                                <h3>Selling to Businesses</h3>
+                                <p>B2B sales documentation</p>
+                            </div>
+                        </div>
                     </div>
-
-                    <div class="form-group">
-                        <label for="temp-notes">Notes (Optional)</label>
-                        <textarea id="temp-notes" rows="3" placeholder="Any issues or observations..."></textarea>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="button" class="btn-secondary btn-cancel">Cancel</button>
-                        <button type="submit" class="btn-primary">Save Record</button>
-                    </div>
-                </form>
+                </div>
             </div>
 
-            <!-- Other views will be added here -->
-            <div id="cleaning-view" class="view">
+            <!-- Placeholder Views for Other Modules -->
+            <div id="inventory-view" class="view">
                 <div class="form-header">
-                    <button class="btn-back">← Back</button>
-                    <h2>Cleaning Checklist</h2>
+                    <button class="btn-back" data-back="restaurant-dashboard">← Back to Restaurant</button>
+                    <h2>Inventory Management</h2>
                 </div>
-                <p class="coming-soon">Coming soon...</p>
+                <p class="coming-soon">Inventory management module coming soon...</p>
             </div>
 
-            <div id="delivery-view" class="view">
+            <div id="financial-view" class="view">
                 <div class="form-header">
-                    <button class="btn-back">← Back</button>
-                    <h2>Delivery Log</h2>
+                    <button class="btn-back" data-back="restaurant-dashboard">← Back to Restaurant</button>
+                    <h2>Financial Data</h2>
                 </div>
-                <p class="coming-soon">Coming soon...</p>
+                <p class="coming-soon">Financial data module coming soon...</p>
             </div>
 
-            <div id="incident-view" class="view">
+            <div id="events-view" class="view">
                 <div class="form-header">
-                    <button class="btn-back">← Back</button>
-                    <h2>Incident Report</h2>
+                    <button class="btn-back" data-back="restaurant-dashboard">← Back to Restaurant</button>
+                    <h2>Caravan Events</h2>
                 </div>
-                <p class="coming-soon">Coming soon...</p>
+                <p class="coming-soon">Caravan events module coming soon...</p>
             </div>
 
-            <div id="staff-view" class="view">
+            <div id="traceability-view" class="view">
                 <div class="form-header">
-                    <button class="btn-back">← Back</button>
-                    <h2>Staff Records</h2>
+                    <button class="btn-back" data-back="manufacturing-dashboard">← Back to Manufacturing</button>
+                    <h2>Traceability System</h2>
                 </div>
-                <p class="coming-soon">Coming soon...</p>
+                <p class="coming-soon">Traceability system coming soon...</p>
             </div>
 
-            <div id="reports-view" class="view">
+            <div id="b2b-sales-view" class="view">
                 <div class="form-header">
-                    <button class="btn-back">← Back</button>
-                    <h2>View Reports</h2>
+                    <button class="btn-back" data-back="manufacturing-dashboard">← Back to Manufacturing</button>
+                    <h2>B2B Sales Tracking</h2>
                 </div>
-                <p class="coming-soon">Coming soon...</p>
+                <p class="coming-soon">B2B sales tracking module coming soon...</p>
+            </div>
+
+            <!-- Placeholder Views for All FCP Modules -->
+            <div id="staff-training-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back-dynamic">← Back</button>
+                    <h2>Staff Training Records</h2>
+                </div>
+                <p class="coming-soon">Staff training records coming soon...</p>
+            </div>
+
+            <div id="personal-hygiene-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back-dynamic">← Back</button>
+                    <h2>Personal Hygiene Records</h2>
+                </div>
+                <p class="coming-soon">Personal hygiene management coming soon...</p>
+            </div>
+
+            <div id="fridge-temps-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back-dynamic">← Back</button>
+                    <h2>Fridge/Chiller Temperature Checks</h2>
+                </div>
+                <p class="coming-soon">Temperature monitoring coming soon...</p>
+            </div>
+
+            <div id="cleaning-closing-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back-dynamic">← Back</button>
+                    <h2>Cleaning & Closing</h2>
+                </div>
+                <p class="coming-soon">Cleaning schedules coming soon...</p>
+            </div>
+
+            <div id="equipment-maintenance-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back-dynamic">← Back</button>
+                    <h2>Equipment Maintenance</h2>
+                </div>
+                <p class="coming-soon">Equipment maintenance records coming soon...</p>
+            </div>
+
+            <div id="cooking-poultry-batch-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back-dynamic">← Back</button>
+                    <h2>Cooking Poultry - Batch Checks</h2>
+                </div>
+                <p class="coming-soon">Batch check records coming soon...</p>
+            </div>
+
+            <div id="proving-method-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back-dynamic">← Back</button>
+                    <h2>Proving the Method</h2>
+                </div>
+                <p class="coming-soon">Method validation coming soon...</p>
+            </div>
+
+            <div id="proving-reheating-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back-dynamic">← Back</button>
+                    <h2>Proving Reheating Method</h2>
+                </div>
+                <p class="coming-soon">Reheating validation coming soon...</p>
+            </div>
+
+            <div id="proving-time-temp-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back-dynamic">← Back</button>
+                    <h2>Proving Time/Temperature Cooking</h2>
+                </div>
+                <p class="coming-soon">Time/temperature validation coming soon...</p>
+            </div>
+
+            <div id="proving-cooling-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back-dynamic">← Back</button>
+                    <h2>Proving Cooling Method</h2>
+                </div>
+                <p class="coming-soon">Cooling method validation coming soon...</p>
+            </div>
+
+            <div id="cooling-batch-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back-dynamic">← Back</button>
+                    <h2>Cooling Food - Batch Checks</h2>
+                </div>
+                <p class="coming-soon">Cooling batch checks coming soon...</p>
+            </div>
+
+            <div id="something-wrong-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back-dynamic">← Back</button>
+                    <h2>When Something Goes Wrong</h2>
+                </div>
+                <p class="coming-soon">Incident reporting coming soon...</p>
+            </div>
+
+            <div id="customer-complaints-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back-dynamic">← Back</button>
+                    <h2>Customer Complaints</h2>
+                </div>
+                <p class="coming-soon">Complaint tracking coming soon...</p>
+            </div>
+
+            <div id="processes-controls-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back-dynamic">← Back</button>
+                    <h2>Processes & Controls</h2>
+                </div>
+                <p class="coming-soon">Process documentation coming soon...</p>
+            </div>
+
+            <div id="selling-to-businesses-view" class="view">
+                <div class="form-header">
+                    <button class="btn-back-dynamic">← Back</button>
+                    <h2>Selling to Businesses</h2>
+                </div>
+                <p class="coming-soon">B2B documentation coming soon...</p>
             </div>
         </main>
 

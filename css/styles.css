@@ -267,6 +267,12 @@ h3 {
     margin: 0 auto;
 }
 
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
 .app-header h1 {
     color: var(--text-primary);
     font-size: 1.5rem;
@@ -352,7 +358,8 @@ h3 {
     background: var(--bg-tertiary);
 }
 
-.btn-back {
+.btn-back,
+.btn-home {
     background: transparent;
     color: var(--primary-color);
     padding: 0.5rem 1rem;
@@ -360,7 +367,27 @@ h3 {
     font-weight: 600;
 }
 
-.btn-back:hover {
+.btn-back:hover,
+.btn-home:hover {
+    background: var(--bg-secondary);
+}
+
+.btn-back-dynamic {
+    background: transparent;
+    color: var(--primary-color);
+    padding: 0.5rem 1rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-back-dynamic:hover {
     background: var(--bg-secondary);
 }
 
@@ -378,6 +405,46 @@ h3 {
 
 .view.active {
     display: block;
+}
+
+/* Dashboard Header */
+.dashboard-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.dashboard-header h2 {
+    color: var(--text-primary);
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+}
+
+.dashboard-header p {
+    color: var(--text-tertiary);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* Module Sections */
+.modules-container {
+    width: 100%;
+}
+
+.module-section {
+    width: 100%;
+    margin-bottom: 3rem;
+}
+
+.section-title {
+    color: var(--text-primary);
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--border-light);
+    letter-spacing: -0.01em;
 }
 
 /* Dashboard Grid */

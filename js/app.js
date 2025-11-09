@@ -1,6 +1,8 @@
 // Main Application Logic
 const App = {
-    currentView: 'dashboard',
+    currentView: 'dashboard-selection',
+    currentDashboard: null, // 'restaurant' or 'manufacturing'
+    previousView: null, // For back navigation
 
     // Initialize the application
     init() {
@@ -36,28 +38,60 @@ const App = {
 
     // Setup navigation between views
     setupNavigation() {
-        // Record card clicks
-        const recordCards = document.querySelectorAll('.record-card');
-        recordCards.forEach(card => {
+        // Dashboard selector clicks
+        const dashboardSelectors = document.querySelectorAll('.dashboard-selector');
+        dashboardSelectors.forEach(card => {
             card.addEventListener('click', () => {
-                const type = card.dataset.type;
-                this.showView(type);
+                const dashboard = card.dataset.dashboard;
+                this.selectDashboard(dashboard);
             });
         });
 
-        // Back button clicks
+        // Record card clicks
+        const recordCards = document.querySelectorAll('.record-card:not(.dashboard-selector)');
+        recordCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const type = card.dataset.type;
+                if (type) {
+                    this.showView(type);
+                }
+            });
+        });
+
+        // Back button clicks (with data-back attribute)
         const backButtons = document.querySelectorAll('.btn-back');
         backButtons.forEach(btn => {
             btn.addEventListener('click', () => {
-                this.showView('dashboard');
+                const backTo = btn.dataset.back;
+                if (backTo) {
+                    this.showView(backTo);
+                } else {
+                    this.goBack();
+                }
             });
         });
+
+        // Dynamic back buttons (for FCP modules)
+        const dynamicBackButtons = document.querySelectorAll('.btn-back-dynamic');
+        dynamicBackButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.goBack();
+            });
+        });
+
+        // Home button click
+        const homeBtn = document.getElementById('home-btn');
+        if (homeBtn) {
+            homeBtn.addEventListener('click', () => {
+                this.showView('dashboard-selection');
+            });
+        }
 
         // Cancel button clicks
         const cancelButtons = document.querySelectorAll('.btn-cancel');
         cancelButtons.forEach(btn => {
             btn.addEventListener('click', () => {
-                this.showView('dashboard');
+                this.goBack();
             });
         });
     },
@@ -74,8 +108,28 @@ const App = {
         }
     },
 
+    // Select a dashboard
+    selectDashboard(dashboard) {
+        this.currentDashboard = dashboard;
+        this.showView(`${dashboard}-dashboard`);
+    },
+
+    // Go back to previous view
+    goBack() {
+        if (this.previousView) {
+            this.showView(this.previousView);
+        } else if (this.currentDashboard) {
+            this.showView(`${this.currentDashboard}-dashboard`);
+        } else {
+            this.showView('dashboard-selection');
+        }
+    },
+
     // Show a specific view
     showView(viewName) {
+        // Save previous view for back navigation
+        this.previousView = this.currentView;
+
         // Hide all views
         const views = document.querySelectorAll('.view');
         views.forEach(view => view.classList.remove('active'));
@@ -85,6 +139,30 @@ const App = {
         if (targetView) {
             targetView.classList.add('active');
             this.currentView = viewName;
+        }
+
+        // Update header and home button visibility
+        this.updateHeader(viewName);
+    },
+
+    // Update header based on current view
+    updateHeader(viewName) {
+        const headerTitle = document.getElementById('header-title');
+        const homeBtn = document.getElementById('home-btn');
+
+        if (viewName === 'dashboard-selection') {
+            headerTitle.textContent = 'Taquero';
+            homeBtn.style.display = 'none';
+        } else if (viewName === 'restaurant-dashboard') {
+            headerTitle.textContent = 'Restaurant';
+            homeBtn.style.display = 'inline-flex';
+        } else if (viewName === 'manufacturing-dashboard') {
+            headerTitle.textContent = 'Manufacturing';
+            homeBtn.style.display = 'inline-flex';
+        } else {
+            // Inside a module
+            headerTitle.textContent = this.currentDashboard === 'restaurant' ? 'Restaurant' : 'Manufacturing';
+            homeBtn.style.display = 'inline-flex';
         }
     },
 

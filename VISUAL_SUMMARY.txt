@@ -1,0 +1,443 @@
+=================================================================================
+                    TAQUERO CODEBASE - VISUAL SUMMARY
+=================================================================================
+
+TECH STACK AT A GLANCE
+=================================================================================
+
+Frontend:           Vanilla HTML5 + CSS3 + ES6+ JavaScript
+Backend:            Google Sheets API + Google Apps Script
+Auth:               Google Sign-In SDK
+Storage:            Google Sheets + localStorage
+PWA:                Service Worker + Web App Manifest
+Hosting:            Traditional HTTP (Apache with .htaccess)
+Build System:       NONE - Zero dependencies!
+
+Frameworks:         None (React, Vue, Angular - NOT used)
+Package Manager:    None (npm, yarn - NOT used)
+Build Tools:        None (webpack, Vite - NOT used)
+
+
+DIRECTORY TREE
+=================================================================================
+
+/home/martin/Taquero/
+│
+├── 📄 index.html               ← MAIN APP (single-page)
+├── 📄 manifest.json            ← PWA manifest
+├── 📄 sw.js                    ← Service Worker
+├── 📄 .htaccess                ← Server config
+├── 📄 icon-generator.html      ← Icon creation tool
+│
+├── 📁 css/
+│   └── styles.css              (14,983 bytes - all styling)
+│
+├── 📁 js/
+│   ├── app.js                  (7,377 bytes - core logic)
+│   ├── auth.js                 (4,912 bytes - authentication)
+│   └── sheets.js               (4,962 bytes - Google Sheets)
+│
+├── 📁 Proyecto_Compliance/     (copy of above for deployment)
+│
+└── 📁 Documentation/
+    ├── README.md
+    ├── QUICKSTART.md
+    ├── SETUP_GUIDE.md
+    ├── DEPLOYMENT_CHECKLIST.md
+    └── ICON_GUIDE.md
+
+
+COLOR PALETTE (Stripe-inspired)
+=================================================================================
+
+Primary:        #635BFF (Purple)         Secondary:      #0A2540 (Dark Blue)
+Success:        #00C48C (Green)          Warning:        #FFB23F (Orange)
+Danger:         #FF5A5F (Red)
+
+Background:     #F6F9FC (Light)          Surface:        #FFFFFF (White)
+Text:           #0A2540 (Dark)           Muted:          #697386 (Gray)
+
+
+COMPONENT INVENTORY
+=================================================================================
+
+CARDS
+  .record-card
+    • Grid layout: auto-fit, minmax(280px, 1fr)
+    • Icon emoji + title + description
+    • Hover: lift effect + shadow + top border
+    • Data attribute: data-type="record_type"
+    • Click triggers: showView(type)
+
+BUTTONS
+  .btn-primary      (gradient blue)
+  .btn-secondary    (outlined)
+  .btn-back         (text/transparent)
+  .btn-logout       (danger red)
+  • Min height: 44px (touch-friendly)
+  • Hover: lift + shadow
+  • Active: return to normal
+
+FORMS
+  .record-form
+    • Input, select, textarea all styled
+    • Min height: 44px
+    • Focus: colored border + glow
+    • Custom select dropdown
+    • Validation feedback
+
+NOTIFICATIONS
+  .toast-container (fixed bottom-right)
+    • Auto-dismiss: 3 seconds
+    • Variants: success (green), error (red), warning (orange)
+    • Slide-in animation
+    • Left border colored
+
+OVERLAYS
+  .loading-overlay  (full-screen backdrop blur)
+    • Spinner animation
+    • Message text
+    • Semi-transparent dark background
+
+HEADER
+  .app-header       (sticky)
+    • Title on left
+    • User info + logout on right
+    • Box-shadow, border-bottom
+
+
+ROUTING & NAVIGATION FLOW
+=================================================================================
+
+                        ┌─────────────────┐
+                        │  LOGIN SCREEN   │
+                        └────────┬────────┘
+                                 │
+                    User signs in (Google or test)
+                                 │
+                        ┌────────▼────────┐
+                        │  APP SCREEN     │
+                        ├─────────────────┤
+                        │  Header         │  ← Sticky
+                        ├─────────────────┤
+                        │ DASHBOARD VIEW  │  ← Default active
+                        │ (Card Grid)     │
+                        │  ├─ Temp Logs   │
+                        │  ├─ Cleaning    │
+                        │  ├─ Delivery    │
+                        │  ├─ Incidents   │
+                        │  ├─ Staff       │
+                        │  └─ Reports     │
+                        ├─────────────────┤
+                        │ FORM VIEWS      │  ← Hidden until clicked
+                        │ (5 templates)   │
+                        ├─────────────────┤
+                        │ OVERLAYS        │
+                        │ ├─ Loading      │
+                        │ └─ Toasts       │
+                        └─────────────────┘
+
+NAVIGATION METHOD:
+  .record-card.click → data-type attribute → App.showView(type)
+  .btn-back.click → App.showView('dashboard')
+  .btn-logout.click → Auth.logout()
+
+VIEW SWITCHING:
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'))
+  document.getElementById(`${viewName}-view`).classList.add('active')
+
+
+STATE MANAGEMENT ARCHITECTURE
+=================================================================================
+
+Global Objects (Modules):
+
+  Auth {
+    currentUser:   { name, email, picture }
+    accessToken:   JWT token
+    
+    Methods:
+    • init()              Check localStorage for existing session
+    • testLogin()         Demo login (password: "123456")
+    • saveSession()       Store user + token in localStorage
+    • logout()            Clear session, show login screen
+    • showApp()           Transition login → app screen
+    • showLogin()         Transition app → login screen
+  }
+
+  App {
+    currentView:   'dashboard' | 'temperature' | etc.
+    
+    Methods:
+    • init()              Register SW, setup navigation, init sheets
+    • setupNavigation()   Wire up card + button clicks
+    • showView()          Switch active view
+    • setupForms()        Attach form submission handlers
+    • validateTemperature() Check temp ranges
+    • simulateSave()      Save to localStorage
+  }
+
+  SheetsAPI {
+    SPREADSHEET_ID: ''   (needs setup)
+    API_KEY: ''          (needs setup)
+    SHEETS: { temperature, cleaning, delivery, incident, staff }
+    
+    Methods:
+    • init()              Load Google Sheets API
+    • appendRow()         Add row to sheet
+    • getSheetData()      Read from sheet
+    • saveTemperatureLog() Save temp record
+  }
+
+  SimpleSheetsAPI {
+    WEB_APP_URL: ''      (needs setup)
+    
+    Methods:
+    • saveRecord()        Generic save via Google Apps Script
+    • saveTemperatureLog() Save temp record
+  }
+
+PERSISTENCE:
+  localStorage:
+    • 'mpi_user'         User object (JSON)
+    • 'mpi_token'        Auth token (string)
+    • 'mpi_temp_records' Temperature records (JSON array)
+
+
+FORM HANDLING EXAMPLE (Temperature Log)
+=================================================================================
+
+HTML:
+  <form id="temperature-form">
+    <select id="temp-type">              ← Equipment type
+    <input id="temp-location">           ← Location name
+    <input id="temp-value" type="number">← Temperature value
+    <textarea id="temp-notes">           ← Optional notes
+    <button type="submit">Save Record</button>
+  </form>
+
+SUBMISSION FLOW:
+  1. User fills form → clicks Save
+  2. Form submit event fired
+  3. Extract form values
+  4. validateTemperature() checks range
+     ├─ If out of range: warn user (confirm dialog)
+     └─ If user cancels: stop
+  5. showLoading(true)           ← Full-screen overlay + spinner
+  6. simulateSave(data)          ← Save to localStorage
+     (later: SimpleSheetsAPI.saveTemperatureLog(data))
+  7. showLoading(false)          ← Hide overlay
+  8. showToast('Success', 'success')   ← Green notification
+  9. form.reset()                ← Clear inputs
+  10. showView('dashboard')      ← Back to dashboard
+
+VALIDATION RULES:
+  Fridge:       -2°C  to  8°C
+  Freezer:     -25°C  to -15°C
+  Hot Holding:  60°C  to 100°C
+  Cooling:      0°C  to  21°C
+  Delivery:     (same as fridge)
+
+
+RESPONSIVE DESIGN
+=================================================================================
+
+BREAKPOINTS:
+
+  Mobile (default)
+  ├─ Full width
+  ├─ Single column dashboard
+  ├─ 44px min button height
+  └─ Touch-optimized
+
+  Tablet (768px - 1024px)
+  ├─ 2-column dashboard grid
+  ├─ Larger touch targets
+  ├─ Bigger icons (3rem)
+  └─ Increased padding
+
+  Desktop (1024px+)
+  ├─ Auto-fit grid (default)
+  ├─ Normal padding
+  └─ Hover effects enabled
+
+TOUCH DEVICE DETECTION:
+  @media (hover: none) and (pointer: coarse)
+  • Min height 48px for touch targets
+  • Font size 1rem (vs 0.9375rem)
+  • No hover effects
+
+
+CSS ORGANIZATION (styles.css - 719 lines)
+=================================================================================
+
+1. Reset & Base Styles       (lines 1-80)
+2. CSS Custom Properties     (lines 8-46)
+3. Typography                (lines 60-78)
+4. Login Screen              (lines 92-250)
+5. App Header                (lines 251-288)
+6. Buttons                   (lines 289-366)
+7. Main Content              (lines 368-372)
+8. View Management           (lines 374-381)
+9. Dashboard Grid            (lines 383-458)
+10. Form Header              (lines 460-473)
+11. Forms                    (lines 475-569)
+12. Notifications            (lines 612-661)
+13. Loading Overlay          (lines 571-610)
+14. Responsive Queries       (lines 663-707)
+15. Accessibility            (lines 710-718)
+
+
+PWA FEATURES
+=================================================================================
+
+SERVICE WORKER (sw.js):
+  ✓ Install event    → Cache critical files
+  ✓ Activate event   → Clean old caches
+  ✓ Fetch event      → Serve from cache (fallback to network)
+  ✓ Version control  → 'mpi-compliance-v1'
+  
+  CACHED RESOURCES:
+  • index.html
+  • css/styles.css
+  • js/{app, auth, sheets}.js
+  • manifest.json
+
+WEB APP MANIFEST (manifest.json):
+  ✓ Name: "MPI Compliance Records"
+  ✓ Display: "standalone" (full-screen)
+  ✓ Theme color: #635BFF
+  ✓ Icons: 192x192 + 512x512 PNG
+  ✓ Start URL: /index.html
+
+
+CURRENT IMPLEMENTATION STATUS
+=================================================================================
+
+FULLY IMPLEMENTED ✅
+  ✓ Google Sign-In authentication
+  ✓ Test login (password: 123456)
+  ✓ Dashboard card layout
+  ✓ View switching/navigation
+  ✓ Temperature Log form + validation
+  ✓ Toast notifications
+  ✓ Loading overlay
+  ✓ Service Worker + PWA manifest
+  ✓ Responsive design
+  ✓ localStorage persistence
+  ✓ Logout functionality
+
+PARTIALLY IMPLEMENTED ⚠️
+  ~ Google Sheets API (code ready, needs Google Cloud setup)
+  ~ Google Apps Script (code ready, needs deployment)
+
+NOT YET IMPLEMENTED ❌
+  ✗ Cleaning Checklist form
+  ✗ Delivery Log form
+  ✗ Incident Report form
+  ✗ Staff Records form
+  ✗ Reports/Search view
+  ✗ Data export functionality
+  ✗ Multi-user permissions
+  ✗ Offline data sync
+
+
+FILES YOU NEED TO UNDERSTAND FOR DUAL-DASHBOARD
+=================================================================================
+
+CRITICAL FILES (must understand):
+  1. index.html         How to add new screens
+  2. js/app.js          Navigation logic (showView method)
+  3. css/styles.css     Card styling (.record-card)
+  4. js/auth.js         Authentication flow
+
+CODE PATTERNS TO REUSE:
+
+  # Pattern 1: Card Grid
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+
+  # Pattern 2: View Switching
+  showView(viewName) {
+    document.querySelectorAll('.view').forEach(v => 
+      v.classList.remove('active')
+    );
+    document.getElementById(`${viewName}-view`).classList.add('active');
+    this.currentView = viewName;
+  }
+
+  # Pattern 3: Form Submission
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    showLoading(true);
+    try {
+      // validation
+      // api call
+      showToast('Success', 'success');
+    } catch (error) {
+      showToast('Error: ' + error.message, 'error');
+    } finally {
+      showLoading(false);
+      showView('dashboard');
+    }
+  });
+
+
+DEPLOYMENT READY CHECKLIST
+=================================================================================
+
+BEFORE DEPLOYING:
+  ☐ Create icons (192x192 and 512x512 PNG)
+  ☐ Set Google Client ID in index.html
+  ☐ Set Google Apps Script Web App URL in sheets.js
+  ☐ Configure Google Sheets (create sheets for each record type)
+  ☐ Test locally with Python HTTP server
+  ☐ Test all forms
+  ☐ Test data saving to Google Sheets
+  ☐ Test PWA install on tablet
+  ☐ Verify HTTPS is enabled
+  ☐ Clear browser cache before testing
+  ☐ Test on actual tablet device
+
+HOSTING REQUIREMENTS:
+  ✓ HTTPS required (for PWA)
+  ✓ Apache with .htaccess support
+  ✓ Static file serving only (no server-side code needed)
+  ✓ CORS enabled for Google APIs
+
+
+KEY METRICS
+=================================================================================
+
+App Size:
+  • index.html:      8,691 bytes
+  • styles.css:     14,983 bytes
+  • app.js:          7,377 bytes
+  • auth.js:         4,912 bytes
+  • sheets.js:       4,962 bytes
+  TOTAL:            40,925 bytes (~40 KB)
+
+Performance:
+  • Zero JavaScript dependencies
+  • Loads in <1 second on modern connection
+  • Optimized for 2018 tablet hardware
+  • Service Worker enables offline use
+
+Browser Support:
+  ✓ Chrome 90+
+  ✓ Edge 90+
+  ✓ Firefox 88+
+  ✓ Safari 13+
+
+
+=================================================================================
+               READY FOR DUAL-DASHBOARD IMPLEMENTATION
+=================================================================================
+
+Current state: Solid foundation with excellent patterns
+Next step: Create Restaurant + Manufacturing dashboards
+Strategy: Add alongside existing MPI dashboard, share infrastructure
+
