@@ -1,154 +1,133 @@
 // Authentication Module
 const Auth = {
     currentUser: null,
-    accessToken: null,
-    TEST_PASSWORD: '123456', // Simple password for testing (REMOVE IN PRODUCTION!)
+    APP_PASSWORD: '123456', // Shared password for all users
+    availableUsers: ['Martin', 'Andres', 'Hugo', 'Marcela', 'Temp Employee'],
 
     // Initialize authentication
     init() {
         // Check if user is already logged in (from localStorage)
-        const savedUser = localStorage.getItem('mpi_user');
-        const savedToken = localStorage.getItem('mpi_token');
+        const savedUser = localStorage.getItem('taquero_user');
 
-        if (savedUser && savedToken) {
+        if (savedUser) {
             this.currentUser = JSON.parse(savedUser);
-            this.accessToken = savedToken;
             this.showApp();
         }
     },
 
-    // Test login with simple password
-    testLogin(password) {
-        console.log('Test login attempt with password:', password);
-        console.log('Expected password:', this.TEST_PASSWORD);
+    // Check password
+    checkPassword(password) {
+        return password === this.APP_PASSWORD;
+    },
 
-        if (password === this.TEST_PASSWORD) {
-            const testUser = {
-                name: 'Test User',
-                email: 'test@hotlikeamexican.com',
-                picture: ''
-            };
-            console.log('Password correct! Logging in as:', testUser);
-            this.saveSession(testUser, 'test-token-' + Date.now());
-            this.showApp();
-            return true;
+    // Show user selection screen
+    showUserSelection() {
+        const loginScreen = document.getElementById('login-screen');
+        const userSelectionScreen = document.getElementById('user-selection-screen');
+
+        if (loginScreen) loginScreen.classList.remove('active');
+        if (userSelectionScreen) userSelectionScreen.classList.add('active');
+    },
+
+    // Select user
+    selectUser(userName) {
+        const user = {
+            name: userName,
+            loginTime: new Date().toISOString()
+        };
+
+        this.currentUser = user;
+        localStorage.setItem('taquero_user', JSON.stringify(user));
+
+        this.showApp();
+
+        if (typeof showToast === 'function') {
+            showToast('Welcome, ' + userName + '!', 'success');
         }
-        console.log('Password incorrect');
-        return false;
     },
 
     // Show app screen
     showApp() {
-        console.log('Showing app screen...', this.currentUser);
         const loginScreen = document.getElementById('login-screen');
+        const userSelectionScreen = document.getElementById('user-selection-screen');
         const appScreen = document.getElementById('app-screen');
         const userName = document.getElementById('user-name');
 
         if (loginScreen) loginScreen.classList.remove('active');
+        if (userSelectionScreen) userSelectionScreen.classList.remove('active');
         if (appScreen) appScreen.classList.add('active');
+
         if (userName && this.currentUser) {
             userName.textContent = this.currentUser.name;
         }
-
-        console.log('App screen should now be visible');
     },
 
     // Show login screen
     showLogin() {
-        document.getElementById('app-screen').classList.remove('active');
-        document.getElementById('login-screen').classList.add('active');
-    },
+        const appScreen = document.getElementById('app-screen');
+        const userSelectionScreen = document.getElementById('user-selection-screen');
+        const loginScreen = document.getElementById('login-screen');
 
-    // Save user session
-    saveSession(user, token) {
-        this.currentUser = user;
-        this.accessToken = token;
-        localStorage.setItem('mpi_user', JSON.stringify(user));
-        localStorage.setItem('mpi_token', token);
-    },
-
-    // Clear user session
-    clearSession() {
-        this.currentUser = null;
-        this.accessToken = null;
-        localStorage.removeItem('mpi_user');
-        localStorage.removeItem('mpi_token');
+        if (appScreen) appScreen.classList.remove('active');
+        if (userSelectionScreen) userSelectionScreen.classList.remove('active');
+        if (loginScreen) loginScreen.classList.add('active');
     },
 
     // Logout
     logout() {
-        this.clearSession();
+        this.currentUser = null;
+        localStorage.removeItem('taquero_user');
         this.showLogin();
-        // Revoke Google token
-        if (window.google && window.google.accounts) {
-            google.accounts.id.disableAutoSelect();
-        }
     }
 };
 
-// Handle Google Sign-In response
-function handleCredentialResponse(response) {
-    // Decode JWT token to get user info
-    const user = parseJwt(response.credential);
-
-    // Validate user email domain (optional - uncomment to restrict to specific domain)
-    // if (!user.email.endsWith('@hotlikeamexican.com')) {
-    //     showToast('Please sign in with your work email', 'error');
-    //     return;
-    // }
-
-    // Save session
-    Auth.saveSession({
-        name: user.name,
-        email: user.email,
-        picture: user.picture
-    }, response.credential);
-
-    // Show app
-    Auth.showApp();
-    showToast('Welcome, ' + user.name + '!', 'success');
-}
-
-// Parse JWT token
-function parseJwt(token) {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-
-    return JSON.parse(jsonPayload);
-}
-
 // Initialize auth when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('Auth module initializing...');
     Auth.init();
+
+    // Setup password login form
+    const passwordLoginForm = document.getElementById('password-login-form');
+    console.log('Password form found:', passwordLoginForm);
+
+    if (passwordLoginForm) {
+        passwordLoginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            console.log('Form submitted');
+
+            const password = document.getElementById('login-password').value;
+            console.log('Password entered:', password);
+
+            if (Auth.checkPassword(password)) {
+                console.log('Password correct, showing user selection');
+                Auth.showUserSelection();
+            } else {
+                console.log('Password incorrect');
+                if (typeof showToast === 'function') {
+                    showToast('Incorrect password', 'error');
+                } else {
+                    alert('Incorrect password. Try: 123456');
+                }
+            }
+        });
+    } else {
+        console.error('Password login form not found!');
+    }
+
+    // Setup user selection cards
+    const userCards = document.querySelectorAll('.user-card');
+    userCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const userName = card.dataset.user;
+            Auth.selectUser(userName);
+        });
+    });
 
     // Setup logout button
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
             Auth.logout();
-        });
-    }
-
-    // Setup test login form
-    const testLoginForm = document.getElementById('test-login-form');
-    if (testLoginForm) {
-        testLoginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const password = document.getElementById('test-password').value;
-            if (Auth.testLogin(password)) {
-                // Login successful - showApp() is called in testLogin()
-                if (typeof showToast === 'function') {
-                    showToast('Test login successful!', 'success');
-                }
-            } else {
-                if (typeof showToast === 'function') {
-                    showToast('Incorrect password', 'error');
-                }
-                alert('Incorrect password. Try: 123456');
-            }
         });
     }
 });

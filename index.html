@@ -16,52 +16,68 @@
     <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
 
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <!-- Styles -->
     <link rel="stylesheet" href="css/styles.css">
-
-    <!-- Google Sign-In -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-    <!-- Login Screen -->
+    <!-- Login Screen - Password Entry -->
     <div id="login-screen" class="screen active">
         <div class="login-container">
             <div class="logo">
                 <h1>🌶️ Hot Like A Mexican</h1>
-                <h2>MPI Compliance Records</h2>
+                <h2>Taquero Management System</h2>
             </div>
 
-            <div id="g_id_onload"
-                 data-client_id="YOUR_GOOGLE_CLIENT_ID"
-                 data-callback="handleCredentialResponse"
-                 data-auto_prompt="false">
-            </div>
-
-            <div class="g_id_signin"
-                 data-type="standard"
-                 data-size="large"
-                 data-theme="outline"
-                 data-text="sign_in_with"
-                 data-shape="rectangular"
-                 data-logo_alignment="left">
-            </div>
-
-            <p class="login-info">Sign in with your work Google account</p>
-
-            <!-- Test Login (REMOVE IN PRODUCTION) -->
-            <div class="test-login-divider">
-                <span>OR FOR TESTING</span>
-            </div>
-
-            <form id="test-login-form" class="test-login-form">
+            <form id="password-login-form" class="login-form">
                 <input type="password"
-                       id="test-password"
-                       placeholder="Enter test password"
+                       id="login-password"
+                       placeholder="Enter password"
                        required
                        autocomplete="off">
-                <button type="submit" class="btn-test-login">Test Login</button>
+                <button type="submit" class="btn-login">Login</button>
             </form>
-            <p class="test-login-info">Password: 123456 (for preview only)</p>
+        </div>
+    </div>
+
+    <!-- User Selection Screen -->
+    <div id="user-selection-screen" class="screen">
+        <div class="login-container user-selection-container">
+            <div class="logo">
+                <h1>Select Your Name</h1>
+                <p class="user-selection-subtitle">Who is logging in today?</p>
+            </div>
+
+            <div class="user-selection-grid">
+                <button class="user-card" data-user="Martin">
+                    <div class="user-icon">👨‍💼</div>
+                    <span>Martin</span>
+                </button>
+
+                <button class="user-card" data-user="Andres">
+                    <div class="user-icon">👨‍🍳</div>
+                    <span>Andres</span>
+                </button>
+
+                <button class="user-card" data-user="Hugo">
+                    <div class="user-icon">👨‍🔧</div>
+                    <span>Hugo</span>
+                </button>
+
+                <button class="user-card" data-user="Marcela">
+                    <div class="user-icon">👩‍💼</div>
+                    <span>Marcela</span>
+                </button>
+
+                <button class="user-card" data-user="Temp Employee">
+                    <div class="user-icon">👤</div>
+                    <span>Temp Employee</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -432,7 +448,149 @@
                     <button class="btn-back-dynamic">← Back</button>
                     <h2>Fridge/Chiller Temperature Checks</h2>
                 </div>
-                <p class="coming-soon">Temperature monitoring coming soon...</p>
+
+                <!-- Step 0: Date Confirmation -->
+                <div id="temp-step-date" class="temp-wizard-step active">
+                    <div class="wizard-content">
+                        <div class="date-confirmation">
+                            <h3>Today's date is:</h3>
+                            <div class="date-display" id="temp-check-date"></div>
+                            <button class="btn-primary btn-continue-date">Continue</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Steps 1-6: Chillers -->
+                <div id="temp-step-1" class="temp-wizard-step">
+                    <div class="wizard-content">
+                        <h3>Chiller #1</h3>
+                        <div class="temp-input-container">
+                            <button class="btn-temp-down" data-unit="1">−</button>
+                            <div class="temp-display">
+                                <input type="number" id="temp-chiller-1" value="3" step="0.1" class="temp-value">
+                                <span class="temp-unit">°C</span>
+                            </div>
+                            <button class="btn-temp-up" data-unit="1">+</button>
+                        </div>
+                        <div class="wizard-actions">
+                            <button class="btn-secondary btn-previous" data-step="0">Previous</button>
+                            <button class="btn-primary btn-continue" data-step="2">Continue</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="temp-step-2" class="temp-wizard-step">
+                    <div class="wizard-content">
+                        <h3>Chiller #2</h3>
+                        <div class="temp-input-container">
+                            <button class="btn-temp-down" data-unit="2">−</button>
+                            <div class="temp-display">
+                                <input type="number" id="temp-chiller-2" value="3" step="0.1" class="temp-value">
+                                <span class="temp-unit">°C</span>
+                            </div>
+                            <button class="btn-temp-up" data-unit="2">+</button>
+                        </div>
+                        <div class="wizard-actions">
+                            <button class="btn-secondary btn-previous" data-step="1">Previous</button>
+                            <button class="btn-primary btn-continue" data-step="3">Continue</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="temp-step-3" class="temp-wizard-step">
+                    <div class="wizard-content">
+                        <h3>Chiller #3</h3>
+                        <div class="temp-input-container">
+                            <button class="btn-temp-down" data-unit="3">−</button>
+                            <div class="temp-display">
+                                <input type="number" id="temp-chiller-3" value="3" step="0.1" class="temp-value">
+                                <span class="temp-unit">°C</span>
+                            </div>
+                            <button class="btn-temp-up" data-unit="3">+</button>
+                        </div>
+                        <div class="wizard-actions">
+                            <button class="btn-secondary btn-previous" data-step="2">Previous</button>
+                            <button class="btn-primary btn-continue" data-step="4">Continue</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="temp-step-4" class="temp-wizard-step">
+                    <div class="wizard-content">
+                        <h3>Chiller #4</h3>
+                        <div class="temp-input-container">
+                            <button class="btn-temp-down" data-unit="4">−</button>
+                            <div class="temp-display">
+                                <input type="number" id="temp-chiller-4" value="3" step="0.1" class="temp-value">
+                                <span class="temp-unit">°C</span>
+                            </div>
+                            <button class="btn-temp-up" data-unit="4">+</button>
+                        </div>
+                        <div class="wizard-actions">
+                            <button class="btn-secondary btn-previous" data-step="3">Previous</button>
+                            <button class="btn-primary btn-continue" data-step="5">Continue</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="temp-step-5" class="temp-wizard-step">
+                    <div class="wizard-content">
+                        <h3>Chiller #5</h3>
+                        <div class="temp-input-container">
+                            <button class="btn-temp-down" data-unit="5">−</button>
+                            <div class="temp-display">
+                                <input type="number" id="temp-chiller-5" value="3" step="0.1" class="temp-value">
+                                <span class="temp-unit">°C</span>
+                            </div>
+                            <button class="btn-temp-up" data-unit="5">+</button>
+                        </div>
+                        <div class="wizard-actions">
+                            <button class="btn-secondary btn-previous" data-step="4">Previous</button>
+                            <button class="btn-primary btn-continue" data-step="6">Continue</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="temp-step-6" class="temp-wizard-step">
+                    <div class="wizard-content">
+                        <h3>Chiller #6</h3>
+                        <div class="temp-input-container">
+                            <button class="btn-temp-down" data-unit="6">−</button>
+                            <div class="temp-display">
+                                <input type="number" id="temp-chiller-6" value="3" step="0.1" class="temp-value">
+                                <span class="temp-unit">°C</span>
+                            </div>
+                            <button class="btn-temp-up" data-unit="6">+</button>
+                        </div>
+                        <div class="wizard-actions">
+                            <button class="btn-secondary btn-previous" data-step="5">Previous</button>
+                            <button class="btn-primary btn-continue" data-step="7">Continue</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 7: Freezer -->
+                <div id="temp-step-7" class="temp-wizard-step">
+                    <div class="wizard-content">
+                        <h3>Freezer</h3>
+                        <div class="temp-input-container">
+                            <button class="btn-temp-down" data-unit="7">−</button>
+                            <div class="temp-display">
+                                <input type="number" id="temp-freezer" value="-18" step="0.1" class="temp-value">
+                                <span class="temp-unit">°C</span>
+                            </div>
+                            <button class="btn-temp-up" data-unit="7">+</button>
+                        </div>
+                        <div class="finish-date-display">
+                            <p class="finish-date-label">Saving temperature check for:</p>
+                            <div class="finish-date-value" id="finish-date"></div>
+                        </div>
+                        <div class="wizard-actions">
+                            <button class="btn-secondary btn-previous" data-step="6">Previous</button>
+                            <button class="btn-primary btn-finish-temp">Finish & Submit</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div id="cleaning-closing-view" class="view">

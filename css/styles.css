@@ -47,7 +47,7 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, 'Helvetica Neue', sans-serif;
+    font-family: 'Raleway', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background-color: var(--bg-secondary);
     color: var(--text-primary);
     line-height: 1.6;
@@ -55,18 +55,19 @@ body {
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
     font-size: 16px;
+    font-weight: 500;
 }
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 1.2;
 }
 
 h1 {
     font-size: 2.5rem;
-    font-weight: 700;
+    font-weight: 800;
 }
 
 h2 {
@@ -132,15 +133,40 @@ h3 {
 .login-container {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
-    padding: 3.5rem;
+    padding: 2rem;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-xl);
     text-align: center;
-    max-width: 420px;
+    max-width: 500px;
     width: 90%;
     position: relative;
     z-index: 1;
     border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+@media (min-width: 768px) {
+    .login-container {
+        padding: 3.5rem;
+    }
+}
+
+/* User Selection Container - Override for wider layout */
+.user-selection-container {
+    max-width: 95%;
+    padding: 1.5rem;
+}
+
+@media (min-width: 500px) {
+    .user-selection-container {
+        max-width: 480px;
+    }
+}
+
+@media (min-width: 768px) {
+    .user-selection-container {
+        max-width: 600px;
+        padding: 2.5rem;
+    }
 }
 
 .logo h1 {
@@ -148,17 +174,28 @@ h3 {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    font-size: 2rem;
+    font-size: 1.5rem;
     margin-bottom: 0.5rem;
     font-weight: 700;
 }
 
 .logo h2 {
     color: var(--text-secondary);
-    font-size: 1.125rem;
+    font-size: 1rem;
     font-weight: 500;
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.5rem;
     letter-spacing: -0.01em;
+}
+
+@media (min-width: 768px) {
+    .logo h1 {
+        font-size: 2rem;
+    }
+
+    .logo h2 {
+        font-size: 1.125rem;
+        margin-bottom: 2.5rem;
+    }
 }
 
 .login-info {
@@ -167,85 +204,182 @@ h3 {
     font-size: 0.9rem;
 }
 
-/* Test Login (REMOVE IN PRODUCTION) */
-.test-login-divider {
-    margin: 2rem 0 1rem;
-    text-align: center;
-    position: relative;
-}
-
-.test-login-divider::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: var(--border-light);
-}
-
-.test-login-divider span {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 0 1rem;
-    position: relative;
-    color: var(--text-tertiary);
-    font-size: 0.8125rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.test-login-form {
-    margin-top: 1.5rem;
+/* Login Form */
+.login-form {
+    margin-top: 2rem;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 1rem;
 }
 
-.test-login-form input {
-    padding: 0.875rem 1rem;
+.login-form input {
+    padding: 1rem 1.25rem;
     border: 1.5px solid var(--border-light);
     border-radius: var(--radius-sm);
-    font-size: 0.9375rem;
+    font-size: 1rem;
     font-family: inherit;
     transition: all var(--transition-base);
     background: var(--bg-primary);
+    text-align: center;
 }
 
-.test-login-form input:focus {
+.login-form input:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.1);
 }
 
-.btn-test-login {
-    background: linear-gradient(135deg, var(--warning-color) 0%, #FF9A56 100%);
+.btn-login {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
     color: var(--text-white);
     border: none;
-    padding: 0.875rem 1.5rem;
+    padding: 1rem 1.5rem;
     border-radius: var(--radius-sm);
-    font-size: 0.9375rem;
-    font-weight: 600;
+    font-size: 1rem;
+    font-weight: 700;
     cursor: pointer;
     transition: all var(--transition-base);
     box-shadow: var(--shadow-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-.btn-test-login:hover {
+.btn-login:hover {
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
 }
 
-.btn-test-login:active {
+.btn-login:active {
     transform: translateY(0);
 }
 
-.test-login-info {
-    margin-top: 0.5rem;
+/* User Selection Screen */
+.user-selection-subtitle {
     color: var(--text-tertiary);
-    font-size: 0.8125rem;
-    text-align: center;
+    font-size: 1rem;
     font-weight: 500;
+    margin-top: 0.5rem;
+}
+
+.user-selection-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin-top: 1rem;
+    width: 100%;
+    max-width: 100%;
+}
+
+@media (min-width: 500px) {
+    .user-selection-grid {
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .user-selection-grid {
+        gap: 1rem;
+    }
+}
+
+.user-card {
+    background: var(--bg-primary);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 0.5rem;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 90px;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+@media (min-width: 500px) {
+    .user-card {
+        padding: 1rem 0.75rem;
+        min-height: 100px;
+    }
+}
+
+@media (min-width: 768px) {
+    .user-card {
+        padding: 1.5rem 1rem;
+        min-height: 120px;
+        gap: 0.75rem;
+    }
+}
+
+.user-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-purple));
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+
+.user-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+}
+
+.user-card:hover::before {
+    opacity: 1;
+}
+
+.user-card:active {
+    transform: translateY(-2px);
+}
+
+.user-icon {
+    font-size: 1.75rem;
+    filter: grayscale(0.2);
+    transition: transform var(--transition-base);
+}
+
+.user-card:hover .user-icon {
+    transform: scale(1.1);
+}
+
+.user-card span {
+    color: var(--text-primary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-align: center;
+    line-height: 1.2;
+}
+
+@media (min-width: 500px) {
+    .user-icon {
+        font-size: 2rem;
+    }
+
+    .user-card span {
+        font-size: 0.875rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .user-icon {
+        font-size: 2.5rem;
+    }
+
+    .user-card span {
+        font-size: 1rem;
+    }
 }
 
 /* App Header */
@@ -287,9 +421,9 @@ h3 {
 }
 
 .user-info span {
-    color: var(--text-secondary);
+    color: #000000;
     font-size: 0.9375rem;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 /* Buttons */
@@ -782,4 +916,237 @@ html {
 *:focus-visible {
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
+}
+
+/* Temperature Wizard Styles */
+.temp-wizard-step {
+    display: none;
+}
+
+.temp-wizard-step.active {
+    display: block;
+}
+
+.wizard-content {
+    background: var(--bg-primary);
+    border-radius: var(--radius-md);
+    padding: 3rem;
+    box-shadow: var(--shadow-md);
+    max-width: 600px;
+    margin: 0 auto;
+    border: 1px solid var(--border-light);
+    text-align: center;
+}
+
+.wizard-content h3 {
+    color: var(--text-primary);
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    letter-spacing: -0.02em;
+}
+
+/* Date Confirmation */
+.date-confirmation {
+    padding: 2rem 0;
+}
+
+.date-confirmation h3 {
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.date-display {
+    background: var(--bg-secondary);
+    border: 2px solid var(--primary-color);
+    border-radius: var(--radius-md);
+    padding: 1.5rem 2rem;
+    margin: 2rem 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    letter-spacing: -0.01em;
+}
+
+.btn-continue-date {
+    margin-top: 1rem;
+    min-width: 200px;
+}
+
+/* Temperature Input Container */
+.temp-input-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin: 3rem 0;
+}
+
+.btn-temp-down,
+.btn-temp-up {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-color);
+    background: var(--bg-primary);
+    color: var(--primary-color);
+    font-size: 2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.btn-temp-down:hover,
+.btn-temp-up:hover {
+    background: var(--primary-color);
+    color: var(--text-white);
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-temp-down:active,
+.btn-temp-up:active {
+    transform: scale(0.95);
+}
+
+.temp-display {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 200px;
+}
+
+.temp-value {
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    border: none;
+    background: transparent;
+    text-align: center;
+    width: 140px;
+    padding: 0;
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+}
+
+.temp-value::-webkit-inner-spin-button,
+.temp-value::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.temp-value:focus {
+    outline: none;
+}
+
+.temp-unit {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text-tertiary);
+}
+
+/* Finish Date Display */
+.finish-date-display {
+    margin-top: 2.5rem;
+    text-align: center;
+}
+
+.finish-date-label {
+    color: var(--text-tertiary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.finish-date-value {
+    background: var(--bg-secondary);
+    border: 2px solid var(--primary-color);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.5rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    letter-spacing: -0.01em;
+}
+
+/* Wizard Actions */
+.wizard-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-light);
+}
+
+.wizard-actions button {
+    flex: 1;
+    min-height: 50px;
+    font-size: 1rem;
+}
+
+.btn-finish-temp {
+    width: 100%;
+}
+
+/* Completion Checkmark Badge */
+.completion-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 32px;
+    height: 32px;
+    background: var(--success-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-white);
+    font-size: 1.25rem;
+    font-weight: 700;
+    box-shadow: var(--shadow-md);
+    animation: checkmarkPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes checkmarkPop {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Mobile/Tablet optimizations for temperature wizard */
+@media (max-width: 768px) {
+    .wizard-content {
+        padding: 2rem 1.5rem;
+    }
+
+    .temp-value {
+        font-size: 3rem;
+        width: 100px;
+    }
+
+    .temp-unit {
+        font-size: 1.5rem;
+    }
+
+    .btn-temp-down,
+    .btn-temp-up {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
 }

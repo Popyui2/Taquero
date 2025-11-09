@@ -11,6 +11,8 @@ const App = {
         this.setupForms();
         this.initializeSheets();
         this.setupBrowserBackButton();
+        this.setupTemperatureWizard();
+        this.checkDailyCompletions();
     },
 
     // Register service worker for PWA
@@ -271,6 +273,312 @@ const App = {
             localStorage.setItem('mpi_temp_records', JSON.stringify(records));
 
             setTimeout(resolve, 1000); // Simulate network delay
+        });
+    },
+
+    // Setup temperature wizard
+    setupTemperatureWizard() {
+        // Initialize wizard when entering fridge-temps view
+        const fridgeTempCards = document.querySelectorAll('[data-type="fridge-temps"]');
+        fridgeTempCards.forEach(card => {
+            card.addEventListener('click', () => {
+                this.initializeTemperatureWizard();
+            });
+        });
+
+        // Date continue button
+        const dateContinueBtn = document.querySelector('.btn-continue-date');
+        if (dateContinueBtn) {
+            dateContinueBtn.addEventListener('click', () => {
+                this.goToTempStep(1);
+            });
+        }
+
+        // Temperature up/down buttons
+        const tempUpButtons = document.querySelectorAll('.btn-temp-up');
+        const tempDownButtons = document.querySelectorAll('.btn-temp-down');
+
+        tempUpButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const unit = btn.dataset.unit;
+                this.adjustTemperature(unit, 0.5);
+            });
+        });
+
+        tempDownButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const unit = btn.dataset.unit;
+                this.adjustTemperature(unit, -0.5);
+            });
+        });
+
+        // Continue buttons
+        const continueButtons = document.querySelectorAll('.btn-continue');
+        continueButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const nextStep = parseInt(btn.dataset.step);
+                this.goToTempStep(nextStep);
+            });
+        });
+
+        // Previous buttons
+        const previousButtons = document.querySelectorAll('.btn-previous');
+        previousButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const prevStep = parseInt(btn.dataset.step);
+                if (prevStep === 0) {
+                    this.goToTempStep('date');
+                } else {
+                    this.goToTempStep(prevStep);
+                }
+            });
+        });
+
+        // Finish button
+        const finishBtn = document.querySelector('.btn-finish-temp');
+        if (finishBtn) {
+            finishBtn.addEventListener('click', () => {
+                this.finishTemperatureCheck();
+            });
+        }
+    },
+
+    // Initialize temperature wizard with today's date
+    initializeTemperatureWizard() {
+        const today = new Date();
+        const dateString = today.toLocaleDateString('en-NZ', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        const dateDisplay = document.getElementById('temp-check-date');
+        const finishDateDisplay = document.getElementById('finish-date');
+
+        if (dateDisplay) dateDisplay.textContent = dateString;
+        if (finishDateDisplay) finishDateDisplay.textContent = dateString;
+
+        // Reset to first step
+        this.goToTempStep('date');
+    },
+
+    // Navigate to a specific temperature wizard step
+    goToTempStep(step) {
+        const allSteps = document.querySelectorAll('.temp-wizard-step');
+        allSteps.forEach(s => s.classList.remove('active'));
+
+        let targetStep;
+        if (step === 'date') {
+            targetStep = document.getElementById('temp-step-date');
+        } else {
+            targetStep = document.getElementById(`temp-step-${step}`);
+        }
+
+        if (targetStep) {
+            targetStep.classList.add('active');
+        }
+    },
+
+    // Adjust temperature value
+    adjustTemperature(unit, delta) {
+        let input;
+        if (unit === '7') {
+            input = document.getElementById('temp-freezer');
+        } else {
+            input = document.getElementById(`temp-chiller-${unit}`);
+        }
+
+        if (input) {
+            const currentValue = parseFloat(input.value);
+            const newValue = (currentValue + delta).toFixed(1);
+            input.value = newValue;
+        }
+    },
+
+    // Finish temperature check and save data
+    async finishTemperatureCheck() {
+        // Check if ANYONE already submitted today
+        const today = new Date().toISOString().split('T')[0];
+        const userName = Auth.currentUser ? Auth.currentUser.name : 'Unknown';
+
+        const previousSubmitter = this.getWhoSubmittedToday('fridge-temps', today);
+
+        if (previousSubmitter) {
+            const confirmSubmit = confirm(
+                `⚠️ Temperature check already completed today by ${previousSubmitter}.\n\n` +
+                `Submitting again (as ${userName}) will create a duplicate entry in Google Sheets.\n\n` +
+                `Do you want to continue anyway?`
+            );
+
+            if (!confirmSubmit) {
+                showToast('Temperature check cancelled', 'info');
+                return; // Exit without submitting
+            }
+        }
+
+        const tempData = {
+            date: today,
+            timestamp: new Date().toISOString(),
+            user: userName,
+            chillers: [],
+            freezer: null
+        };
+
+        // Collect chiller temperatures
+        for (let i = 1; i <= 6; i++) {
+            const input = document.getElementById(`temp-chiller-${i}`);
+            if (input) {
+                tempData.chillers.push({
+                    unit: `Chiller #${i}`,
+                    temperature: parseFloat(input.value)
+                });
+            }
+        }
+
+        // Collect freezer temperature
+        const freezerInput = document.getElementById('temp-freezer');
+        if (freezerInput) {
+            tempData.freezer = {
+                unit: 'Freezer',
+                temperature: parseFloat(freezerInput.value)
+            };
+        }
+
+        try {
+            showLoading(true);
+
+            // Save to Google Sheets
+            const googleSheetsUrl = 'https://script.google.com/macros/s/AKfycbx6oBuAoKUJNsF70DbNTmEg7LwLX_UobFWbc6HahUZwDdUYysuTD01SD0R7iD9KQWSR/exec';
+
+            console.log('Sending data to Google Sheets:', tempData);
+            console.log('Google Sheets URL:', googleSheetsUrl);
+
+            try {
+                const response = await fetch(googleSheetsUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(tempData)
+                });
+                console.log('Fetch request completed (no-cors mode - cannot see response)');
+                console.log('Data should now be in Google Sheets if script is configured correctly');
+            } catch (fetchError) {
+                console.error('Error sending to Google Sheets:', fetchError);
+                showToast('Warning: Could not reach Google Sheets. Data saved locally.', 'warning');
+                // Continue anyway - data is still saved locally
+            }
+
+            // Also save to localStorage as backup
+            const allTempRecords = JSON.parse(localStorage.getItem('fridge_temp_records') || '[]');
+            allTempRecords.push(tempData);
+            localStorage.setItem('fridge_temp_records', JSON.stringify(allTempRecords));
+
+            // Record that this user has submitted today
+            this.recordUserSubmission('fridge-temps', userName, today);
+
+            // Mark as completed for today
+            this.markTaskCompleted('fridge-temps');
+
+            showLoading(false);
+            showToast('Temperature check saved to Google Sheets!', 'success');
+
+            // Go back to previous view
+            this.goBack();
+
+        } catch (error) {
+            showLoading(false);
+            showToast('Error saving temperature data: ' + error.message, 'error');
+            console.error('Error:', error);
+        }
+    },
+
+    // Check who (if anyone) has submitted today
+    getWhoSubmittedToday(taskId, date) {
+        const userSubmissions = JSON.parse(localStorage.getItem('user_submissions') || '{}');
+
+        // Structure: { 'fridge-temps': { '2025-11-09': ['Martin', 'Andres'] } }
+        if (userSubmissions[taskId] && userSubmissions[taskId][date]) {
+            const submitters = userSubmissions[taskId][date];
+            if (submitters.length > 0) {
+                // Return first submitter (or join all if multiple)
+                return submitters.join(', ');
+            }
+        }
+
+        return null; // No one has submitted today
+    },
+
+    // Record that a user has submitted today
+    recordUserSubmission(taskId, userName, date) {
+        const userSubmissions = JSON.parse(localStorage.getItem('user_submissions') || '{}');
+
+        if (!userSubmissions[taskId]) {
+            userSubmissions[taskId] = {};
+        }
+
+        if (!userSubmissions[taskId][date]) {
+            userSubmissions[taskId][date] = [];
+        }
+
+        if (!userSubmissions[taskId][date].includes(userName)) {
+            userSubmissions[taskId][date].push(userName);
+        }
+
+        localStorage.setItem('user_submissions', JSON.stringify(userSubmissions));
+    },
+
+    // Mark a task as completed for today
+    markTaskCompleted(taskId) {
+        const today = new Date().toISOString().split('T')[0];
+        const completions = JSON.parse(localStorage.getItem('task_completions') || '{}');
+
+        if (!completions[today]) {
+            completions[today] = [];
+        }
+
+        if (!completions[today].includes(taskId)) {
+            completions[today].push(taskId);
+        }
+
+        localStorage.setItem('task_completions', JSON.stringify(completions));
+
+        // Add checkmark badge to the card
+        this.updateCompletionBadges();
+    },
+
+    // Check and display daily completion badges
+    checkDailyCompletions() {
+        // Check on initial load and update badges
+        this.updateCompletionBadges();
+    },
+
+    // Update completion badges on cards
+    updateCompletionBadges() {
+        const today = new Date().toISOString().split('T')[0];
+        const completions = JSON.parse(localStorage.getItem('task_completions') || '{}');
+        const todayCompletions = completions[today] || [];
+
+        // Remove all existing badges
+        document.querySelectorAll('.completion-badge').forEach(badge => badge.remove());
+
+        // Add badges to completed tasks
+        todayCompletions.forEach(taskId => {
+            const cards = document.querySelectorAll(`[data-type="${taskId}"]`);
+            cards.forEach(card => {
+                // Make card position relative if not already
+                if (getComputedStyle(card).position === 'static') {
+                    card.style.position = 'relative';
+                }
+
+                // Add checkmark badge
+                const badge = document.createElement('div');
+                badge.className = 'completion-badge';
+                badge.innerHTML = '✓';
+                card.appendChild(badge);
+            });
         });
     }
 };
