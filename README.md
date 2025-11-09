@@ -1,6 +1,6 @@
-# MPI Compliance Record Keeping System
+# Taquero, a compliance, recordkeeping and business suite for small restaurants
 
-A Progressive Web App (PWA) for managing food safety compliance records for Hot Like A Mexican restaurant in New Zealand.
+A Progressive Web App (PWA) for managing food safety compliance records, inventory, and shopping lists.
 
 ## Features
 
