@@ -10,6 +10,7 @@ const App = {
         this.setupNavigation();
         this.setupForms();
         this.initializeSheets();
+        this.setupBrowserBackButton();
     },
 
     // Register service worker for PWA
@@ -126,7 +127,7 @@ const App = {
     },
 
     // Show a specific view
-    showView(viewName) {
+    showView(viewName, pushState = true) {
         // Save previous view for back navigation
         this.previousView = this.currentView;
 
@@ -143,6 +144,11 @@ const App = {
 
         // Update header and home button visibility
         this.updateHeader(viewName);
+
+        // Push state to browser history (for back button support)
+        if (pushState) {
+            history.pushState({ view: viewName, dashboard: this.currentDashboard }, '', '');
+        }
     },
 
     // Update header based on current view
@@ -164,6 +170,24 @@ const App = {
             headerTitle.textContent = this.currentDashboard === 'restaurant' ? 'Restaurant' : 'Manufacturing';
             homeBtn.style.display = 'inline-flex';
         }
+    },
+
+    // Setup browser back button handling
+    setupBrowserBackButton() {
+        // Push initial state
+        history.replaceState({ view: this.currentView, dashboard: this.currentDashboard }, '', '');
+
+        // Listen for browser back/forward button
+        window.addEventListener('popstate', (event) => {
+            if (event.state && event.state.view) {
+                // Navigate to the view from history without pushing new state
+                this.showView(event.state.view, false);
+                this.currentDashboard = event.state.dashboard;
+            } else {
+                // If no state, go back to dashboard selection
+                this.showView('dashboard-selection', false);
+            }
+        });
     },
 
     // Handle temperature form submission
