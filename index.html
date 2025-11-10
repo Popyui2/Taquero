@@ -406,8 +406,132 @@
                 <div class="form-header">
                     <button class="btn-back" data-back="restaurant-dashboard">← Back to Restaurant</button>
                     <h2>Caravan Events</h2>
+                    <button class="btn-primary btn-add-event">+ Add Event</button>
                 </div>
-                <p class="coming-soon">Caravan events module coming soon...</p>
+
+                <!-- Stats Bar -->
+                <div class="events-stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-events">0</div>
+                        <div class="stat-label">Total Events</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="upcoming-events">0</div>
+                        <div class="stat-label">Upcoming</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="confirmed-events">0</div>
+                        <div class="stat-label">Confirmed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-revenue">$0</div>
+                        <div class="stat-label">Total Revenue</div>
+                    </div>
+                </div>
+
+                <!-- Toggle for Archived Events -->
+                <div class="archive-toggle">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="show-archived">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label">Show Archived Events</span>
+                </div>
+
+                <!-- Kanban Board -->
+                <div class="kanban-board">
+                    <div class="kanban-column">
+                        <div class="kanban-header solicitado">
+                            <h3>⏳ Solicitado</h3>
+                            <span class="event-count" id="count-solicitado">0</span>
+                        </div>
+                        <div class="kanban-cards" id="column-solicitado" data-status="Solicitado"></div>
+                    </div>
+
+                    <div class="kanban-column">
+                        <div class="kanban-header confirmado">
+                            <h3>✓ Confirmado</h3>
+                            <span class="event-count" id="count-confirmado">0</span>
+                        </div>
+                        <div class="kanban-cards" id="column-confirmado" data-status="Confirmado"></div>
+                    </div>
+
+                    <div class="kanban-column">
+                        <div class="kanban-header pagado">
+                            <h3>💰 Pagado</h3>
+                            <span class="event-count" id="count-pagado">0</span>
+                        </div>
+                        <div class="kanban-cards" id="column-pagado" data-status="Pagado"></div>
+                    </div>
+
+                    <div class="kanban-column">
+                        <div class="kanban-header finalizado">
+                            <h3>🏁 Finalizado</h3>
+                            <span class="event-count" id="count-finalizado">0</span>
+                        </div>
+                        <div class="kanban-cards" id="column-finalizado" data-status="Finalizado"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Event Edit Modal -->
+            <div id="event-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 id="modal-title">Edit Event</h2>
+                        <button class="modal-close">&times;</button>
+                    </div>
+                    <form id="event-form">
+                        <input type="hidden" id="event-row-index">
+
+                        <div class="form-group">
+                            <label for="event-nombre">Event Name *</label>
+                            <input type="text" id="event-nombre" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="event-fecha">Date *</label>
+                            <input type="text" id="event-fecha" required placeholder="e.g., 8 de diciembre 2025">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="event-status">Status *</label>
+                            <select id="event-status" required>
+                                <option value="Solicitado">⏳ Solicitado</option>
+                                <option value="Confirmado">✓ Confirmado</option>
+                                <option value="Pagado">💰 Pagado y Confirmado</option>
+                                <option value="Finalizado">🏁 Finalizado</option>
+                                <option value="Archived">📦 Archived</option>
+                                <option value="Cancelado">❌ Cancelado</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="event-notas">Notes</label>
+                            <textarea id="event-notas" rows="3" placeholder="Additional notes..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="event-ganancias">Revenue</label>
+                            <input type="text" id="event-ganancias" placeholder="e.g., $2,500">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="event-inventario">Inventory Used</label>
+                            <textarea id="event-inventario" rows="2" placeholder="e.g., 6 bolsas de tortillas..."></textarea>
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="button" class="btn-delete-event" id="btn-delete-event">
+                                🗑️ Delete
+                            </button>
+                            <div class="modal-actions-right">
+                                <button type="button" class="btn-secondary modal-cancel">Cancel</button>
+                                <button type="submit" class="btn-primary">Save Event</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             <div id="traceability-view" class="view">
@@ -693,7 +817,7 @@
         <!-- Loading Overlay -->
         <div id="loading-overlay" class="loading-overlay">
             <div class="spinner"></div>
-            <p>Saving...</p>
+            <p id="loading-message">Saving...</p>
         </div>
 
         <!-- Toast Notifications -->
@@ -703,6 +827,7 @@
     <!-- Scripts -->
     <script src="js/auth.js"></script>
     <script src="js/sheets.js"></script>
+    <script src="js/events.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

@@ -147,6 +147,11 @@ const App = {
         // Update header and home button visibility
         this.updateHeader(viewName);
 
+        // Check for completions when showing dashboard or FCP views
+        if (viewName.includes('dashboard') || viewName.includes('fcp')) {
+            this.checkDailyCompletions();
+        }
+
         // Push state to browser history (for back button support)
         if (pushState) {
             history.pushState({ view: viewName, dashboard: this.currentDashboard }, '', '');
@@ -446,10 +451,10 @@ const App = {
         }
 
         try {
-            showLoading(true);
+            showLoading(true, 'Saving to Database...');
 
             // Save to Google Sheets
-            const googleSheetsUrl = 'https://script.google.com/macros/s/AKfycbx6oBuAoKUJNsF70DbNTmEg7LwLX_UobFWbc6HahUZwDdUYysuTD01SD0R7iD9KQWSR/exec';
+            const googleSheetsUrl = 'https://script.google.com/macros/s/AKfycbz27gmlc2swJgIXdayBHnP-b3KMIR-TiuY6Ib35piYo8m0TYDD1SzFbEDp2Q1EeywQg/exec';
 
             console.log('Sending data to Google Sheets:', tempData);
             console.log('Google Sheets URL:', googleSheetsUrl);
@@ -550,9 +555,51 @@ const App = {
     },
 
     // Check and display daily completion badges
-    checkDailyCompletions() {
-        // Check on initial load and update badges
+    async checkDailyCompletions() {
+        // Check Google Sheets for fridge temps completion
+        await this.checkFridgeTempsCompletion();
+
+        // Update badges
         this.updateCompletionBadges();
+    },
+
+    // Check if fridge temps were completed today in Google Sheets
+    async checkFridgeTempsCompletion() {
+        try {
+            const googleSheetsUrl = 'https://script.google.com/macros/s/AKfycbz27gmlc2swJgIXdayBHnP-b3KMIR-TiuY6Ib35piYo8m0TYDD1SzFbEDp2Q1EeywQg/exec';
+
+            const response = await fetch(googleSheetsUrl + '?action=checkToday');
+            const data = await response.json();
+
+            if (data.status === 'success' && data.hasToday) {
+                this.markTaskCompleted('fridge-temps');
+            } else {
+                const records = JSON.parse(localStorage.getItem('fridge_temp_records') || '[]');
+                const today = new Date().toISOString().split('T')[0];
+
+                const todayRecord = records.find(record => {
+                    const recordDate = new Date(record.timestamp).toISOString().split('T')[0];
+                    return recordDate === today;
+                });
+
+                if (todayRecord) {
+                    this.markTaskCompleted('fridge-temps');
+                }
+            }
+
+        } catch (error) {
+            const records = JSON.parse(localStorage.getItem('fridge_temp_records') || '[]');
+            const today = new Date().toISOString().split('T')[0];
+
+            const todayRecord = records.find(record => {
+                const recordDate = new Date(record.timestamp).toISOString().split('T')[0];
+                return recordDate === today;
+            });
+
+            if (todayRecord) {
+                this.markTaskCompleted('fridge-temps');
+            }
+        }
     },
 
     // Update completion badges on cards
@@ -561,8 +608,9 @@ const App = {
         const completions = JSON.parse(localStorage.getItem('task_completions') || '{}');
         const todayCompletions = completions[today] || [];
 
-        // Remove all existing badges
+        // Remove all existing badges and completed class
         document.querySelectorAll('.completion-badge').forEach(badge => badge.remove());
+        document.querySelectorAll('.record-card').forEach(card => card.classList.remove('completed'));
 
         // Add badges to completed tasks
         todayCompletions.forEach(taskId => {
@@ -572,6 +620,9 @@ const App = {
                 if (getComputedStyle(card).position === 'static') {
                     card.style.position = 'relative';
                 }
+
+                // Add completed class for green background
+                card.classList.add('completed');
 
                 // Add checkmark badge
                 const badge = document.createElement('div');
@@ -586,9 +637,14 @@ const App = {
 // Utility Functions
 
 // Show/hide loading overlay
-function showLoading(show) {
+function showLoading(show, message = 'Saving...') {
     const overlay = document.getElementById('loading-overlay');
+    const messageEl = document.getElementById('loading-message');
+
     if (show) {
+        if (messageEl) {
+            messageEl.textContent = message;
+        }
         overlay.classList.add('active');
     } else {
         overlay.classList.remove('active');
