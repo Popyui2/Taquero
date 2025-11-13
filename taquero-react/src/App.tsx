@@ -10,6 +10,9 @@ import { ManufacturingDashboard } from '@/pages/ManufacturingDashboard'
 import { RestaurantFCP } from '@/pages/RestaurantFCP'
 import { ManufacturingFCP } from '@/pages/ManufacturingFCP'
 import { FridgeTemps } from '@/pages/modules/FridgeTemps'
+import { StaffTraining } from '@/pages/modules/StaffTraining'
+import { StaffTrainingViewPage } from '@/pages/modules/StaffTrainingView'
+import { StaffTrainingEditPage } from '@/pages/modules/StaffTrainingEdit'
 import { ModulePlaceholder } from '@/pages/modules/ModulePlaceholder'
 import { Toast, ToastContainer } from '@/components/ui/toast'
 
@@ -115,15 +118,9 @@ function App() {
 
           {/* FCP Module Routes */}
           <Route path="/module/fridge-temps" element={<FridgeTemps />} />
-          <Route
-            path="/module/staff-training"
-            element={
-              <ModulePlaceholder
-                title="Staff Training Records"
-                description="Training logs & certifications"
-              />
-            }
-          />
+          <Route path="/module/staff-training" element={<StaffTraining />} />
+          <Route path="/module/staff-training/view" element={<StaffTrainingViewPage />} />
+          <Route path="/module/staff-training/edit" element={<StaffTrainingEditPage />} />
           <Route
             path="/module/personal-hygiene"
             element={

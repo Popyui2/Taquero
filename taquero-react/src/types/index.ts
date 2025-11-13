@@ -25,3 +25,17 @@ export interface ModuleCard {
   icon: string
   dashboard: DashboardType | 'both'
 }
+
+export interface TrainingRecord {
+  id: string
+  topic: string
+  trainerInitials: string
+  date: string // ISO format
+}
+
+export interface StaffMember {
+  id: string
+  name: string
+  position: string
+  trainingRecords: TrainingRecord[]
+}
