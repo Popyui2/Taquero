@@ -10,10 +10,11 @@ import { ManufacturingDashboard } from '@/pages/ManufacturingDashboard'
 import { RestaurantFCP } from '@/pages/RestaurantFCP'
 import { ManufacturingFCP } from '@/pages/ManufacturingFCP'
 import { FridgeTemps } from '@/pages/modules/FridgeTemps'
-import { StaffTraining } from '@/pages/modules/StaffTraining'
-import { StaffTrainingViewPage } from '@/pages/modules/StaffTrainingView'
-import { StaffTrainingEditPage } from '@/pages/modules/StaffTrainingEdit'
 import { ModulePlaceholder } from '@/pages/modules/ModulePlaceholder'
+import { StaffList } from '@/components/staff-training/StaffList'
+import { StaffDetail } from '@/components/staff-training/StaffDetail'
+import { AddStaffForm } from '@/components/staff-training/AddStaffForm'
+import { StaffTrainingRecordMPI } from '@/components/staff-training/StaffTrainingRecordMPI'
 import { Toast, ToastContainer } from '@/components/ui/toast'
 
 interface ToastMessage {
@@ -118,9 +119,10 @@ function App() {
 
           {/* FCP Module Routes */}
           <Route path="/module/fridge-temps" element={<FridgeTemps />} />
-          <Route path="/module/staff-training" element={<StaffTraining />} />
-          <Route path="/module/staff-training/view" element={<StaffTrainingViewPage />} />
-          <Route path="/module/staff-training/edit" element={<StaffTrainingEditPage />} />
+          <Route path="/module/staff-training" element={<StaffList />} />
+          <Route path="/module/staff-training/add" element={<AddStaffForm />} />
+          <Route path="/module/staff-training/:staffId" element={<StaffDetail />} />
+          <Route path="/module/staff-training/:staffId/mpi-record" element={<StaffTrainingRecordMPI />} />
           <Route
             path="/module/personal-hygiene"
             element={

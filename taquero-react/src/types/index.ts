@@ -28,6 +28,7 @@ export interface ModuleCard {
 
 export interface TrainingRecord {
   id: string
+  staffId?: string // Reference to staff member
   topic: string
   trainerInitials: string
   date: string // ISO format
@@ -36,6 +37,10 @@ export interface TrainingRecord {
 export interface StaffMember {
   id: string
   name: string
+  initials: string // 2-letter staff initials (e.g., "HV")
   position: string
+  email?: string // Optional
+  phone?: string // Optional
+  createdAt: string // ISO format
   trainingRecords: TrainingRecord[]
 }

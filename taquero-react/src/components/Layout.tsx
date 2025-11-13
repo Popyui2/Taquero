@@ -40,7 +40,44 @@ export function Layout({ children }: LayoutProps) {
   }
 
   const handleBack = () => {
-    navigate(-1)
+    const path = location.pathname
+
+    // Smart navigation based on current location
+    // Staff training sub-pages -> go to staff training main page
+    if (path.startsWith('/module/staff-training/')) {
+      navigate('/module/staff-training')
+    }
+    // Staff training main page -> go to FCP modules
+    else if (path === '/module/staff-training') {
+      navigate('/restaurant/fcp')
+    }
+    // Any other module page -> go to FCP modules
+    else if (path.startsWith('/module/')) {
+      navigate('/restaurant/fcp')
+    }
+    // FCP pages -> go to respective dashboard
+    else if (path === '/restaurant/fcp') {
+      navigate('/restaurant')
+    }
+    else if (path === '/manufacturing/fcp') {
+      navigate('/manufacturing')
+    }
+    // Restaurant sub-pages -> go to restaurant dashboard
+    else if (path.startsWith('/restaurant/')) {
+      navigate('/restaurant')
+    }
+    // Manufacturing sub-pages -> go to manufacturing dashboard
+    else if (path.startsWith('/manufacturing/')) {
+      navigate('/manufacturing')
+    }
+    // Dashboard pages -> go to home
+    else if (path === '/restaurant' || path === '/manufacturing') {
+      navigate('/')
+    }
+    // Default: go to home
+    else {
+      navigate('/')
+    }
   }
 
   // Generate breadcrumbs based on current path
