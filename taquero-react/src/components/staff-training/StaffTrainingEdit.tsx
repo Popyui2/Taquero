@@ -36,8 +36,13 @@ const TRAINING_TOPICS = [
 ]
 
 export function StaffTrainingEdit({ staffId, onBack, onSelectStaff }: StaffTrainingEditProps) {
-  const { staffMembers, addStaffMember, updateStaffMember, addTrainingRecord, deleteTrainingRecord } =
+  const { staffMembers, addStaffMember, updateStaffMember, addTrainingRecord, deleteTrainingRecord, fetchFromGoogleSheets } =
     useStaffTrainingStore()
+
+  // Fetch data from Google Sheets on mount
+  useEffect(() => {
+    fetchFromGoogleSheets()
+  }, [fetchFromGoogleSheets])
 
   const currentStaff = staffId ? staffMembers.find((s) => s.id === staffId) : null
 

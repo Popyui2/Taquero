@@ -8,13 +8,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { useStaffTrainingStore } from '@/store/staffTrainingStore'
 import { getTodayNZ } from '@/lib/dateUtils'
 import { useToast } from '@/components/ui/use-toast'
@@ -25,18 +18,6 @@ interface LogTrainingModalProps {
   open: boolean
   onClose: () => void
 }
-
-// MPI Training Topics
-const TRAINING_TOPICS = [
-  'Wash hands (washing with soap for 20 seconds and drying thoroughly)',
-  'Personal hygiene (hair, jewelry, and illness)',
-  'Protecting food from contamination (clean clothes and managing sickness)',
-  'Separating food (raw vs cooked, allergy awareness)',
-  'Cleaning up (what to clean, when, and how)',
-  'Temperature monitoring',
-  'Equipment maintenance',
-  'Fridge/chiller management',
-]
 
 export function LogTrainingModal({ staffId, staffName, open, onClose }: LogTrainingModalProps) {
   const { addTrainingRecord } = useStaffTrainingStore()
@@ -132,18 +113,15 @@ export function LogTrainingModal({ staffId, staffName, open, onClose }: LogTrain
             <label className="text-sm font-medium">
               Training Topic <span className="text-destructive">*</span>
             </label>
-            <Select value={topic} onValueChange={setTopic}>
-              <SelectTrigger className="h-12 text-base">
-                <SelectValue placeholder="Select from MPI FCP topics..." />
-              </SelectTrigger>
-              <SelectContent>
-                {TRAINING_TOPICS.map((t) => (
-                  <SelectItem key={t} value={t} className="py-3">
-                    {t}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Input
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="e.g., Wash hands, Temperature monitoring, When something goes wrong"
+              className="h-12 text-base"
+            />
+            <p className="text-xs text-muted-foreground">
+              Enter any training topic including unexpected situations
+            </p>
           </div>
 
           {/* Trainer Initials */}

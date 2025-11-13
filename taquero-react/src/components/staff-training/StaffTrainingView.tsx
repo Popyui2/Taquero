@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
@@ -24,7 +25,13 @@ interface StaffTrainingViewProps {
 }
 
 export function StaffTrainingView({ staffId, onBack, onSelectStaff }: StaffTrainingViewProps) {
-  const { staffMembers } = useStaffTrainingStore()
+  const { staffMembers, fetchFromGoogleSheets } = useStaffTrainingStore()
+
+  // Fetch data from Google Sheets on mount
+  useEffect(() => {
+    fetchFromGoogleSheets()
+  }, [fetchFromGoogleSheets])
+
   const currentStaff = staffId ? staffMembers.find((s) => s.id === staffId) : null
 
   return (

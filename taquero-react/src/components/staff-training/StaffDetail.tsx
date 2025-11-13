@@ -324,7 +324,11 @@ export function StaffDetail() {
           </div>
         </CardHeader>
         <CardContent>
-          <TrainingHistoryTable records={staff.trainingRecords} />
+          <TrainingHistoryTable
+            staffId={staffId}
+            staffName={staff.name}
+            records={staff.trainingRecords}
+          />
         </CardContent>
       </Card>
 

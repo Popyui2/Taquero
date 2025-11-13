@@ -11,11 +11,18 @@ const generateId = (): string => {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
 
-// Google Sheets webhook URL (you'll need to set this up)
-const GOOGLE_SHEETS_WEBHOOK = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec'
+// Google Sheets webhook URL
+const GOOGLE_SHEETS_WEBHOOK = 'https://script.google.com/macros/s/AKfycbzUX1FIp1LkGstKP0j2sVs-VUPpDRoJ2D9lnwwT8-bP9MuSNfwPBuocJ5ob0Xym5QTz/exec'
 
 interface StaffTrainingState {
+  // State
   staffMembers: StaffMember[]
+  isLoading: boolean
+  isSyncing: boolean
+  lastSyncTime: string | null
+  syncError: string | null
+
+  // Actions
   addStaffMember: (staff: Omit<StaffMember, 'id' | 'trainingRecords' | 'createdAt'>) => Promise<void>
   updateStaffMember: (id: string, staff: Partial<Omit<StaffMember, 'id' | 'trainingRecords' | 'createdAt'>>) => Promise<void>
   deleteStaffMember: (id: string) => Promise<void>
@@ -23,33 +30,124 @@ interface StaffTrainingState {
   updateTrainingRecord: (staffId: string, recordId: string, record: Partial<Omit<TrainingRecord, 'id' | 'staffId'>>) => Promise<void>
   deleteTrainingRecord: (staffId: string, recordId: string) => Promise<void>
   getStaffMember: (id: string) => StaffMember | undefined
+
+  // Sync functions
+  fetchFromGoogleSheets: () => Promise<void>
   syncToGoogleSheets: (action: string, data: any) => Promise<void>
+  setLoading: (loading: boolean) => void
+  setSyncing: (syncing: boolean) => void
 }
 
 export const useStaffTrainingStore = create<StaffTrainingState>()(
   persist(
     (set, get) => ({
+      // Initial state
       staffMembers: [],
+      isLoading: false,
+      isSyncing: false,
+      lastSyncTime: null,
+      syncError: null,
 
-      syncToGoogleSheets: async (action, data) => {
+      // Set loading state
+      setLoading: (loading: boolean) => {
+        set({ isLoading: loading })
+      },
+
+      // Set syncing state
+      setSyncing: (syncing: boolean) => {
+        set({ isSyncing: syncing })
+      },
+
+      // Fetch data from Google Sheets
+      fetchFromGoogleSheets: async () => {
+        console.log('🔄 fetchFromGoogleSheets called')
+
+        // Don't fetch if no webhook URL configured
+        if (GOOGLE_SHEETS_WEBHOOK.includes('YOUR_DEPLOYMENT_ID')) {
+          console.warn('Google Sheets webhook not configured yet')
+          return
+        }
+
+        console.log('📡 Fetching from:', GOOGLE_SHEETS_WEBHOOK)
+        set({ isLoading: true, syncError: null })
+
         try {
+          // Don't send Content-Type header to avoid CORS preflight
           const response = await fetch(GOOGLE_SHEETS_WEBHOOK, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              action,
-              data,
-              timestamp: new Date().toISOString(),
-            }),
+            method: 'GET',
           })
 
           if (!response.ok) {
-            console.warn('Google Sheets sync failed, data saved locally')
+            throw new Error(`HTTP error! status: ${response.status}`)
+          }
+
+          const result = await response.json()
+
+          if (result.success && result.data) {
+            // Update state with fetched data
+            set({
+              staffMembers: result.data,
+              lastSyncTime: new Date().toISOString(),
+              syncError: null,
+            })
+          } else {
+            throw new Error(result.error || 'Failed to fetch data')
           }
         } catch (error) {
-          console.warn('Google Sheets sync error:', error, '- data saved locally')
+          console.error('Error fetching from Google Sheets:', error)
+          set({
+            syncError: error instanceof Error ? error.message : 'Unknown error',
+          })
+          // Keep using cached data from localStorage
+        } finally {
+          set({ isLoading: false })
+        }
+      },
+
+      // Sync data to Google Sheets
+      syncToGoogleSheets: async (action, data) => {
+        // Don't sync if no webhook URL configured
+        if (GOOGLE_SHEETS_WEBHOOK.includes('YOUR_DEPLOYMENT_ID')) {
+          console.warn('Google Sheets webhook not configured yet')
+          return
+        }
+
+        set({ isSyncing: true })
+
+        try {
+          // Use URLSearchParams to avoid CORS preflight triggered by Content-Type: application/json
+          const params = new URLSearchParams()
+          params.append('action', action)
+          params.append('data', JSON.stringify(data))
+          params.append('timestamp', new Date().toISOString())
+
+          const response = await fetch(GOOGLE_SHEETS_WEBHOOK, {
+            method: 'POST',
+            body: params,
+          })
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+          }
+
+          const result = await response.json()
+
+          if (result.success) {
+            set({
+              lastSyncTime: new Date().toISOString(),
+              syncError: null,
+            })
+          } else {
+            throw new Error(result.error || 'Sync failed')
+          }
+        } catch (error) {
+          console.error('Google Sheets sync error:', error)
+          set({
+            syncError: error instanceof Error ? error.message : 'Sync failed',
+          })
+          // Data is still saved locally, so we don't throw
+        } finally {
+          set({ isSyncing: false })
         }
       },
 

@@ -1,13 +1,19 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { useStaffTrainingStore } from '@/store/staffTrainingStore'
-import { User, Plus } from 'lucide-react'
+import { User, Plus, Loader2 } from 'lucide-react'
 import { AllStaffMPIRecord } from './AllStaffMPIRecord'
 
 export function StaffList() {
   const navigate = useNavigate()
-  const { staffMembers } = useStaffTrainingStore()
+  const { staffMembers, isLoading, fetchFromGoogleSheets } = useStaffTrainingStore()
+
+  // Fetch data from Google Sheets on mount
+  useEffect(() => {
+    fetchFromGoogleSheets()
+  }, [fetchFromGoogleSheets])
 
   const handleStaffClick = (staffId: string) => {
     navigate(`/module/staff-training/${staffId}`)
@@ -15,6 +21,23 @@ export function StaffList() {
 
   const handleAddStaff = () => {
     navigate('/module/staff-training/add')
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="max-w-md mx-auto px-4">
+        <div className="text-center space-y-6 py-12">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto text-muted-foreground" />
+          <div className="space-y-2">
+            <h3 className="text-xl font-semibold">Loading Staff Data</h3>
+            <p className="text-muted-foreground text-sm">
+              Fetching from Google Sheets...
+            </p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // Empty state
