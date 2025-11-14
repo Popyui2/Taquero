@@ -1,15 +1,7 @@
 import { useState } from 'react'
-import { Plus, Trash2, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { Plus, Trash2, CheckCircle2, AlertTriangle, Flame } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { BatchCheckWizard } from '@/components/batch-check/BatchCheckWizard'
 import { useBatchCheckStore } from '@/store/batchCheckStore'
 import {
@@ -49,57 +41,39 @@ export function CookingProteinsBatch() {
   }
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">
-            Cooking Proteins - Batch
-          </h2>
-          <p className="text-muted-foreground text-lg mt-1">
-            Temperature batch checks for chicken, beef, and pork
-          </p>
-        </div>
-        <Button
-          size="lg"
-          onClick={() => setShowWizard(true)}
-          className="h-12 px-6 min-h-[48px]"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Add Batch Check
-        </Button>
+    <div className="space-y-8 max-w-4xl mx-auto">
+      <div className="space-y-2 text-center md:text-left">
+        <h2 className="text-3xl font-bold tracking-tight">
+          Cooking Proteins - Batch
+        </h2>
+        <p className="text-muted-foreground text-lg">
+          Temperature batch checks for chicken, beef, and pork
+        </p>
       </div>
 
-      {/* Summary Card */}
+      <Button
+        size="lg"
+        onClick={() => setShowWizard(true)}
+        className="h-12 px-6 min-h-[48px] w-full sm:w-auto"
+      >
+        <Plus className="h-5 w-5 mr-2" />
+        Add Batch Check
+      </Button>
+
+      {/* Recent Batch Checks */}
       <Card>
         <CardHeader>
-          <CardTitle>Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-1">
-              <div className="text-2xl font-bold">{batchChecks.length}</div>
-              <div className="text-sm text-muted-foreground">Total Checks</div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Flame className="h-5 w-5 text-primary" />
             </div>
-            <div className="space-y-1">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {batchChecks.filter((c) => c.isSafe).length}
-              </div>
-              <div className="text-sm text-muted-foreground">Safe</div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-2xl font-bold text-destructive">
-                {batchChecks.filter((c) => !c.isSafe).length}
-              </div>
-              <div className="text-sm text-muted-foreground">Unsafe</div>
+            <div>
+              <CardTitle>Recent Batch Checks</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Latest temperature records
+              </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Batch Checks Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Batch Check Records</CardTitle>
         </CardHeader>
         <CardContent>
           {batchChecks.length === 0 ? (
@@ -110,62 +84,72 @@ export function CookingProteinsBatch() {
               </p>
             </div>
           ) : (
-            <div className="rounded-md border overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Food</TableHead>
-                    <TableHead>Check Type</TableHead>
-                    <TableHead>Temperature</TableHead>
-                    <TableHead>Time at Temp</TableHead>
-                    <TableHead>Completed By</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-[80px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {batchChecks.map((check) => (
-                    <TableRow key={check.id}>
-                      <TableCell>
-                        {new Date(check.date + 'T00:00').toLocaleDateString('en-NZ')}
-                      </TableCell>
-                      <TableCell>{check.time}</TableCell>
-                      <TableCell>
+            <div className="space-y-4">
+              {batchChecks.map((check, idx) => (
+                <div
+                  key={check.id}
+                  className="border rounded-lg p-4 space-y-3 transition-all duration-300 hover:shadow-md hover:border-primary/30 hover:scale-[1.01]"
+                  style={{ animationDelay: `${idx * 100}ms` }}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="font-semibold">
+                          {new Date(check.date + 'T00:00').toLocaleDateString('en-NZ', {
+                            weekday: 'short',
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </div>
+                        <span className="text-muted-foreground">•</span>
+                        <div className="text-sm text-muted-foreground">{check.time}</div>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {check.completedBy} • {getCheckTypeLabel(check.checkType)}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDeleteId(check.id)}
+                      className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                    <div className="p-2 bg-muted/50 rounded">
+                      <div className="text-xs text-muted-foreground">Food</div>
+                      <div className="font-medium">
                         {check.foodType === 'Other' ? check.customFood : check.foodType}
-                      </TableCell>
-                      <TableCell>{getCheckTypeLabel(check.checkType)}</TableCell>
-                      <TableCell className="font-mono">{check.temperature}°C</TableCell>
-                      <TableCell>{check.timeAtTemperature}</TableCell>
-                      <TableCell>{check.completedBy}</TableCell>
-                      <TableCell>
-                        {check.isSafe ? (
-                          <span className="inline-flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
-                            <CheckCircle2 className="h-4 w-4" />
-                            Safe
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-sm text-destructive">
-                            <AlertTriangle className="h-4 w-4" />
-                            Unsafe
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setDeleteId(check.id)}
-                          className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      </div>
+                    </div>
+                    <div className="p-2 bg-muted/50 rounded">
+                      <div className="text-xs text-muted-foreground">Temp</div>
+                      <div className="font-mono font-semibold">{check.temperature}°C</div>
+                    </div>
+                    <div className="p-2 bg-muted/50 rounded">
+                      <div className="text-xs text-muted-foreground">Duration</div>
+                      <div className="font-medium">{check.timeAtTemperature}</div>
+                    </div>
+                    <div className="p-2 bg-muted/50 rounded">
+                      <div className="text-xs text-muted-foreground">Status</div>
+                      {check.isSafe ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                          <CheckCircle2 className="h-3 w-3" />
+                          Safe
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-xs text-destructive">
+                          <AlertTriangle className="h-3 w-3" />
+                          Unsafe
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>
