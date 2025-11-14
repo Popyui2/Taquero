@@ -70,23 +70,23 @@ export function CookingProteinsBatch() {
       </div>
 
       {/* Summary Card */}
-      <Card className="animate-in fade-in slide-in-from-top-4 duration-500">
+      <Card>
         <CardHeader>
           <CardTitle>Summary</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-1 animate-in fade-in zoom-in duration-300" style={{ animationDelay: '100ms' }}>
+            <div className="space-y-1">
               <div className="text-2xl font-bold">{batchChecks.length}</div>
               <div className="text-sm text-muted-foreground">Total Checks</div>
             </div>
-            <div className="space-y-1 animate-in fade-in zoom-in duration-300" style={{ animationDelay: '200ms' }}>
+            <div className="space-y-1">
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {batchChecks.filter((c) => c.isSafe).length}
               </div>
               <div className="text-sm text-muted-foreground">Safe</div>
             </div>
-            <div className="space-y-1 animate-in fade-in zoom-in duration-300" style={{ animationDelay: '300ms' }}>
+            <div className="space-y-1">
               <div className="text-2xl font-bold text-destructive">
                 {batchChecks.filter((c) => !c.isSafe).length}
               </div>
@@ -97,7 +97,7 @@ export function CookingProteinsBatch() {
       </Card>
 
       {/* Batch Checks Table */}
-      <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
+      <Card>
         <CardHeader>
           <CardTitle>Batch Check Records</CardTitle>
         </CardHeader>
