@@ -138,8 +138,8 @@ export function StaffDetail() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-semibold">{staff.name}</h1>
-          <p className="text-sm text-muted-foreground">{staff.position}</p>
+          <h1 className="text-2xl font-semibold">Staff Training Records</h1>
+          <p className="text-sm text-muted-foreground">{staff.name} - {staff.position}</p>
         </div>
       </div>
 
