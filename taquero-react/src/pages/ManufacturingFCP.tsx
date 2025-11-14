@@ -67,8 +67,8 @@ export function ManufacturingFCP() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <ModuleCard
             id="cooking-poultry-batch"
-            title="Cooking Poultry - Batch Checks"
-            description="Batch checks for poultry, minced meat, liver"
+            title="Cooking Proteins - Batch"
+            description="Batch checks for chicken, beef, pork"
             icon="🍗"
             onClick={() => navigate('/module/cooking-poultry-batch')}
           />

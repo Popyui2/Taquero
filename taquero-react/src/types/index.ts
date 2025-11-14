@@ -48,3 +48,20 @@ export interface StaffMember {
   createdAt: string // ISO format
   trainingRecords: TrainingRecord[]
 }
+
+export type FoodType = 'Chicken' | 'Beef' | 'Pork' | 'Other'
+export type CheckType = 'initial' | 'weekly' | 'confirm' | 'doner'
+
+export interface BatchCheck {
+  id: string
+  date: string // ISO format date
+  time: string // HH:MM format
+  foodType: FoodType
+  customFood?: string // Only if foodType is 'Other'
+  checkType: CheckType
+  temperature: number // in Celsius
+  timeAtTemperature: string
+  completedBy: string // Staff name
+  timestamp: string // ISO timestamp when saved
+  isSafe: boolean // Whether temperature was >= 65°C
+}
