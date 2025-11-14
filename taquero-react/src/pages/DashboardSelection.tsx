@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { ModuleCard } from '@/components/dashboard/ModuleCard'
+import { UtensilsCrossed, Factory } from 'lucide-react'
 
 export function DashboardSelection() {
   const navigate = useNavigate()
@@ -18,7 +19,7 @@ export function DashboardSelection() {
           id="restaurant-dashboard"
           title="Restaurant"
           description="FCP Records, Inventory, Events & Financial Data"
-          icon="🌮"
+          icon={UtensilsCrossed}
           onClick={() => navigate('/restaurant')}
         />
 
@@ -26,7 +27,7 @@ export function DashboardSelection() {
           id="manufacturing-dashboard"
           title="Food Manufacturing"
           description="FCP Records, Traceability & B2B Sales"
-          icon="🏭"
+          icon={Factory}
           onClick={() => navigate('/manufacturing')}
         />
       </div>

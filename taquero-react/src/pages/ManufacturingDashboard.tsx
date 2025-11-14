@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { ModuleCard } from '@/components/dashboard/ModuleCard'
+import { ClipboardList, Search, BarChart3 } from 'lucide-react'
 
 export function ManufacturingDashboard() {
   const navigate = useNavigate()
@@ -20,7 +21,7 @@ export function ManufacturingDashboard() {
           id="manufacturing-fcp"
           title="FCP Recordkeeping"
           description="All 13 food control plan sections"
-          icon="📋"
+          icon={ClipboardList}
           onClick={() => navigate('/manufacturing/fcp')}
         />
 
@@ -28,7 +29,7 @@ export function ManufacturingDashboard() {
           id="traceability"
           title="Traceability System"
           description="Track ingredients & products"
-          icon="🔍"
+          icon={Search}
           onClick={() => navigate('/manufacturing/traceability')}
         />
 
@@ -36,7 +37,7 @@ export function ManufacturingDashboard() {
           id="b2b-sales"
           title="B2B Sales Tracking"
           description="Business-to-business orders"
-          icon="📊"
+          icon={BarChart3}
           onClick={() => navigate('/manufacturing/b2b')}
         />
       </div>
