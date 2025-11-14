@@ -74,7 +74,7 @@ export function StaffList() {
       {/* Header with Add button */}
       <div className="flex items-center justify-between print:hidden">
         <div>
-          <h2 className="text-2xl font-semibold">Staff Members</h2>
+          <h2 className="text-2xl font-semibold">Staff Training Records</h2>
           <p className="text-muted-foreground text-sm mt-1">
             {staffMembers.length} team member{staffMembers.length !== 1 ? 's' : ''}
           </p>
