@@ -43,6 +43,7 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
   const [checkType, setCheckType] = useState<CheckType | ''>('')
   const [temperature, setTemperature] = useState('')
   const [timeAtTemp, setTimeAtTemp] = useState('')
+  const [timeUnit, setTimeUnit] = useState<'minutes' | 'hours'>('minutes')
 
   // UI state
   const [hasPassedStep1, setHasPassedStep1] = useState(false)
@@ -63,6 +64,7 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
     setCheckType('')
     setTemperature('')
     setTimeAtTemp('')
+    setTimeUnit('minutes')
     setHasPassedStep1(false)
   }
 
@@ -105,7 +107,7 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
       customFood: foodType === 'Other' ? customFood : undefined,
       checkType: checkType as CheckType,
       temperature: tempValue,
-      timeAtTemperature: timeAtTemp,
+      timeAtTemperature: `${timeAtTemp} ${timeUnit}`,
       completedBy: currentUser.name,
       timestamp: new Date().toISOString(),
       isSafe: isSafeTemp,
@@ -198,6 +200,20 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <Card
                   className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+                    checkType === 'weekly' ? 'border-primary ring-2 ring-primary bg-primary/5' : 'hover:border-primary/50'
+                  }`}
+                  onClick={() => setCheckType('weekly')}
+                >
+                  <CardContent className="p-4 text-center space-y-2">
+                    <div className="w-10 h-10 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                      <RefreshCw className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="font-medium">Weekly Batch</div>
+                  </CardContent>
+                </Card>
+
+                <Card
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
                     checkType === 'initial' ? 'border-primary ring-2 ring-primary bg-primary/5' : 'hover:border-primary/50'
                   }`}
                   onClick={() => setCheckType('initial')}
@@ -221,20 +237,6 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
                       <Thermometer className="h-5 w-5 text-primary" />
                     </div>
                     <div className="font-medium text-sm">One item in each batch</div>
-                  </CardContent>
-                </Card>
-
-                <Card
-                  className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-                    checkType === 'weekly' ? 'border-primary ring-2 ring-primary bg-primary/5' : 'hover:border-primary/50'
-                  }`}
-                  onClick={() => setCheckType('weekly')}
-                >
-                  <CardContent className="p-4 text-center space-y-2">
-                    <div className="w-10 h-10 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                      <RefreshCw className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="font-medium">Weekly Batch</div>
                   </CardContent>
                 </Card>
               </div>
@@ -285,14 +287,9 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
                     ) : (
                       <>
                         <AlertTriangle className="h-5 w-5" />
-                        <div>
-                          <AlertDescription className="font-medium">
-                            UNSAFE - Below safe temperature
-                          </AlertDescription>
-                          <AlertDescription className="text-sm mt-1">
-                            Actions: Reheat immediately or discard batch
-                          </AlertDescription>
-                        </div>
+                        <AlertDescription className="font-medium">
+                          UNSAFE - Below safe temperature
+                        </AlertDescription>
                       </>
                     )}
                   </div>
@@ -308,14 +305,41 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
                 <Label className="text-base">
                   How long did it stay at this temperature?
                 </Label>
-                <Input
-                  value={timeAtTemp}
-                  onChange={(e) => setTimeAtTemp(e.target.value)}
-                  placeholder="e.g., 15 minutes, 20+ mins"
-                  className="h-12"
-                />
+                <div className="flex gap-3">
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    value={timeAtTemp}
+                    onChange={(e) => {
+                      const value = e.target.value
+                      if (value === '' || /^\d+$/.test(value)) {
+                        setTimeAtTemp(value)
+                      }
+                    }}
+                    placeholder="Enter duration"
+                    className="h-12 flex-1"
+                  />
+                  <div className="flex border rounded-md">
+                    <Button
+                      type="button"
+                      variant={timeUnit === 'minutes' ? 'default' : 'ghost'}
+                      onClick={() => setTimeUnit('minutes')}
+                      className="h-12 rounded-r-none"
+                    >
+                      Minutes
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={timeUnit === 'hours' ? 'default' : 'ghost'}
+                      onClick={() => setTimeUnit('hours')}
+                      className="h-12 rounded-l-none"
+                    >
+                      Hours
+                    </Button>
+                  </div>
+                </div>
                 <p className="text-sm text-muted-foreground">
-                  Enter the duration (e.g., "15 mins", "20+ minutes")
+                  Enter numbers only
                 </p>
               </div>
             </div>
@@ -394,7 +418,7 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
               <div className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex-1">
                   <div className="text-xs text-muted-foreground mb-1">Time at Temp</div>
-                  <div className="font-medium">{timeAtTemp}</div>
+                  <div className="font-medium">{timeAtTemp} {timeUnit}</div>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => handleJumpToStep(4)} className="h-8 w-8 p-0">
                   <Edit2 className="h-3 w-3" />
