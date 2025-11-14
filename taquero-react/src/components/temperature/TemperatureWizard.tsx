@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,11 +11,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { formatDate, getTodayString } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import { useAppStore } from '@/store/appStore'
 import { useTemperatureStore } from '@/store/temperatureStore'
-import { Minus, Plus, CalendarIcon } from 'lucide-react'
+import { Minus, Plus } from 'lucide-react'
 import { TemperatureData } from '@/types'
 
 interface TemperatureWizardProps {
@@ -44,9 +42,6 @@ export function TemperatureWizard({ onComplete, onShowToast, onWizardStart }: Te
   const [showDuplicateAlert, setShowDuplicateAlert] = useState(false)
   const [duplicateUser, setDuplicateUser] = useState('')
   const [showExistingRecordWarning, setShowExistingRecordWarning] = useState(false)
-
-  // Detect if device is touch-enabled (mobile/tablet)
-  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
 
   const currentUser = useAuthStore((state) => state.currentUser)
   const getWhoSubmittedToday = useAppStore((state) => state.getWhoSubmittedToday)
@@ -255,7 +250,7 @@ export function TemperatureWizard({ onComplete, onShowToast, onWizardStart }: Te
             <AlertDialogCancel
               onClick={() => {
                 setShowExistingRecordWarning(false)
-                onShowToast('Temperature check cancelled', 'info')
+                onShowToast('Temperature check cancelled', 'warning')
               }}
             >
               Cancel
@@ -285,7 +280,7 @@ export function TemperatureWizard({ onComplete, onShowToast, onWizardStart }: Te
             <AlertDialogCancel
               onClick={() => {
                 setShowDuplicateAlert(false)
-                onShowToast('Temperature check cancelled', 'info')
+                onShowToast('Temperature check cancelled', 'warning')
               }}
             >
               Cancel

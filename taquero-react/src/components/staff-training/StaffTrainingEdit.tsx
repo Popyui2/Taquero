@@ -17,7 +17,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { AlertDialog } from '@/components/ui/alert-dialog'
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { useStaffTrainingStore } from '@/store/staffTrainingStore'
 import { Trash2, Plus } from 'lucide-react'
 import { format } from 'date-fns'
@@ -35,7 +42,7 @@ const TRAINING_TOPICS = [
   'Cleaning up (what to clean, when and how)',
 ]
 
-export function StaffTrainingEdit({ staffId, onBack, onSelectStaff }: StaffTrainingEditProps) {
+export function StaffTrainingEdit({ staffId, onBack: _onBack, onSelectStaff }: StaffTrainingEditProps) {
   const { staffMembers, addStaffMember, updateStaffMember, addTrainingRecord, deleteTrainingRecord, fetchFromGoogleSheets } =
     useStaffTrainingStore()
 
@@ -48,6 +55,7 @@ export function StaffTrainingEdit({ staffId, onBack, onSelectStaff }: StaffTrain
 
   // Staff info form
   const [name, setName] = useState(currentStaff?.name || '')
+  const [initials, setInitials] = useState(currentStaff?.initials || '')
   const [position, setPosition] = useState(currentStaff?.position || '')
 
   // Training record form
@@ -61,12 +69,13 @@ export function StaffTrainingEdit({ staffId, onBack, onSelectStaff }: StaffTrain
   useEffect(() => {
     if (currentStaff) {
       setName(currentStaff.name)
+      setInitials(currentStaff.initials)
       setPosition(currentStaff.position)
     }
   }, [currentStaff])
 
   const handleSaveStaffInfo = () => {
-    if (!name || !position) {
+    if (!name || !initials || !position) {
       return
     }
 
@@ -74,11 +83,13 @@ export function StaffTrainingEdit({ staffId, onBack, onSelectStaff }: StaffTrain
       if (staffId) {
         updateStaffMember(staffId, {
           name,
+          initials,
           position,
         })
       } else {
         addStaffMember({
           name,
+          initials,
           position,
         })
         // Get the newly added staff member and select it
@@ -162,13 +173,23 @@ export function StaffTrainingEdit({ staffId, onBack, onSelectStaff }: StaffTrain
           <CardTitle>Staff Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Staff Name *</label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Staff member name"
+                className="h-12"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Initials *</label>
+              <Input
+                value={initials}
+                onChange={(e) => setInitials(e.target.value.toUpperCase().slice(0, 2))}
+                placeholder="e.g., JD"
+                maxLength={2}
                 className="h-12"
               />
             </div>
@@ -315,14 +336,24 @@ export function StaffTrainingEdit({ staffId, onBack, onSelectStaff }: StaffTrain
       )}
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={!!deleteRecordId}
-        onOpenChange={(open) => !open && setDeleteRecordId(null)}
-        title="Delete Training Record?"
-        description="This action cannot be undone. This will permanently delete this training record."
-        onConfirm={handleDeleteRecord}
-        onCancel={() => setDeleteRecordId(null)}
-      />
+      <AlertDialog open={!!deleteRecordId} onOpenChange={(open) => !open && setDeleteRecordId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Training Record?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete this training record.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={() => setDeleteRecordId(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteRecord}>
+              Delete
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
