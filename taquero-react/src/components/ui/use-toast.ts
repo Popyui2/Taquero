@@ -7,7 +7,7 @@ export interface Toast {
   variant?: 'default' | 'destructive'
 }
 
-const toastTimeouts = new Map<string, NodeJS.Timeout>()
+const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
 let toastCount = 0
 const listeners = new Set<(toasts: Toast[]) => void>()

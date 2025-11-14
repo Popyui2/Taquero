@@ -24,7 +24,7 @@ interface StaffTrainingViewProps {
   onSelectStaff: (staffId: string | null) => void
 }
 
-export function StaffTrainingView({ staffId, onBack, onSelectStaff }: StaffTrainingViewProps) {
+export function StaffTrainingView({ staffId, onBack: _onBack, onSelectStaff }: StaffTrainingViewProps) {
   const { staffMembers, fetchFromGoogleSheets } = useStaffTrainingStore()
 
   // Fetch data from Google Sheets on mount
