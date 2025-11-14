@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { APP_PASSWORD } from '@/store/authStore'
+import { Maximize, Minimize } from 'lucide-react'
 
 interface LoginScreenProps {
   onPasswordCorrect: () => void
@@ -10,6 +11,7 @@ interface LoginScreenProps {
 
 export function LoginScreen({ onPasswordCorrect, onError }: LoginScreenProps) {
   const [password, setPassword] = useState('')
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,8 +24,33 @@ export function LoginScreen({ onPasswordCorrect, onError }: LoginScreenProps) {
     }
   }
 
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen()
+      setIsFullscreen(true)
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+        setIsFullscreen(false)
+      }
+    }
+  }
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 relative">
+      {/* Fullscreen button */}
+      <button
+        onClick={toggleFullscreen}
+        className="absolute top-4 right-4 p-2 rounded-md hover:bg-accent transition-colors"
+        aria-label="Toggle fullscreen"
+      >
+        {isFullscreen ? (
+          <Minimize className="h-4 w-4 text-muted-foreground" />
+        ) : (
+          <Maximize className="h-4 w-4 text-muted-foreground" />
+        )}
+      </button>
+
       <div className="w-full text-center mb-12">
         <h1 className="login-title font-bold tracking-tight">
           Taquero

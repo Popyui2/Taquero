@@ -18,6 +18,10 @@ export interface TemperatureData {
   freezer: TemperatureReading | null
 }
 
+export interface TemperatureRecord extends TemperatureData {
+  id?: string
+}
+
 export interface ModuleCard {
   id: string
   title: string
