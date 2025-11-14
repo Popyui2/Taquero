@@ -80,7 +80,7 @@ export function FridgeTemps() {
 
         {/* Recent Temperature Records - Hidden when wizard is active */}
         {!wizardActive && (
-          <Card>
+          <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -108,7 +108,8 @@ export function FridgeTemps() {
                   {recentRecords.map((record, idx) => (
                     <div
                       key={record.id || idx}
-                      className="border rounded-lg p-4 space-y-3"
+                      className="border rounded-lg p-4 space-y-3 transition-all duration-300 hover:shadow-md hover:border-primary/30 hover:scale-[1.01] animate-in fade-in slide-in-from-left-4"
+                      style={{ animationDelay: `${idx * 100}ms` }}
                     >
                       <div className="flex items-center justify-between">
                         <div>

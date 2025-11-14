@@ -26,7 +26,12 @@ export function ModuleCard({
   return (
     <Card
       className={cn(
-        'cursor-pointer hover:border-primary/50 transition-all hover:scale-[1.02] active:scale-[0.98] relative',
+        'cursor-pointer transition-all duration-300 ease-in-out',
+        'hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10',
+        'hover:scale-[1.02] hover:-translate-y-1',
+        'active:scale-[0.98] active:translate-y-0',
+        'animate-in fade-in slide-in-from-bottom-4 duration-500',
+        'relative group',
         className
       )}
       onClick={onClick}
@@ -34,14 +39,16 @@ export function ModuleCard({
       {isCompleted && (
         <Badge
           variant="success"
-          className="absolute top-3 right-3 gap-1"
+          className="absolute top-3 right-3 gap-1 animate-in zoom-in duration-300"
         >
           <Check className="h-3 w-3" />
           Done
         </Badge>
       )}
       <CardHeader className="space-y-3">
-        <div className="text-4xl">{icon}</div>
+        <div className="text-4xl transition-transform duration-300 group-hover:scale-110">
+          {icon}
+        </div>
         <CardTitle className="text-xl">{title}</CardTitle>
         <CardDescription className="text-base">{description}</CardDescription>
       </CardHeader>
