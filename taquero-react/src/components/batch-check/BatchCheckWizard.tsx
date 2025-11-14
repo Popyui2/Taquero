@@ -355,7 +355,7 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
               <Label className="text-base">Which type of check?</Label>
               <RadioGroup
                 value={checkType}
-                onValueChange={(value) => setCheckType(value as CheckType)}
+                onValueChange={(value: string) => setCheckType(value as CheckType)}
                 className="space-y-3"
               >
                 <div className="flex items-start space-x-3 border rounded-lg p-4 hover:bg-muted/50 cursor-pointer">
@@ -472,7 +472,7 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
               </Label>
               <RadioGroup
                 value={timeAtTemp}
-                onValueChange={(value) => setTimeAtTemp(value)}
+                onValueChange={(value: string) => setTimeAtTemp(value)}
                 className="space-y-3"
               >
                 <div className="flex items-center space-x-3 border rounded-lg p-4 hover:bg-muted/50 cursor-pointer opacity-50">
