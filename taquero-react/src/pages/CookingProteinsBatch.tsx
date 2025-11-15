@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Plus, Trash2, Flame } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Plus, Trash2, Flame, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { BatchCheckWizard } from '@/components/batch-check/BatchCheckWizard'
@@ -16,9 +16,14 @@ import {
 } from '@/components/ui/alert-dialog'
 
 export function CookingProteinsBatch() {
-  const { batchChecks, deleteBatchCheck } = useBatchCheckStore()
+  const { batchChecks, deleteBatchCheck, fetchFromGoogleSheets, isLoading } = useBatchCheckStore()
   const [showWizard, setShowWizard] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchFromGoogleSheets()
+  }, [fetchFromGoogleSheets])
 
   const handleDelete = (id: string) => {
     deleteBatchCheck(id)
@@ -76,7 +81,11 @@ export function CookingProteinsBatch() {
           </div>
         </CardHeader>
         <CardContent>
-          {batchChecks.length === 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : batchChecks.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <p className="text-lg font-medium">No batch checks recorded yet</p>
               <p className="text-sm mt-2">

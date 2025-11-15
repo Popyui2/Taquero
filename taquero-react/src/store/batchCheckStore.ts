@@ -2,16 +2,25 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { BatchCheck } from '@/types'
 
+// Google Sheets webhook URL - will need to be updated with your deployment URL
+const GOOGLE_SHEETS_WEBHOOK = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'
+
 interface BatchCheckState {
   // State
   batchChecks: BatchCheck[]
+  isLoading: boolean
+  lastFetchTime: string | null
+  fetchError: string | null
 
   // Actions
+  fetchFromGoogleSheets: () => Promise<void>
   addBatchCheck: (check: BatchCheck) => void
+  addLocalRecord: (check: BatchCheck) => void
   getBatchChecks: () => BatchCheck[]
   getTodayChecks: () => BatchCheck[]
   deleteBatchCheck: (id: string) => void
   clearAll: () => void
+  setLoading: (loading: boolean) => void
 }
 
 export const useBatchCheckStore = create<BatchCheckState>()(
@@ -19,9 +28,67 @@ export const useBatchCheckStore = create<BatchCheckState>()(
     (set, get) => ({
       // Initial state
       batchChecks: [],
+      isLoading: false,
+      lastFetchTime: null,
+      fetchError: null,
 
-      // Add a new batch check
+      // Set loading state
+      setLoading: (loading: boolean) => {
+        set({ isLoading: loading })
+      },
+
+      // Fetch data from Google Sheets
+      fetchFromGoogleSheets: async () => {
+        console.log('🔄 fetchFromGoogleSheets called for batch checks')
+
+        set({ isLoading: true, fetchError: null })
+
+        try {
+          const response = await fetch(GOOGLE_SHEETS_WEBHOOK, {
+            method: 'GET',
+          })
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+          }
+
+          const result = await response.json()
+
+          if (result.success && result.data) {
+            // Update state with fetched data
+            set({
+              batchChecks: result.data,
+              lastFetchTime: new Date().toISOString(),
+              fetchError: null,
+            })
+            console.log('✅ Batch checks fetched:', result.data.length)
+          } else {
+            throw new Error(result.error || 'Failed to fetch data')
+          }
+        } catch (error) {
+          console.error('Error fetching from Google Sheets:', error)
+          set({
+            fetchError: error instanceof Error ? error.message : 'Unknown error',
+          })
+          // Keep using cached data from localStorage
+        } finally {
+          set({ isLoading: false })
+        }
+      },
+
+      // Add a new batch check (and sync to Google Sheets)
       addBatchCheck: (check: BatchCheck) => {
+        // Add locally first for immediate UI update
+        set((state) => ({
+          batchChecks: [check, ...state.batchChecks],
+        }))
+
+        // Note: Actual submission to Google Sheets should be done from the component
+        // to handle submission feedback properly
+      },
+
+      // Add a record locally (after successful submission)
+      addLocalRecord: (check: BatchCheck) => {
         set((state) => ({
           batchChecks: [check, ...state.batchChecks],
         }))

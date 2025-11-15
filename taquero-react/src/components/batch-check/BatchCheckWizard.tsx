@@ -15,6 +15,9 @@ import { useBatchCheckStore } from '@/store/batchCheckStore'
 import { useAuthStore } from '@/store/authStore'
 import type { FoodType, CheckType } from '@/types'
 
+// Google Sheets webhook URL - update this with your deployed Apps Script URL
+const GOOGLE_SHEETS_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'
+
 interface BatchCheckWizardProps {
   open: boolean
   onClose: () => void
@@ -22,7 +25,7 @@ interface BatchCheckWizardProps {
 
 export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
   const { currentUser } = useAuthStore()
-  const { addBatchCheck } = useBatchCheckStore()
+  const { addLocalRecord } = useBatchCheckStore()
 
   // Current step (1-5)
   const [step, setStep] = useState(1)
@@ -39,6 +42,7 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
 
   // UI state
   const [hasPassedStep1, setHasPassedStep1] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const totalSteps = 5
   const progress = (step / totalSteps) * 100
@@ -84,28 +88,64 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
   }
 
   // Save batch check and close
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!currentUser) {
       alert('Error: No user logged in')
       return
     }
 
-    const batchCheck = {
-      id: `batch-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      date,
-      time,
-      foodType: foodType as FoodType,
-      customFood: foodType === 'Other' ? customFood : undefined,
-      checkType: checkType as CheckType,
+    setIsSubmitting(true)
+
+    const batchCheckId = `batch-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    const unixTimestamp = Math.floor(new Date().getTime() / 1000)
+
+    const batchCheckData = {
+      unixTimestamp,
+      staffName: currentUser.name,
+      proteinCooked: foodType === 'Other' ? customFood : foodType,
+      typeOfCheck: getCheckTypeLabel(checkType as CheckType),
       temperature: tempValue,
-      timeAtTemperature: `${timeAtTemp} ${timeUnit}`,
-      completedBy: currentUser.name,
-      timestamp: new Date().toISOString(),
+      durationInTemperature: `${timeAtTemp} ${timeUnit}`,
+      cookingProteinBatchID: batchCheckId,
     }
 
-    addBatchCheck(batchCheck)
-    resetForm()
-    onClose()
+    try {
+      // Send to Google Sheets
+      await fetch(GOOGLE_SHEETS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(batchCheckData),
+      })
+
+      // Create batch check object for local storage
+      const batchCheck = {
+        id: batchCheckId,
+        date,
+        time,
+        foodType: foodType as FoodType,
+        customFood: foodType === 'Other' ? customFood : undefined,
+        checkType: checkType as CheckType,
+        temperature: tempValue,
+        timeAtTemperature: `${timeAtTemp} ${timeUnit}`,
+        completedBy: currentUser.name,
+        timestamp: new Date().toISOString(),
+      }
+
+      // Add to local storage for immediate UI update
+      addLocalRecord(batchCheck)
+
+      // Success - close wizard
+      resetForm()
+      onClose()
+
+      console.log('✅ Batch check submitted successfully')
+    } catch (error) {
+      console.error('❌ Error submitting batch check:', error)
+      alert('Error submitting batch check. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   // Get check type label
@@ -461,9 +501,10 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
           {step === totalSteps && (
             <Button
               onClick={handleSave}
+              disabled={isSubmitting}
               className="h-12 min-h-[48px] flex-1"
             >
-              Save & Close
+              {isSubmitting ? 'Saving...' : 'Save & Close'}
             </Button>
           )}
         </div>
