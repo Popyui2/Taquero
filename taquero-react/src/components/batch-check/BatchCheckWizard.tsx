@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Edit2, CheckCircle2, AlertTriangle, User, Thermometer, Calendar, Clock, RefreshCw, Target, Drumstick, Beef, Utensils, HelpCircle } from 'lucide-react'
+import { Edit2, CheckCircle2, AlertTriangle, User, Thermometer, Calendar, Clock, RefreshCw, Target, Utensils, HelpCircle } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -158,7 +158,7 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
                 >
                   <CardContent className="p-4 text-center space-y-2">
                     <div className="w-10 h-10 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                      <Drumstick className="h-5 w-5 text-primary" />
+                      <Utensils className="h-5 w-5 text-primary" />
                     </div>
                     <div className="font-medium">Chicken</div>
                   </CardContent>
@@ -172,7 +172,7 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
                 >
                   <CardContent className="p-4 text-center space-y-2">
                     <div className="w-10 h-10 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                      <Beef className="h-5 w-5 text-primary" />
+                      <Utensils className="h-5 w-5 text-primary" />
                     </div>
                     <div className="font-medium">Beef</div>
                   </CardContent>
