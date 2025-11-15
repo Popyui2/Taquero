@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Edit2, CheckCircle2, AlertTriangle, User, Thermometer, Calendar, Clock, RefreshCw, Target } from 'lucide-react'
+import { Edit2, CheckCircle2, AlertTriangle, User, Thermometer, Calendar, Clock, RefreshCw, Target, Drumstick, Beef, Utensils, HelpCircle } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -9,13 +9,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -156,28 +149,63 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
           {step === 1 && (
             <div className="space-y-4">
               <Label className="text-base">What food are you checking?</Label>
-              <Select
-                value={foodType}
-                onValueChange={(value) => setFoodType(value as FoodType)}
-              >
-                <SelectTrigger className="h-14 text-base">
-                  <SelectValue placeholder="Select a food type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Chicken" className="h-12 text-base">
-                    Chicken
-                  </SelectItem>
-                  <SelectItem value="Beef" className="h-12 text-base">
-                    Beef
-                  </SelectItem>
-                  <SelectItem value="Pork" className="h-12 text-base">
-                    Pork
-                  </SelectItem>
-                  <SelectItem value="Other" className="h-12 text-base">
-                    Other (specify below)
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <Card
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+                    foodType === 'Chicken' ? 'border-primary ring-2 ring-primary bg-primary/5' : 'hover:border-primary/50'
+                  }`}
+                  onClick={() => setFoodType('Chicken')}
+                >
+                  <CardContent className="p-4 text-center space-y-2">
+                    <div className="w-10 h-10 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                      <Drumstick className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="font-medium">Chicken</div>
+                  </CardContent>
+                </Card>
+
+                <Card
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+                    foodType === 'Beef' ? 'border-primary ring-2 ring-primary bg-primary/5' : 'hover:border-primary/50'
+                  }`}
+                  onClick={() => setFoodType('Beef')}
+                >
+                  <CardContent className="p-4 text-center space-y-2">
+                    <div className="w-10 h-10 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                      <Beef className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="font-medium">Beef</div>
+                  </CardContent>
+                </Card>
+
+                <Card
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+                    foodType === 'Pork' ? 'border-primary ring-2 ring-primary bg-primary/5' : 'hover:border-primary/50'
+                  }`}
+                  onClick={() => setFoodType('Pork')}
+                >
+                  <CardContent className="p-4 text-center space-y-2">
+                    <div className="w-10 h-10 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                      <Utensils className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="font-medium">Pork</div>
+                  </CardContent>
+                </Card>
+
+                <Card
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+                    foodType === 'Other' ? 'border-primary ring-2 ring-primary bg-primary/5' : 'hover:border-primary/50'
+                  }`}
+                  onClick={() => setFoodType('Other')}
+                >
+                  <CardContent className="p-4 text-center space-y-2">
+                    <div className="w-10 h-10 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                      <HelpCircle className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="font-medium">Other</div>
+                  </CardContent>
+                </Card>
+              </div>
 
               {foodType === 'Other' && (
                 <div className="space-y-2">
