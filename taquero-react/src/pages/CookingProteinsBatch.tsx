@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { BatchCheckWizard } from '@/components/batch-check/BatchCheckWizard'
 import { useBatchCheckStore } from '@/store/batchCheckStore'
+import { Toast, ToastContainer } from '@/components/ui/toast'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,15 +16,38 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 
+interface ToastMessage {
+  id: number
+  message: string
+  type: 'success' | 'error' | 'info' | 'warning'
+}
+
 export function CookingProteinsBatch() {
   const { batchChecks, deleteBatchCheck, fetchFromGoogleSheets, isLoading } = useBatchCheckStore()
   const [showWizard, setShowWizard] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [toasts, setToasts] = useState<ToastMessage[]>([])
 
   // Fetch data on mount
   useEffect(() => {
     fetchFromGoogleSheets()
   }, [fetchFromGoogleSheets])
+
+  const showToast = (message: string, type: ToastMessage['type'] = 'info') => {
+    const id = Date.now()
+    setToasts((prev) => [...prev, { id, message, type }])
+  }
+
+  const removeToast = (id: number) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id))
+  }
+
+  const handleSuccess = () => {
+    // Refresh data from Google Sheets
+    fetchFromGoogleSheets()
+    // Show success toast
+    showToast('Batch check saved to Google Sheets!', 'success')
+  }
 
   const handleDelete = (id: string) => {
     deleteBatchCheck(id)
@@ -151,7 +175,11 @@ export function CookingProteinsBatch() {
       </Card>
 
       {/* Wizard Modal */}
-      <BatchCheckWizard open={showWizard} onClose={() => setShowWizard(false)} />
+      <BatchCheckWizard
+        open={showWizard}
+        onClose={() => setShowWizard(false)}
+        onSuccess={handleSuccess}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
@@ -174,6 +202,18 @@ export function CookingProteinsBatch() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Toast Notifications */}
+      <ToastContainer>
+        {toasts.map((toast) => (
+          <Toast
+            key={toast.id}
+            message={toast.message}
+            type={toast.type}
+            onClose={() => removeToast(toast.id)}
+          />
+        ))}
+      </ToastContainer>
     </div>
   )
 }

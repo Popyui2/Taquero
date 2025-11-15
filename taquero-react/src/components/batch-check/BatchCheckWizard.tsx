@@ -21,9 +21,10 @@ const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxgS84Em_zCCa
 interface BatchCheckWizardProps {
   open: boolean
   onClose: () => void
+  onSuccess?: () => void
 }
 
-export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
+export function BatchCheckWizard({ open, onClose, onSuccess }: BatchCheckWizardProps) {
   const { currentUser } = useAuthStore()
   const { addLocalRecord } = useBatchCheckStore()
 
@@ -135,15 +136,17 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
       // Add to local storage for immediate UI update
       addLocalRecord(batchCheck)
 
-      // Success - close wizard
+      console.log('✅ Batch check submitted successfully')
+
+      // Success - close wizard and trigger callback
       resetForm()
       onClose()
 
-      console.log('✅ Batch check submitted successfully')
+      // Notify parent component of success (for toast + data refresh)
+      onSuccess?.()
     } catch (error) {
       console.error('❌ Error submitting batch check:', error)
       alert('Error submitting batch check. Please try again.')
-    } finally {
       setIsSubmitting(false)
     }
   }
@@ -165,6 +168,16 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        {/* Loading Overlay */}
+        {isSubmitting && (
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              <div className="text-lg font-semibold">Saving to Google Sheets...</div>
+            </div>
+          </div>
+        )}
+
         <DialogHeader>
           <DialogTitle>
             {step === totalSteps ? 'Review Your Batch Check' : 'New Batch Check'}
