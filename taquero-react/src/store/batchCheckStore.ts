@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { BatchCheck } from '@/types'
 
 // Google Sheets webhook URL - will need to be updated with your deployment URL
-const GOOGLE_SHEETS_WEBHOOK = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'
+const GOOGLE_SHEETS_WEBHOOK = 'https://script.google.com/macros/s/AKfycbxgS84Em_zCCa7xWbGaB0YcBEXbG24zZ2LO6D3H8fhJi0OxSYAqescXD99r2CK5bpSy/exec'
 
 interface BatchCheckState {
   // State

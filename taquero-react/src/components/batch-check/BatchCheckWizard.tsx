@@ -16,7 +16,7 @@ import { useAuthStore } from '@/store/authStore'
 import type { FoodType, CheckType } from '@/types'
 
 // Google Sheets webhook URL - update this with your deployed Apps Script URL
-const GOOGLE_SHEETS_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'
+const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxgS84Em_zCCa7xWbGaB0YcBEXbG24zZ2LO6D3H8fhJi0OxSYAqescXD99r2CK5bpSy/exec'
 
 interface BatchCheckWizardProps {
   open: boolean
