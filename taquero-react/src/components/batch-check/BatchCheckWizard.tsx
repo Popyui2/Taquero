@@ -283,7 +283,10 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
                     onChange={(e) => {
                       const value = e.target.value
                       if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                        setTemperature(value)
+                        const numValue = parseFloat(value)
+                        if (value === '' || (numValue >= 0 && numValue <= 300)) {
+                          setTemperature(value)
+                        }
                       }
                     }}
                     placeholder="Enter temperature"
@@ -312,7 +315,10 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
                     onChange={(e) => {
                       const value = e.target.value
                       if (value === '' || /^\d+$/.test(value)) {
-                        setTimeAtTemp(value)
+                        const numValue = parseInt(value)
+                        if (value === '' || (numValue >= 0 && numValue <= 999)) {
+                          setTimeAtTemp(value)
+                        }
                       }
                     }}
                     placeholder="Enter duration"
