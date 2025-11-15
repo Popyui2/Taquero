@@ -63,5 +63,5 @@ export interface BatchCheck {
   timeAtTemperature: string
   completedBy: string // Staff name
   timestamp: string // ISO timestamp when saved
-  isSafe: boolean // Whether temperature was >= 65°C
+  isSafe?: boolean // Legacy field - no longer used
 }

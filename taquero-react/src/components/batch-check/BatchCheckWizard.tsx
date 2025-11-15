@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Edit2, CheckCircle2, AlertTriangle, User, Thermometer, Calendar, Clock, RefreshCw, Target, Utensils, HelpCircle } from 'lucide-react'
+import { Edit2, User, Thermometer, Calendar, Clock, RefreshCw, Target, Utensils, HelpCircle } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useBatchCheckStore } from '@/store/batchCheckStore'
 import { useAuthStore } from '@/store/authStore'
 import type { FoodType, CheckType } from '@/types'
@@ -44,9 +43,8 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
   const totalSteps = 5
   const progress = (step / totalSteps) * 100
 
-  // Check if temperature is safe
+  // Parse temperature
   const tempValue = parseFloat(temperature)
-  const isSafeTemp = !isNaN(tempValue) && tempValue >= 65
   const hasTemp = temperature.trim() !== ''
 
   // Reset form
@@ -103,7 +101,6 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
       timeAtTemperature: `${timeAtTemp} ${timeUnit}`,
       completedBy: currentUser.name,
       timestamp: new Date().toISOString(),
-      isSafe: isSafeTemp,
     }
 
     addBatchCheck(batchCheck)
@@ -296,33 +293,7 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
                     °C
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Safe range: 65°C or higher
-                </p>
               </div>
-
-              {/* Temperature validation feedback */}
-              {hasTemp && (
-                <Alert variant={isSafeTemp ? 'default' : 'destructive'}>
-                  <div className="flex items-center gap-2">
-                    {isSafeTemp ? (
-                      <>
-                        <CheckCircle2 className="h-5 w-5 text-green-500" />
-                        <AlertDescription className="text-green-600 dark:text-green-400 font-medium">
-                          Safe temperature
-                        </AlertDescription>
-                      </>
-                    ) : (
-                      <>
-                        <AlertTriangle className="h-5 w-5" />
-                        <AlertDescription className="font-medium">
-                          UNSAFE - Below safe temperature
-                        </AlertDescription>
-                      </>
-                    )}
-                  </div>
-                </Alert>
-              )}
             </div>
           )}
 
@@ -423,20 +394,7 @@ export function BatchCheckWizard({ open, onClose }: BatchCheckWizardProps) {
               <div className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex-1">
                   <div className="text-xs text-muted-foreground mb-1">Temperature</div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{temperature}°C</span>
-                    {isSafeTemp ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
-                        <CheckCircle2 className="h-3 w-3" />
-                        Safe
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-destructive/10 text-destructive border border-destructive/20">
-                        <AlertTriangle className="h-3 w-3" />
-                        Unsafe
-                      </span>
-                    )}
-                  </div>
+                  <div className="font-medium">{temperature}°C</div>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => handleJumpToStep(3)} className="h-8 w-8 p-0">
                   <Edit2 className="h-3 w-3" />

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Trash2, CheckCircle2, AlertTriangle, Flame } from 'lucide-react'
+import { Plus, Trash2, Flame } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { BatchCheckWizard } from '@/components/batch-check/BatchCheckWizard'
@@ -118,7 +118,7 @@ export function CookingProteinsBatch() {
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
                     <div className="p-2 bg-muted/50 rounded">
                       <div className="text-xs text-muted-foreground">Food</div>
                       <div className="font-medium">
@@ -132,20 +132,6 @@ export function CookingProteinsBatch() {
                     <div className="p-2 bg-muted/50 rounded">
                       <div className="text-xs text-muted-foreground">Duration</div>
                       <div className="font-medium">{check.timeAtTemperature}</div>
-                    </div>
-                    <div className="p-2 bg-muted/50 rounded">
-                      <div className="text-xs text-muted-foreground">Status</div>
-                      {check.isSafe ? (
-                        <span className="inline-flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                          <CheckCircle2 className="h-3 w-3" />
-                          Safe
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-xs text-destructive">
-                          <AlertTriangle className="h-3 w-3" />
-                          Unsafe
-                        </span>
-                      )}
                     </div>
                   </div>
                 </div>
