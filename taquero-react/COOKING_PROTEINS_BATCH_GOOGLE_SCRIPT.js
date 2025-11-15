@@ -17,7 +17,7 @@
 
 // Your Google Sheet ID - REPLACE THIS with your actual Sheet ID
 const SHEET_ID = 'YOUR_SHEET_ID_HERE'
-const SHEET_NAME = 'Cooking Proteins Batch'
+const SHEET_NAME = 'Protein_Batch'
 
 /**
  * Handles GET requests - fetches all batch check data
