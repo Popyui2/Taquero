@@ -1,20 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Flame, Loader2 } from 'lucide-react'
+import { Plus, Flame, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { BatchCheckWizard } from '@/components/batch-check/BatchCheckWizard'
 import { useBatchCheckStore } from '@/store/batchCheckStore'
 import { Toast, ToastContainer } from '@/components/ui/toast'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 
 interface ToastMessage {
   id: number
@@ -23,9 +13,8 @@ interface ToastMessage {
 }
 
 export function CookingProteinsBatch() {
-  const { batchChecks, deleteBatchCheck, fetchFromGoogleSheets, isLoading } = useBatchCheckStore()
+  const { batchChecks, fetchFromGoogleSheets, isLoading } = useBatchCheckStore()
   const [showWizard, setShowWizard] = useState(false)
-  const [deleteId, setDeleteId] = useState<string | null>(null)
   const [toasts, setToasts] = useState<ToastMessage[]>([])
 
   // Fetch data on mount
@@ -47,11 +36,6 @@ export function CookingProteinsBatch() {
     fetchFromGoogleSheets()
     // Show success toast
     showToast('Batch check saved to Google Sheets!', 'success')
-  }
-
-  const handleDelete = (id: string) => {
-    deleteBatchCheck(id)
-    setDeleteId(null)
   }
 
   const getCheckTypeLabel = (type: string): string => {
@@ -124,31 +108,21 @@ export function CookingProteinsBatch() {
                   className="border rounded-lg p-4 space-y-3 transition-all duration-300 hover:shadow-md hover:border-primary/30 hover:scale-[1.01]"
                   style={{ animationDelay: `${idx * 100}ms` }}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="font-semibold">
-                          {new Date(check.date + 'T00:00').toLocaleDateString('en-NZ', {
-                            weekday: 'short',
-                            month: 'long',
-                            day: 'numeric',
-                          })}
-                        </div>
-                        <span className="text-muted-foreground">•</span>
-                        <div className="text-sm text-muted-foreground">{check.time}</div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="font-semibold">
+                        {new Date(check.date + 'T00:00').toLocaleDateString('en-NZ', {
+                          weekday: 'short',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        {check.completedBy} • {getCheckTypeLabel(check.checkType)}
-                      </div>
+                      <span className="text-muted-foreground">•</span>
+                      <div className="text-sm text-muted-foreground">{check.time}</div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDeleteId(check.id)}
-                      className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="text-sm text-muted-foreground">
+                      {check.completedBy} • {getCheckTypeLabel(check.checkType)}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
@@ -180,28 +154,6 @@ export function CookingProteinsBatch() {
         onClose={() => setShowWizard(false)}
         onSuccess={handleSuccess}
       />
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Batch Check?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete this batch check record. This action cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteId && handleDelete(deleteId)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Toast Notifications */}
       <ToastContainer>
