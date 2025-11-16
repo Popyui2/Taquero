@@ -4,6 +4,9 @@ import { Input } from '@/components/ui/input'
 import { APP_PASSWORD } from '@/store/authStore'
 import { Maximize, Minimize } from 'lucide-react'
 
+// Build timestamp - updated at compile time
+const BUILD_TIMESTAMP = new Date().toISOString()
+
 interface LoginScreenProps {
   onPasswordCorrect: () => void
   onError: (message: string) => void
@@ -72,6 +75,20 @@ export function LoginScreen({ onPasswordCorrect, onError }: LoginScreenProps) {
             Login
           </Button>
         </form>
+      </div>
+
+      {/* Build version */}
+      <div className="absolute bottom-4 left-0 right-0 text-center">
+        <p className="text-xs text-muted-foreground">
+          Build: {new Date(BUILD_TIMESTAMP).toLocaleString('en-NZ', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          })}
+        </p>
       </div>
     </div>
   )
