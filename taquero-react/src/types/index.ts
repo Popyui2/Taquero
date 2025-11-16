@@ -65,3 +65,24 @@ export interface BatchCheck {
   timestamp: string // ISO timestamp when saved
   isSafe?: boolean // Legacy field - no longer used
 }
+
+// Proving Method Types
+export interface ValidationBatch {
+  batchNumber: 1 | 2 | 3
+  date: string // ISO format date
+  temperature: number // in Celsius at thickest part
+  timeAtTemp: string // e.g., "1 minute", "30 seconds"
+  completedBy: string // Staff name
+  timestamp: string // ISO timestamp when recorded
+}
+
+export interface ProvingMethod {
+  id: string
+  itemDescription: string // e.g., "2kg chicken roast x4"
+  cookingMethod: string // Full method description
+  status: 'in-progress' | 'proven' // in-progress = 0-2 batches, proven = 3 batches
+  batches: ValidationBatch[] // Array of 0-3 batches
+  createdAt: string // ISO timestamp when method was created
+  provenAt?: string // ISO timestamp when 3rd batch completed (only if status = proven)
+  createdBy: string // Staff name who created the method
+}
