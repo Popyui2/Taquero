@@ -6,6 +6,8 @@ import { Progress } from '@/components/ui/progress'
 import { useProvingMethodStore } from '@/store/provingMethodStore'
 import { Toast, ToastContainer } from '@/components/ui/toast'
 import { NewMethodWizard } from '@/components/proving-method/NewMethodWizard'
+import { AddBatchWizard } from '@/components/proving-method/AddBatchWizard'
+import { ProvingMethod } from '@/types'
 
 interface ToastMessage {
   id: number
@@ -17,6 +19,8 @@ export function ProvingMethods() {
   const { methods, isLoading } = useProvingMethodStore()
   const [toasts, setToasts] = useState<ToastMessage[]>([])
   const [showNewMethodWizard, setShowNewMethodWizard] = useState(false)
+  const [showAddBatchWizard, setShowAddBatchWizard] = useState(false)
+  const [selectedMethod, setSelectedMethod] = useState<ProvingMethod | null>(null)
 
   // Fetch data on mount
   useEffect(() => {
@@ -34,6 +38,20 @@ export function ProvingMethods() {
 
   const handleMethodCreated = () => {
     showToast('Method created with Batch 1! Record 2 more batches to prove it works.', 'success')
+  }
+
+  const handleAddBatch = (method: ProvingMethod) => {
+    setSelectedMethod(method)
+    setShowAddBatchWizard(true)
+  }
+
+  const handleBatchAdded = (isProven: boolean) => {
+    if (isProven) {
+      showToast('🎉 Method proven! You have completed 3 successful batches.', 'success')
+    } else {
+      showToast(`Batch recorded! ${selectedMethod ? 3 - selectedMethod.batches.length - 1 : 0} more batch${selectedMethod && 3 - selectedMethod.batches.length - 1 === 1 ? '' : 'es'} to go.`, 'success')
+    }
+    setSelectedMethod(null)
   }
 
   // Show only last 10 methods
@@ -104,7 +122,7 @@ export function ProvingMethods() {
                         {method.status === 'proven' ? (
                           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-800 text-xs font-medium">
                             <CheckCircle2 className="h-3 w-3" />
-                            Proven
+                            Method Proven
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-2 py-1 rounded-full bg-background border text-foreground text-xs font-medium">
@@ -172,7 +190,7 @@ export function ProvingMethods() {
                   {/* Action button for in-progress methods */}
                   {method.status === 'in-progress' && (
                     <Button
-                      onClick={() => console.log('Add batch to', method.id)}
+                      onClick={() => handleAddBatch(method)}
                       className="w-full"
                       size="lg"
                     >
@@ -193,6 +211,19 @@ export function ProvingMethods() {
         onClose={() => setShowNewMethodWizard(false)}
         onSuccess={handleMethodCreated}
       />
+
+      {/* Add Batch Wizard */}
+      {selectedMethod && (
+        <AddBatchWizard
+          open={showAddBatchWizard}
+          onClose={() => {
+            setShowAddBatchWizard(false)
+            setSelectedMethod(null)
+          }}
+          onSuccess={handleBatchAdded}
+          method={selectedMethod}
+        />
+      )}
 
       {/* Toast Notifications */}
       <ToastContainer>
