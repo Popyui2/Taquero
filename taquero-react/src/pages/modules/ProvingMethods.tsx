@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { useProvingMethodStore } from '@/store/provingMethodStore'
 import { Toast, ToastContainer } from '@/components/ui/toast'
+import { NewMethodWizard } from '@/components/proving-method/NewMethodWizard'
 
 interface ToastMessage {
   id: number
@@ -15,20 +16,25 @@ interface ToastMessage {
 export function ProvingMethods() {
   const { methods, isLoading } = useProvingMethodStore()
   const [toasts, setToasts] = useState<ToastMessage[]>([])
+  const [showNewMethodWizard, setShowNewMethodWizard] = useState(false)
 
   // Fetch data on mount
   useEffect(() => {
     // Will implement Google Sheets fetch later
   }, [])
 
+  const showToast = (message: string, type: ToastMessage['type'] = 'info') => {
+    const id = Date.now()
+    setToasts((prev) => [...prev, { id, message, type }])
+  }
+
   const removeToast = (id: number) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id))
   }
 
-  // const showToast = (message: string, type: ToastMessage['type'] = 'info') => {
-  //   const id = Date.now()
-  //   setToasts((prev) => [...prev, { id, message, type }])
-  // }
+  const handleMethodCreated = () => {
+    showToast('Method created with Batch 1! Record 2 more batches to prove it works.', 'success')
+  }
 
   // Show only last 10 methods
   const recentMethods = methods.slice(0, 10)
@@ -48,7 +54,7 @@ export function ProvingMethods() {
       {/* Create New Method Button */}
       <Button
         size="lg"
-        onClick={() => console.log('Create new method')}
+        onClick={() => setShowNewMethodWizard(true)}
         className="h-12 px-6 min-h-[48px] w-full sm:w-auto"
       >
         <Plus className="h-5 w-5 mr-2" />
@@ -180,6 +186,13 @@ export function ProvingMethods() {
           )}
         </CardContent>
       </Card>
+
+      {/* New Method Wizard */}
+      <NewMethodWizard
+        open={showNewMethodWizard}
+        onClose={() => setShowNewMethodWizard(false)}
+        onSuccess={handleMethodCreated}
+      />
 
       {/* Toast Notifications */}
       <ToastContainer>
