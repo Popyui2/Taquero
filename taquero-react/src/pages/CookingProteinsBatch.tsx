@@ -130,7 +130,7 @@ export function CookingProteinsBatch() {
                         <div className="font-semibold">
                           {new Date(check.date + 'T00:00').toLocaleDateString('en-NZ', {
                             weekday: 'short',
-                            month: 'short',
+                            month: 'long',
                             day: 'numeric',
                           })}
                         </div>
