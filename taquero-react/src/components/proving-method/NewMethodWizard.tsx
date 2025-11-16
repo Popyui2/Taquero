@@ -37,7 +37,7 @@ export function NewMethodWizard({ open, onClose, onSuccess }: NewMethodWizardPro
   const [hasPassedStep1, setHasPassedStep1] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const totalSteps = 4
+  const totalSteps = 5
   const progress = (step / totalSteps) * 100
   const tempValue = parseFloat(temperature)
   const hasTemp = temperature.trim() !== ''
@@ -194,7 +194,7 @@ export function NewMethodWizard({ open, onClose, onSuccess }: NewMethodWizardPro
           {/* STEP 3: Temperature (Batch 1) */}
           {step === 3 && (
             <div className="space-y-4">
-              <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
+              <div className="p-3 bg-muted rounded-lg border">
                 <p className="text-sm font-medium">Recording Batch 1 of 3</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   You'll need to record 2 more batches to prove this method works
@@ -230,9 +230,9 @@ export function NewMethodWizard({ open, onClose, onSuccess }: NewMethodWizardPro
             </div>
           )}
 
-          {/* STEP 4: Time at Temperature (Batch 1) + Review */}
+          {/* STEP 4: Time at Temperature (Batch 1) */}
           {step === 4 && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-base">
                   Time at this temperature
@@ -274,11 +274,15 @@ export function NewMethodWizard({ open, onClose, onSuccess }: NewMethodWizardPro
                   </div>
                 </div>
               </div>
+            </div>
+          )}
 
-              {/* Review Section */}
-              <div className="border-t pt-6 space-y-3">
-                <h3 className="font-semibold text-lg">Review Your Method</h3>
+          {/* STEP 5: Review */}
+          {step === 5 && (
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg">Review Your Method</h3>
 
+              <div className="space-y-3">
                 {/* Item */}
                 <div className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex-1">
@@ -326,7 +330,7 @@ export function NewMethodWizard({ open, onClose, onSuccess }: NewMethodWizardPro
                 </div>
 
                 {/* Batch 1 Results */}
-                <div className="p-4 bg-primary/5 rounded-lg border border-primary/20 space-y-2">
+                <div className="p-4 bg-muted/50 rounded-lg border space-y-2">
                   <div className="font-semibold flex items-center gap-2">
                     <Thermometer className="h-4 w-4" />
                     Batch 1 Results
@@ -346,9 +350,9 @@ export function NewMethodWizard({ open, onClose, onSuccess }: NewMethodWizardPro
                   </div>
                 </div>
 
-                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                  <p className="text-sm text-amber-900">
-                    ⚠️ You'll need to record <strong>2 more batches</strong> to prove this method works
+                <div className="p-3 bg-muted/30 border rounded-lg">
+                  <p className="text-sm">
+                    You'll need to record <strong>2 more batches</strong> to prove this method works
                   </p>
                 </div>
               </div>

@@ -107,7 +107,7 @@ export function ProvingMethods() {
                             Proven
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-medium">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-medium">
                             {method.batches.length}/3 Batches
                           </span>
                         )}
