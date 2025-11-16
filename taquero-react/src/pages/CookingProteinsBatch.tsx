@@ -83,7 +83,7 @@ export function CookingProteinsBatch() {
             <div>
               <CardTitle>Recent Batch Checks</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Latest temperature records
+                Last 10 temperature records
               </p>
             </div>
           </div>
@@ -102,7 +102,7 @@ export function CookingProteinsBatch() {
             </div>
           ) : (
             <div className="space-y-4">
-              {batchChecks.map((check, idx) => (
+              {batchChecks.slice(0, 10).map((check, idx) => (
                 <div
                   key={check.id}
                   className="border rounded-lg p-4 space-y-3 transition-all duration-300 hover:shadow-md hover:border-primary/30 hover:scale-[1.01]"
