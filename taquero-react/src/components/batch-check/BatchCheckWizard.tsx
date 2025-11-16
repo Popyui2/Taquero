@@ -375,14 +375,14 @@ export function BatchCheckWizard({ open, onClose, onSuccess }: BatchCheckWizardP
                       }
                     }}
                     placeholder="Enter duration"
-                    className="h-12 flex-1"
+                    className="h-16 text-xl flex-1"
                   />
                   <div className="flex border rounded-md">
                     <Button
                       type="button"
                       variant={timeUnit === 'minutes' ? 'default' : 'ghost'}
                       onClick={() => setTimeUnit('minutes')}
-                      className="h-12 rounded-r-none"
+                      className="h-16 rounded-r-none"
                     >
                       Minutes
                     </Button>
@@ -390,15 +390,12 @@ export function BatchCheckWizard({ open, onClose, onSuccess }: BatchCheckWizardP
                       type="button"
                       variant={timeUnit === 'hours' ? 'default' : 'ghost'}
                       onClick={() => setTimeUnit('hours')}
-                      className="h-12 rounded-l-none"
+                      className="h-16 rounded-l-none"
                     >
                       Hours
                     </Button>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Enter numbers only
-                </p>
               </div>
             </div>
           )}
