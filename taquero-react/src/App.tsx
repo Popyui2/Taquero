@@ -129,8 +129,8 @@ function App() {
             path="/module/personal-hygiene"
             element={
               <ModulePlaceholder
-                title="Personal Hygiene"
-                description="Hygiene management & records"
+                title="Staff Sickness"
+                description="Staff health & sickness records"
               />
             }
           />
