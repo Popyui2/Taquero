@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useStaffSicknessStore, saveSicknessToGoogleSheets } from '@/store/staffSicknessStore'
 import { SicknessRecord } from '@/types'
-import { CalendarCheck, CheckCircle2 } from 'lucide-react'
+import { CalendarCheck, Wrench } from 'lucide-react'
 
 interface MarkRecoveredWizardProps {
   open: boolean
@@ -85,7 +85,7 @@ export function MarkRecoveredWizard({ open, onClose, onSuccess, record }: MarkRe
 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-green-600" />
+            <Wrench className="h-5 w-5 text-green-600" />
             {record?.status === 'returned' ? 'Edit Return Date' : 'Mark as Recovered'}
           </DialogTitle>
         </DialogHeader>

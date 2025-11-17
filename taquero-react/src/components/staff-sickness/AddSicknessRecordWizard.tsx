@@ -223,7 +223,6 @@ export function AddSicknessRecordWizard({ open, onClose, onSuccess }: AddSicknes
                   value={dateReturned}
                   onChange={(e) => setDateReturned(e.target.value)}
                   min={dateSick}
-                  max={new Date().toISOString().split('T')[0]}
                   className="h-16 text-xl"
                 />
               </div>

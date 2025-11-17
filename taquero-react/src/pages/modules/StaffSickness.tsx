@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Loader2, HeartPulse, CheckCircle2 } from 'lucide-react'
+import { Plus, Loader2, HeartPulse, Wrench } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useStaffSicknessStore } from '@/store/staffSicknessStore'
@@ -145,7 +145,7 @@ export function StaffSickness() {
                             className="h-8 w-8 p-0 hover:bg-green-100 dark:hover:bg-green-900/20"
                             title={record.status === 'returned' ? 'Edit return date' : 'Mark as recovered'}
                           >
-                            <CheckCircle2
+                            <Wrench
                               className={`h-4 w-4 ${record.status === 'returned' ? 'text-green-600' : 'text-muted-foreground'}`}
                             />
                           </Button>
