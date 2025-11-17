@@ -8,7 +8,6 @@ import {
   Wrench,
   UtensilsCrossed,
   Flame,
-  Timer,
   Snowflake,
   Box,
   AlertTriangle,
@@ -95,9 +94,9 @@ export function RestaurantFCP() {
           />
           <ModuleCard
             id="proving-time-temp"
-            title="Proving the Method"
+            title="Proving the Cooking Method"
             description="Method validation records"
-            icon={Timer}
+            icon={Flame}
             onClick={() => navigate('/module/proving-time-temp')}
           />
           <ModuleCard
