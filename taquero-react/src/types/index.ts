@@ -124,3 +124,19 @@ export interface CoolingMethod {
   provenAt?: string // ISO timestamp when 3rd batch completed (only if status = proven)
   createdBy: string // Staff name who created the method
 }
+
+// Cooling Batch Check Types (Weekly checks AFTER proving a cooling method)
+export interface CoolingBatchCheckRecord {
+  id: string
+  foodType: string // Type of food being cooled
+  dateCooked: string // ISO format date when food was cooked
+  startTime: string // HH:MM format when food reaches 60°C
+  startTemp: number // Should be around 60°C
+  secondTimeCheck: string // HH:MM format
+  secondTempCheck: number // Should be ≤21°C (60°C to 21°C in 2 hours or less)
+  thirdTimeCheck: string // HH:MM format
+  thirdTempCheck: number // Should be ≤5°C (21°C to 5°C in 4 hours or less)
+  coolingMethod: string // Description of cooling method used
+  completedBy: string // Staff name who did the check
+  timestamp: string // ISO timestamp when recorded
+}

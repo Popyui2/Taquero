@@ -15,6 +15,7 @@ import { CookingProteinsBatch } from '@/pages/CookingProteinsBatch'
 import { ProvingMethods } from '@/pages/modules/ProvingMethods'
 import { ProvingCooling } from '@/pages/modules/ProvingCooling'
 import { StaffSickness } from '@/pages/modules/StaffSickness'
+import { CoolingBatchChecks } from '@/pages/modules/CoolingBatchChecks'
 import { StaffList } from '@/components/staff-training/StaffList'
 import { StaffDetail } from '@/components/staff-training/StaffDetail'
 import { AddStaffForm } from '@/components/staff-training/AddStaffForm'
@@ -181,12 +182,7 @@ function App() {
           />
           <Route
             path="/module/cooling-batch"
-            element={
-              <ModulePlaceholder
-                title="Cooling Food - Batch Checks"
-                description="Freshly cooked food cooling logs"
-              />
-            }
+            element={<CoolingBatchChecks />}
           />
           <Route
             path="/module/something-wrong"
