@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { SicknessRecord } from '@/types'
 
 // Google Sheets webhook URL - update this with your deployed Apps Script URL
-const GOOGLE_SHEETS_URL = '' // TODO: Add your Google Sheets deployment URL here
+const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwKeROQFAY1e7uKNa1iQ5kP9m5r7FpURvC7Wy7CkhWGgyW8f_3wktIMKvivRE3YyolR/exec'
 
 // Helper function to save sickness record to Google Sheets
 export async function saveSicknessToGoogleSheets(
@@ -16,7 +16,7 @@ export async function saveSicknessToGoogleSheets(
 
   try {
     const payload = {
-      recordId: record.id,
+      id: record.id,
       staffName: record.staffName,
       symptoms: record.symptoms || '',
       dateSick: record.dateSick,
@@ -27,7 +27,7 @@ export async function saveSicknessToGoogleSheets(
       status: record.status,
     }
 
-    await fetch(GOOGLE_SHEETS_URL, {
+    await fetch(`${GOOGLE_SHEETS_URL}?module=staff-sickness`, {
       method: 'POST',
       mode: 'no-cors' as RequestMode,
       headers: {
@@ -83,7 +83,7 @@ export const useStaffSicknessStore = create<StaffSicknessState>()(
         set({ isLoading: true, fetchError: null })
 
         try {
-          const response = await fetch(GOOGLE_SHEETS_URL, {
+          const response = await fetch(`${GOOGLE_SHEETS_URL}?module=staff-sickness`, {
             method: 'GET',
           })
 
