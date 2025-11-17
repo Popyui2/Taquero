@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { CoolingMethod, CoolingBatch } from '@/types'
 
 // Google Sheets webhook URL - update this with your deployed Apps Script URL
-const GOOGLE_SHEETS_URL = ''
+const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyOtf6NcCqd8YUnfhkOgMSb1oLvp0DdQc0m-cMS0Du7auPw6G4e4P77SEhLoxEmtPAN/exec'
 
 // Helper function to save batch to Google Sheets
 export async function saveCoolingBatchToGoogleSheets(
