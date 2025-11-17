@@ -23,7 +23,6 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [temperature, setTemperature] = useState('')
   const [timeValue, setTimeValue] = useState('')
-  const [timeUnit, setTimeUnit] = useState<'seconds' | 'minutes'>('minutes')
   const [completedBy, setCompletedBy] = useState('')
 
   const totalSteps = 4 // Date, Temp, Time, Review
@@ -34,7 +33,6 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
     setDate(new Date().toISOString().split('T')[0])
     setTemperature('')
     setTimeValue('')
-    setTimeUnit('minutes')
     setCompletedBy('')
     onClose()
   }
@@ -56,7 +54,7 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
       batchNumber: nextBatchNumber,
       date: date,
       temperature: parseFloat(temperature),
-      timeAtTemp: `${timeValue} ${timeUnit === 'minutes' ? timeValue === '1' ? 'minute' : 'minutes' : timeValue === '1' ? 'second' : 'seconds'}`,
+      timeAtTemp: `${timeValue} ${timeValue === '1' ? 'minute' : 'minutes'}`,
       completedBy: completedBy,
       timestamp: new Date().toISOString()
     }
@@ -164,8 +162,8 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
           {step === 3 && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-base">Time at this temperature</Label>
-                <div className="flex gap-3">
+                <Label className="text-base">Time at this temperature (minutes)</Label>
+                <div className="relative">
                   <Input
                     type="text"
                     inputMode="numeric"
@@ -176,26 +174,11 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
                         setTimeValue(val)
                       }
                     }}
-                    placeholder="Enter time"
-                    className="h-16 text-xl flex-1"
+                    placeholder="Enter time in minutes"
+                    className="h-16 text-xl pr-24"
                   />
-                  <div className="flex border rounded-md">
-                    <Button
-                      type="button"
-                      variant={timeUnit === 'seconds' ? 'default' : 'ghost'}
-                      onClick={() => setTimeUnit('seconds')}
-                      className="h-16 rounded-r-none"
-                    >
-                      Seconds
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={timeUnit === 'minutes' ? 'default' : 'ghost'}
-                      onClick={() => setTimeUnit('minutes')}
-                      className="h-16 rounded-l-none"
-                    >
-                      Minutes
-                    </Button>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-lg text-muted-foreground">
+                    minutes
                   </div>
                 </div>
               </div>
@@ -227,7 +210,7 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
                 <div className="bg-muted/50 rounded-lg border p-3">
                   <p className="text-sm text-muted-foreground">Time at temperature</p>
                   <p className="font-medium">
-                    {timeValue} {timeUnit === 'minutes' ? (timeValue === '1' ? 'minute' : 'minutes') : (timeValue === '1' ? 'second' : 'seconds')}
+                    {timeValue} {timeValue === '1' ? 'minute' : 'minutes'}
                   </p>
                 </div>
               </div>

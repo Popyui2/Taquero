@@ -28,7 +28,6 @@ export function NewMethodWizard({ open, onClose, onSuccess }: NewMethodWizardPro
   const [cookingMethod, setCookingMethod] = useState('')
   const [temperature, setTemperature] = useState('')
   const [timeValue, setTimeValue] = useState('')
-  const [timeUnit, setTimeUnit] = useState<'seconds' | 'minutes'>('minutes')
 
   // Auto-filled date/time
   const [date] = useState(new Date().toISOString().split('T')[0])
@@ -49,7 +48,6 @@ export function NewMethodWizard({ open, onClose, onSuccess }: NewMethodWizardPro
     setCookingMethod('')
     setTemperature('')
     setTimeValue('')
-    setTimeUnit('minutes')
     setHasPassedStep1(false)
   }
 
@@ -93,7 +91,7 @@ export function NewMethodWizard({ open, onClose, onSuccess }: NewMethodWizardPro
       batchNumber: 1,
       date,
       temperature: tempValue,
-      timeAtTemp: `${timeValue} ${timeUnit}`,
+      timeAtTemp: `${timeValue} ${timeValue === '1' ? 'minute' : 'minutes'}`,
       completedBy: currentUser.name,
       timestamp: new Date().toISOString(),
     }
@@ -235,9 +233,9 @@ export function NewMethodWizard({ open, onClose, onSuccess }: NewMethodWizardPro
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-base">
-                  Time at this temperature
+                  Time at this temperature (minutes)
                 </Label>
-                <div className="flex gap-3">
+                <div className="relative">
                   <Input
                     type="text"
                     inputMode="numeric"
@@ -251,26 +249,11 @@ export function NewMethodWizard({ open, onClose, onSuccess }: NewMethodWizardPro
                         }
                       }
                     }}
-                    placeholder="Enter time"
-                    className="h-16 text-xl flex-1"
+                    placeholder="Enter time in minutes"
+                    className="h-16 text-xl pr-24"
                   />
-                  <div className="flex border rounded-md">
-                    <Button
-                      type="button"
-                      variant={timeUnit === 'seconds' ? 'default' : 'ghost'}
-                      onClick={() => setTimeUnit('seconds')}
-                      className="h-16 rounded-r-none"
-                    >
-                      Seconds
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={timeUnit === 'minutes' ? 'default' : 'ghost'}
-                      onClick={() => setTimeUnit('minutes')}
-                      className="h-16 rounded-l-none"
-                    >
-                      Minutes
-                    </Button>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-lg text-muted-foreground">
+                    minutes
                   </div>
                 </div>
               </div>
@@ -342,7 +325,7 @@ export function NewMethodWizard({ open, onClose, onSuccess }: NewMethodWizardPro
                     </div>
                     <div>
                       <span className="text-muted-foreground">Time:</span>{' '}
-                      <span className="font-medium">{timeValue} {timeUnit}</span>
+                      <span className="font-medium">{timeValue} {timeValue === '1' ? 'minute' : 'minutes'}</span>
                     </div>
                   </div>
                   <div className="text-xs text-muted-foreground">
