@@ -13,6 +13,7 @@ import { FridgeTemps } from '@/pages/modules/FridgeTemps'
 import { ModulePlaceholder } from '@/pages/modules/ModulePlaceholder'
 import { CookingProteinsBatch } from '@/pages/CookingProteinsBatch'
 import { ProvingMethods } from '@/pages/modules/ProvingMethods'
+import { StaffSickness } from '@/pages/modules/StaffSickness'
 import { StaffList } from '@/components/staff-training/StaffList'
 import { StaffDetail } from '@/components/staff-training/StaffDetail'
 import { AddStaffForm } from '@/components/staff-training/AddStaffForm'
@@ -127,12 +128,7 @@ function App() {
           <Route path="/module/staff-training/:staffId/mpi-record" element={<StaffTrainingRecordMPI />} />
           <Route
             path="/module/personal-hygiene"
-            element={
-              <ModulePlaceholder
-                title="Staff Sickness"
-                description="Staff health & sickness records"
-              />
-            }
+            element={<StaffSickness />}
           />
           <Route
             path="/module/cleaning-closing"

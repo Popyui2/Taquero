@@ -86,3 +86,16 @@ export interface ProvingMethod {
   provenAt?: string // ISO timestamp when 3rd batch completed (only if status = proven)
   createdBy: string // Staff name who created the method
 }
+
+// Staff Sickness Types
+export interface SicknessRecord {
+  id: string
+  staffName: string // Name of staff member who was sick
+  symptoms?: string // Optional - what symptoms they had
+  dateSick: string // ISO format date when they became sick
+  dateReturned?: string // ISO format date when returned to work (undefined if still sick)
+  actionTaken?: string // Optional - what action was taken
+  checkedBy: string // Who recorded/checked this entry
+  timestamp: string // ISO timestamp when record was created
+  status: 'sick' | 'returned' // Current status
+}
