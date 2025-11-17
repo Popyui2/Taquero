@@ -7,7 +7,6 @@ import {
   Sparkles,
   Wrench,
   UtensilsCrossed,
-  CheckCircle2,
   Flame,
   Timer,
   Snowflake,
@@ -88,13 +87,6 @@ export function RestaurantFCP() {
             onClick={() => navigate('/module/cooking-poultry-batch')}
           />
           <ModuleCard
-            id="proving-method"
-            title="Proving the Method"
-            description="Method validation records"
-            icon={CheckCircle2}
-            onClick={() => navigate('/module/proving-method')}
-          />
-          <ModuleCard
             id="proving-reheating"
             title="Proving Reheating Method"
             description="Reheating validation"
@@ -103,8 +95,8 @@ export function RestaurantFCP() {
           />
           <ModuleCard
             id="proving-time-temp"
-            title="Proving Time/Temp Cooking"
-            description="Time/temperature validation"
+            title="Proving the Method"
+            description="Method validation records"
             icon={Timer}
             onClick={() => navigate('/module/proving-time-temp')}
           />
