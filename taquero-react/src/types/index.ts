@@ -99,3 +99,28 @@ export interface SicknessRecord {
   timestamp: string // ISO timestamp when record was created
   status: 'sick' | 'returned' // Current status
 }
+
+// Proving Cooling Method Types
+export interface CoolingBatch {
+  batchNumber: 1 | 2 | 3
+  date: string // ISO format date
+  startTime: string // HH:MM format when food reaches 60°C
+  startTemp: number // Should be around 60°C
+  secondTimeCheck: string // HH:MM format
+  secondTempCheck: number // Should be ≤21°C (60°C to 21°C in 2 hours or less)
+  thirdTimeCheck: string // HH:MM format
+  thirdTempCheck: number // Should be ≤5°C (21°C to 5°C in 4 hours or less)
+  completedBy: string // Staff name
+  timestamp: string // ISO timestamp when recorded
+}
+
+export interface CoolingMethod {
+  id: string
+  foodItem: string // e.g., "1 litre of butter chicken curry"
+  coolingMethod: string // Full method description
+  status: 'in-progress' | 'proven' // in-progress = 0-2 batches, proven = 3 batches
+  batches: CoolingBatch[] // Array of 0-3 batches
+  createdAt: string // ISO timestamp when method was created
+  provenAt?: string // ISO timestamp when 3rd batch completed (only if status = proven)
+  createdBy: string // Staff name who created the method
+}

@@ -13,6 +13,7 @@ import { FridgeTemps } from '@/pages/modules/FridgeTemps'
 import { ModulePlaceholder } from '@/pages/modules/ModulePlaceholder'
 import { CookingProteinsBatch } from '@/pages/CookingProteinsBatch'
 import { ProvingMethods } from '@/pages/modules/ProvingMethods'
+import { ProvingCooling } from '@/pages/modules/ProvingCooling'
 import { StaffSickness } from '@/pages/modules/StaffSickness'
 import { StaffList } from '@/components/staff-training/StaffList'
 import { StaffDetail } from '@/components/staff-training/StaffDetail'
@@ -176,12 +177,7 @@ function App() {
           />
           <Route
             path="/module/proving-cooling"
-            element={
-              <ModulePlaceholder
-                title="Proving Cooling Method"
-                description="Cooling method validation"
-              />
-            }
+            element={<ProvingCooling />}
           />
           <Route
             path="/module/cooling-batch"
