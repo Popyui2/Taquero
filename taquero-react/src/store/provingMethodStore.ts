@@ -10,16 +10,10 @@ export async function saveBatchToGoogleSheets(
   method: ProvingMethod,
   batch: ValidationBatch
 ): Promise<{ success: boolean; error?: string }> {
-  console.log('🔵 saveBatchToGoogleSheets called')
-  console.log('🔵 Method:', method)
-  console.log('🔵 Batch:', batch)
-
   if (!GOOGLE_SHEETS_URL) {
     console.warn('⚠️ Google Sheets URL not configured')
     return { success: false, error: 'Google Sheets URL not configured' }
   }
-
-  console.log('🔵 Google Sheets URL:', GOOGLE_SHEETS_URL)
 
   try {
     const payload = {
@@ -37,33 +31,18 @@ export async function saveBatchToGoogleSheets(
       createdAt: method.createdAt,
     }
 
-    console.log('📤 Saving batch to Google Sheets')
-    console.log('📤 Full payload:', JSON.stringify(payload, null, 2))
-    console.log('📤 Payload size:', JSON.stringify(payload).length, 'bytes')
-
-    const fetchOptions = {
+    await fetch(GOOGLE_SHEETS_URL, {
       method: 'POST',
       mode: 'no-cors' as RequestMode,
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
-    }
-
-    console.log('📤 Fetch options:', fetchOptions)
-    console.log('📤 Sending request to:', GOOGLE_SHEETS_URL)
-
-    const response = await fetch(GOOGLE_SHEETS_URL, fetchOptions)
-
-    console.log('✅ Fetch completed (no-cors mode - cannot read response)')
-    console.log('✅ Response type:', response.type)
-    console.log('✅ Response status:', response.status)
+    })
 
     return { success: true }
   } catch (error) {
     console.error('❌ Error saving to Google Sheets:', error)
-    console.error('❌ Error type:', typeof error)
-    console.error('❌ Error details:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
