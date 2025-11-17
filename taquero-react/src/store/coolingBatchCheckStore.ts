@@ -2,8 +2,8 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { CoolingBatchCheckRecord } from '@/types'
 
-// Google Sheets webhook URL - update this with your deployed Apps Script URL
-const GOOGLE_SHEETS_URL = ''
+// Google Sheets webhook URL
+const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycby8gcfPCWLbzPlE5jHGavGNO39gUvcrJ59_i8SlWcqfTaDu0FCM79-HpZZpvfFHp-bH/exec'
 
 // Helper function to save batch check record to Google Sheets
 export async function saveBatchCheckToGoogleSheets(
