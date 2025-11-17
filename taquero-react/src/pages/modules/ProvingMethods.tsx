@@ -54,8 +54,8 @@ export function ProvingMethods() {
     setSelectedMethod(null)
   }
 
-  // Show only last 10 methods
-  const recentMethods = methods.slice(0, 10)
+  // Show only last 99 methods
+  const recentMethods = methods.slice(0, 99)
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
@@ -89,7 +89,7 @@ export function ProvingMethods() {
             <div>
               <CardTitle>Your Methods</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Last 10 methods (in-progress and proven)
+                Last 99 methods (in-progress and proven)
               </p>
             </div>
           </div>
