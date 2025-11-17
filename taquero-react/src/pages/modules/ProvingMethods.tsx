@@ -16,16 +16,16 @@ interface ToastMessage {
 }
 
 export function ProvingMethods() {
-  const { methods, isLoading } = useProvingMethodStore()
+  const { methods, isLoading, fetchFromGoogleSheets } = useProvingMethodStore()
   const [toasts, setToasts] = useState<ToastMessage[]>([])
   const [showNewMethodWizard, setShowNewMethodWizard] = useState(false)
   const [showAddBatchWizard, setShowAddBatchWizard] = useState(false)
   const [selectedMethod, setSelectedMethod] = useState<ProvingMethod | null>(null)
 
-  // Fetch data on mount
+  // Fetch data from Google Sheets on mount
   useEffect(() => {
-    // Will implement Google Sheets fetch later
-  }, [])
+    fetchFromGoogleSheets()
+  }, [fetchFromGoogleSheets])
 
   const showToast = (message: string, type: ToastMessage['type'] = 'info') => {
     const id = Date.now()
