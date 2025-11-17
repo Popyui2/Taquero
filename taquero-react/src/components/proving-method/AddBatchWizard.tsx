@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, ChevronRight, ChevronLeft } from 'lucide-react'
+import { ChevronRight, ChevronLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -84,11 +84,8 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl flex items-center justify-between">
-            <span>Add Batch {nextBatchNumber}/3</span>
-            <Button variant="ghost" size="icon" onClick={handleClose}>
-              <X className="h-5 w-5" />
-            </Button>
+          <DialogTitle className="text-2xl">
+            Add Batch {nextBatchNumber}/3
           </DialogTitle>
         </DialogHeader>
 
