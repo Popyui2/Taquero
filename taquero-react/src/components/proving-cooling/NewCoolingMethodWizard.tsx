@@ -40,7 +40,7 @@ export function NewCoolingMethodWizard({ open, onClose, onSuccess }: NewCoolingM
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState('')
 
-  const totalSteps = 8
+  const totalSteps = 7
   const progress = (step / totalSteps) * 100
 
   // Reset form
@@ -151,7 +151,7 @@ export function NewCoolingMethodWizard({ open, onClose, onSuccess }: NewCoolingM
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Snowflake className="h-5 w-5 text-primary" />
-            Create New Cooling Method - Batch 1
+            New Cooling method - Batch 1
           </DialogTitle>
         </DialogHeader>
 
@@ -186,9 +186,6 @@ export function NewCoolingMethodWizard({ open, onClose, onSuccess }: NewCoolingM
           {step === 2 && (
             <div className="space-y-4">
               <Label className="text-base">Describe your cooling method</Label>
-              <p className="text-sm text-muted-foreground">
-                Explain how you cool this food
-              </p>
               <Textarea
                 value={coolingMethod}
                 onChange={(e) => setCoolingMethod(e.target.value)}
@@ -203,13 +200,11 @@ export function NewCoolingMethodWizard({ open, onClose, onSuccess }: NewCoolingM
           {step === 3 && (
             <div className="space-y-4">
               <Label className="text-base">Date of Batch 1</Label>
-              <p className="text-sm text-muted-foreground">Today's date</p>
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
                 <Input
                   type="date"
                   value={date}
-                  disabled
                   className="h-16 text-xl pl-12"
                 />
               </div>
@@ -240,7 +235,7 @@ export function NewCoolingMethodWizard({ open, onClose, onSuccess }: NewCoolingM
                   value={startTemp}
                   onChange={(e) => setStartTemp(e.target.value)}
                   placeholder="60.0"
-                  className="h-16 text-xl pl-12"
+                  className="h-16 text-xl pl-12 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
             </div>
@@ -273,7 +268,7 @@ export function NewCoolingMethodWizard({ open, onClose, onSuccess }: NewCoolingM
                   value={secondTempCheck}
                   onChange={(e) => setSecondTempCheck(e.target.value)}
                   placeholder="21.0 or below"
-                  className="h-16 text-xl pl-12"
+                  className="h-16 text-xl pl-12 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
             </div>
@@ -306,7 +301,7 @@ export function NewCoolingMethodWizard({ open, onClose, onSuccess }: NewCoolingM
                   value={thirdTempCheck}
                   onChange={(e) => setThirdTempCheck(e.target.value)}
                   placeholder="5.0 or below"
-                  className="h-16 text-xl pl-12"
+                  className="h-16 text-xl pl-12 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
             </div>
@@ -348,31 +343,20 @@ export function NewCoolingMethodWizard({ open, onClose, onSuccess }: NewCoolingM
               </div>
             </div>
           )}
-
-          {/* STEP 8: Final Confirmation */}
-          {step === 8 && (
-            <div className="space-y-4 text-center py-6">
-              <Snowflake className="h-16 w-16 text-primary mx-auto" />
-              <h3 className="text-xl font-semibold">Ready to create cooling method?</h3>
-              <p className="text-muted-foreground">
-                This will create your cooling method with Batch 1 recorded.
-                <br />
-                You'll need to record 2 more batches to prove it works.
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Navigation Buttons */}
         <div className="flex gap-3 pt-4 border-t">
-          <Button
-            variant="outline"
-            onClick={handleClose}
-            className="flex-1"
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
+          {step === 1 && (
+            <Button
+              variant="outline"
+              onClick={handleClose}
+              className="flex-1"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+          )}
           {step > 1 && (
             <Button
               variant="outline"

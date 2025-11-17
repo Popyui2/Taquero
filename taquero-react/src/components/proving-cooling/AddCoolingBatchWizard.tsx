@@ -22,7 +22,7 @@ export function AddCoolingBatchWizard({ open, onClose, onSuccess, method }: AddC
 
   const nextBatchNumber = (method.batches.length + 1) as 1 | 2 | 3
 
-  // Current step (1-6)
+  // Current step (1-5)
   const [step, setStep] = useState(1)
 
   // Form data
@@ -39,7 +39,7 @@ export function AddCoolingBatchWizard({ open, onClose, onSuccess, method }: AddC
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState('')
 
-  const totalSteps = 6
+  const totalSteps = 5
   const progress = (step / totalSteps) * 100
 
   // Reset form
@@ -149,13 +149,11 @@ export function AddCoolingBatchWizard({ open, onClose, onSuccess, method }: AddC
           {step === 1 && (
             <div className="space-y-4">
               <Label className="text-base">Date of Batch {nextBatchNumber}</Label>
-              <p className="text-sm text-muted-foreground">Today's date</p>
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
                 <Input
                   type="date"
                   value={date}
-                  disabled
                   className="h-16 text-xl pl-12"
                 />
               </div>
@@ -186,7 +184,7 @@ export function AddCoolingBatchWizard({ open, onClose, onSuccess, method }: AddC
                   value={startTemp}
                   onChange={(e) => setStartTemp(e.target.value)}
                   placeholder="60.0"
-                  className="h-16 text-xl pl-12"
+                  className="h-16 text-xl pl-12 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
             </div>
@@ -219,7 +217,7 @@ export function AddCoolingBatchWizard({ open, onClose, onSuccess, method }: AddC
                   value={secondTempCheck}
                   onChange={(e) => setSecondTempCheck(e.target.value)}
                   placeholder="21.0 or below"
-                  className="h-16 text-xl pl-12"
+                  className="h-16 text-xl pl-12 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
             </div>
@@ -252,7 +250,7 @@ export function AddCoolingBatchWizard({ open, onClose, onSuccess, method }: AddC
                   value={thirdTempCheck}
                   onChange={(e) => setThirdTempCheck(e.target.value)}
                   placeholder="5.0 or below"
-                  className="h-16 text-xl pl-12"
+                  className="h-16 text-xl pl-12 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
             </div>
@@ -286,37 +284,20 @@ export function AddCoolingBatchWizard({ open, onClose, onSuccess, method }: AddC
               </div>
             </div>
           )}
-
-          {/* STEP 6: Final Confirmation */}
-          {step === 6 && (
-            <div className="space-y-4 text-center py-6">
-              <Snowflake className="h-16 w-16 text-primary mx-auto" />
-              <h3 className="text-xl font-semibold">Ready to add Batch {nextBatchNumber}?</h3>
-              {nextBatchNumber === 3 ? (
-                <p className="text-muted-foreground">
-                  🎉 This is your final batch!
-                  <br />
-                  After this, your cooling method will be proven.
-                </p>
-              ) : (
-                <p className="text-muted-foreground">
-                  After this, you'll need {3 - nextBatchNumber} more batch{3 - nextBatchNumber === 1 ? '' : 'es'} to prove the method.
-                </p>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Navigation Buttons */}
         <div className="flex gap-3 pt-4 border-t">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="flex-1"
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
+          {step === 1 && (
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="flex-1"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+          )}
           {step > 1 && (
             <Button
               variant="outline"
