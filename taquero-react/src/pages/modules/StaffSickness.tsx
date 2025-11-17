@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Plus, Loader2, HeartPulse } from 'lucide-react'
+import { Plus, Loader2, HeartPulse, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useStaffSicknessStore } from '@/store/staffSicknessStore'
 import { Toast, ToastContainer } from '@/components/ui/toast'
 import { AddSicknessRecordWizard } from '@/components/staff-sickness/AddSicknessRecordWizard'
+import { MarkRecoveredWizard } from '@/components/staff-sickness/MarkRecoveredWizard'
+import { SicknessRecord } from '@/types'
 
 interface ToastMessage {
   id: number
@@ -16,6 +18,8 @@ export function StaffSickness() {
   const { records, isLoading, fetchFromGoogleSheets } = useStaffSicknessStore()
   const [toasts, setToasts] = useState<ToastMessage[]>([])
   const [showAddWizard, setShowAddWizard] = useState(false)
+  const [showRecoveredWizard, setShowRecoveredWizard] = useState(false)
+  const [selectedRecord, setSelectedRecord] = useState<SicknessRecord | null>(null)
 
   // Fetch data from Google Sheets on mount
   useEffect(() => {
@@ -33,6 +37,16 @@ export function StaffSickness() {
 
   const handleRecordAdded = () => {
     showToast('Sickness record added successfully', 'success')
+  }
+
+  const handleMarkRecovered = (record: SicknessRecord) => {
+    setSelectedRecord(record)
+    setShowRecoveredWizard(true)
+  }
+
+  const handleRecoveryMarked = () => {
+    showToast('Staff member marked as recovered', 'success')
+    setSelectedRecord(null)
   }
 
   // Recent records (last 50)
@@ -100,6 +114,7 @@ export function StaffSickness() {
                     <th className="pb-3 font-medium">Date Returned</th>
                     <th className="pb-3 font-medium">Action Taken</th>
                     <th className="pb-3 font-medium">Checked By</th>
+                    <th className="pb-3 font-medium text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -121,6 +136,25 @@ export function StaffSickness() {
                         {record.actionTaken || '-'}
                       </td>
                       <td className="py-3">{record.checkedBy}</td>
+                      <td className="py-3">
+                        {record.status === 'sick' && !record.dateReturned ? (
+                          <div className="flex items-center justify-center">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleMarkRecovered(record)}
+                              className="h-8 w-8 p-0 hover:bg-green-100 dark:hover:bg-green-900/20"
+                              title="Mark as recovered"
+                            >
+                              <CheckCircle2 className="h-4 w-4 text-green-600" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <span className="text-xs text-muted-foreground">-</span>
+                          </div>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -135,6 +169,17 @@ export function StaffSickness() {
         open={showAddWizard}
         onClose={() => setShowAddWizard(false)}
         onSuccess={handleRecordAdded}
+      />
+
+      {/* Mark Recovered Wizard */}
+      <MarkRecoveredWizard
+        open={showRecoveredWizard}
+        onClose={() => {
+          setShowRecoveredWizard(false)
+          setSelectedRecord(null)
+        }}
+        onSuccess={handleRecoveryMarked}
+        record={selectedRecord}
       />
 
       {/* Toast Notifications */}
