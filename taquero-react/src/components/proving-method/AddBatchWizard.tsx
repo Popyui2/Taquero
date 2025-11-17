@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
 import { useProvingMethodStore } from '@/store/provingMethodStore'
+import { useAuthStore } from '@/store/authStore'
 import { ProvingMethod, ValidationBatch } from '@/types'
 
 interface AddBatchWizardProps {
@@ -17,13 +18,13 @@ interface AddBatchWizardProps {
 
 export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWizardProps) {
   const { addBatchToMethod } = useProvingMethodStore()
+  const { currentUser } = useAuthStore()
   const [step, setStep] = useState(1)
 
   // Form state
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [temperature, setTemperature] = useState('')
   const [timeValue, setTimeValue] = useState('')
-  const [completedBy, setCompletedBy] = useState('')
 
   const totalSteps = 4 // Date, Temp, Time, Review
   const nextBatchNumber = (method.batches.length + 1) as 1 | 2 | 3
@@ -33,7 +34,6 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
     setDate(new Date().toISOString().split('T')[0])
     setTemperature('')
     setTimeValue('')
-    setCompletedBy('')
     onClose()
   }
 
@@ -50,12 +50,17 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
   }
 
   const handleSubmit = () => {
+    if (!currentUser) {
+      alert('Error: No user logged in')
+      return
+    }
+
     const batch: ValidationBatch = {
       batchNumber: nextBatchNumber,
       date: date,
       temperature: parseFloat(temperature),
       timeAtTemp: `${timeValue} ${timeValue === '1' ? 'minute' : 'minutes'}`,
-      completedBy: completedBy,
+      completedBy: currentUser.name,
       timestamp: new Date().toISOString()
     }
 
@@ -73,7 +78,7 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
       case 1: return date !== ''
       case 2: return temperature !== '' && parseFloat(temperature) > 0
       case 3: return timeValue !== '' && parseFloat(timeValue) > 0
-      case 4: return completedBy.trim() !== ''
+      case 4: return true
       default: return false
     }
   }
@@ -215,18 +220,9 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
                 </div>
               </div>
 
-              <div className="space-y-2 pt-4">
-                <Label htmlFor="completedBy" className="text-base">
-                  Who completed this batch?
-                </Label>
-                <Input
-                  id="completedBy"
-                  type="text"
-                  value={completedBy}
-                  onChange={(e) => setCompletedBy(e.target.value)}
-                  placeholder="Staff member name"
-                  className="h-12 text-base"
-                />
+              <div className="bg-muted/50 rounded-lg border p-3">
+                <p className="text-sm text-muted-foreground">Completed by</p>
+                <p className="font-medium">{currentUser?.name}</p>
               </div>
 
               {nextBatchNumber === 3 && (
