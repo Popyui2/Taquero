@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { ProvingMethod, ValidationBatch } from '@/types'
 
 // Google Sheets webhook URL - update this with your deployed Apps Script URL
-const GOOGLE_SHEETS_URL = ''
+const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxCuLVrqdTBnjPZpbMVyWArCR78Iq6fi6a8vGTZTJSAFjcL65J934tcHp23Z0Oxr4dbhw/exec'
 
 // Helper function to save batch to Google Sheets
 export async function saveBatchToGoogleSheets(
