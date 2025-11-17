@@ -51,10 +51,17 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
   }
 
   const handleSubmit = async () => {
+    console.log('🟡 AddBatchWizard - handleSubmit called')
+    console.log('🟡 Method:', method)
+    console.log('🟡 Next batch number:', nextBatchNumber)
+
     if (!currentUser) {
+      console.error('❌ No user logged in')
       alert('Error: No user logged in')
       return
     }
+
+    console.log('🟡 Current user:', currentUser)
 
     setIsSubmitting(true)
 
@@ -68,8 +75,13 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
         timestamp: new Date().toISOString()
       }
 
+      console.log('🟡 Batch created:', batch)
+      console.log('🟡 Calling saveBatchToGoogleSheets...')
+
       // Save to Google Sheets
       const saveResult = await saveBatchToGoogleSheets(method, batch)
+
+      console.log('🟡 Save result:', saveResult)
 
       if (!saveResult.success) {
         console.warn('⚠️ Failed to save to Google Sheets:', saveResult.error)

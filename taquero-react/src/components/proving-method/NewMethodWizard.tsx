@@ -77,14 +77,20 @@ export function NewMethodWizard({ open, onClose, onSuccess }: NewMethodWizardPro
 
   // Create method and first batch
   const handleCreate = async () => {
+    console.log('🟢 NewMethodWizard - handleCreate called')
+
     if (!currentUser) {
+      console.error('❌ No user logged in')
       alert('Error: No user logged in')
       return
     }
 
+    console.log('🟢 Current user:', currentUser)
+
     setIsSubmitting(true)
 
     const methodId = `method-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    console.log('🟢 Generated method ID:', methodId)
 
     // Create first batch
     const firstBatch: ValidationBatch = {
@@ -95,6 +101,8 @@ export function NewMethodWizard({ open, onClose, onSuccess }: NewMethodWizardPro
       completedBy: currentUser.name,
       timestamp: new Date().toISOString(),
     }
+
+    console.log('🟢 First batch created:', firstBatch)
 
     // Create method with first batch
     const newMethod: ProvingMethod = {
@@ -107,9 +115,15 @@ export function NewMethodWizard({ open, onClose, onSuccess }: NewMethodWizardPro
       createdBy: currentUser.name,
     }
 
+    console.log('🟢 New method created:', newMethod)
+
     try {
+      console.log('🟢 Calling saveBatchToGoogleSheets...')
+
       // Save to Google Sheets
       const saveResult = await saveBatchToGoogleSheets(newMethod, firstBatch)
+
+      console.log('🟢 Save result:', saveResult)
 
       if (!saveResult.success) {
         console.warn('⚠️ Failed to save to Google Sheets:', saveResult.error)
