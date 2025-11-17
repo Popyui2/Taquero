@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { ModuleCard } from '@/components/dashboard/ModuleCard'
 import {
   Users,
-  Droplets,
+  HeartPulse,
   Thermometer,
   Sparkles,
   Wrench,
@@ -45,9 +45,9 @@ export function ManufacturingFCP() {
           />
           <ModuleCard
             id="personal-hygiene"
-            title="Personal Hygiene"
-            description="Hygiene management & records"
-            icon={Droplets}
+            title="Staff Sickness"
+            description="Staff health & sickness records"
+            icon={HeartPulse}
             onClick={() => navigate('/module/personal-hygiene')}
           />
           <ModuleCard
