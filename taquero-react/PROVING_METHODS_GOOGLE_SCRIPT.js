@@ -3,70 +3,53 @@
  *
  * SETUP INSTRUCTIONS:
  * 1. Create a new Google Sheet with the following headers in row 1:
- *    Method ID | Item Description | Cooking Method | Batch Number | Date | Temperature (°C) | Time at Temp | Completed By | Unix Timestamp | Status | Created By | Created At
+ *    Unix Timestamp | Method ID | Item Description | Cooking Method | Batch Number | Date | Temperature (°C) | Time at Temp | Completed By | Status | Created By | Created At
  *
- * 2. Open Tools > Script editor
+ * 2. Go to Extensions > Apps Script
  * 3. Paste this code
- * 4. Deploy as Web App:
- *    - Execute as: Me
- *    - Who has access: Anyone
- * 5. Copy the deployment URL and paste it in:
- *    - src/store/provingMethodStore.ts (GOOGLE_SHEETS_URL constant)
+ * 4. Click Deploy > New deployment
+ * 5. Select type: Web app
+ * 6. Execute as: Me
+ * 7. Who has access: Anyone
+ * 8. Click Deploy and copy the deployment URL
+ * 9. Paste the URL in src/store/provingMethodStore.ts (line 6)
  */
 
-// Your Google Sheet ID - REPLACE THIS with your actual Sheet ID
-const SHEET_ID = 'YOUR_SHEET_ID_HERE'
-const SHEET_NAME = 'Proving_Methods'
+var SHEET_NAME = 'Proving_Methods'
 
 /**
  * Handles GET requests - fetches all proving methods with batches
  */
 function doGet(e) {
   try {
-    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME)
-
-    if (!sheet) {
-      return ContentService.createTextOutput(
-        JSON.stringify({
-          success: false,
-          error: 'Sheet not found: ' + SHEET_NAME
-        })
-      ).setMimeType(ContentService.MimeType.JSON)
-    }
-
-    const data = sheet.getDataRange().getValues()
+    var sheet = getSheet()
+    var data = sheet.getDataRange().getValues()
 
     // Skip header row
     if (data.length <= 1) {
-      return ContentService.createTextOutput(
-        JSON.stringify({
-          success: true,
-          data: []
-        })
-      ).setMimeType(ContentService.MimeType.JSON)
+      return createResponse({ success: true, data: [] })
     }
 
-    const rows = data.slice(1)
+    var rows = data.slice(1)
+    var methodsMap = {}
 
-    // Group rows by Method ID
-    const methodsMap = {}
-
-    rows.forEach(row => {
-      const methodId = row[0]
-      const itemDescription = row[1]
-      const cookingMethod = row[2]
-      const batchNumber = Number(row[3])
-      const date = row[4]
-      const temperature = Number(row[5])
-      const timeAtTemp = row[6]
-      const completedBy = row[7]
-      const unixTimestamp = Number(row[8])
-      const status = row[9]
-      const createdBy = row[10]
-      const createdAt = row[11]
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i]
+      var unixTimestamp = row[0]
+      var methodId = row[1]
+      var itemDescription = row[2]
+      var cookingMethod = row[3]
+      var batchNumber = Number(row[4])
+      var date = row[5]
+      var temperature = Number(row[6])
+      var timeAtTemp = row[7]
+      var completedBy = row[8]
+      var status = row[9]
+      var createdBy = row[10]
+      var createdAt = row[11]
 
       // Create batch object
-      const batch = {
+      var batch = {
         batchNumber: batchNumber,
         date: date,
         temperature: temperature,
@@ -89,74 +72,51 @@ function doGet(e) {
       }
 
       methodsMap[methodId].batches.push(batch)
-    })
+    }
 
     // Convert map to array
-    const methods = Object.values(methodsMap)
+    var methods = []
+    for (var key in methodsMap) {
+      methods.push(methodsMap[key])
+    }
 
     // Sort batches within each method
-    methods.forEach(method => {
-      method.batches.sort((a, b) => a.batchNumber - b.batchNumber)
-    })
+    for (var j = 0; j < methods.length; j++) {
+      methods[j].batches.sort(function(a, b) {
+        return a.batchNumber - b.batchNumber
+      })
+    }
 
     // Sort methods by created date (newest first)
-    methods.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    methods.sort(function(a, b) {
+      return new Date(b.createdAt) - new Date(a.createdAt)
+    })
 
-    return ContentService.createTextOutput(
-      JSON.stringify({
-        success: true,
-        data: methods
-      })
-    ).setMimeType(ContentService.MimeType.JSON)
+    return createResponse({ success: true, data: methods })
 
   } catch (error) {
     Logger.log('Error in doGet: ' + error.toString())
-    return ContentService.createTextOutput(
-      JSON.stringify({
-        success: false,
-        error: error.toString()
-      })
-    ).setMimeType(ContentService.MimeType.JSON)
+    return createResponse({
+      success: false,
+      error: error.toString()
+    })
   }
 }
 
 /**
  * Handles POST requests - adds new method or batch
- * Expected data format:
- * {
- *   methodId: string,
- *   itemDescription: string,
- *   cookingMethod: string,
- *   batchNumber: number,
- *   date: string,
- *   temperature: number,
- *   timeAtTemp: string,
- *   completedBy: string,
- *   unixTimestamp: number,
- *   status: string,
- *   createdBy: string,
- *   createdAt: string
- * }
  */
 function doPost(e) {
   try {
-    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME)
-
-    if (!sheet) {
-      return ContentService.createTextOutput(
-        JSON.stringify({
-          success: false,
-          error: 'Sheet not found: ' + SHEET_NAME
-        })
-      ).setMimeType(ContentService.MimeType.JSON)
-    }
+    var sheet = getSheet()
 
     // Parse the incoming data
-    const data = JSON.parse(e.postData.contents)
+    var data = JSON.parse(e.postData.contents)
 
     // Prepare row data matching the headers:
-    // Method ID | Item Description | Cooking Method | Batch Number | Date | Temperature (°C) | Time at Temp | Completed By | Unix Timestamp | Status | Created By | Created At
-    const rowData = [
+    // Unix Timestamp | Method ID | Item Description | Cooking Method | Batch Number | Date | Temperature (°C) | Time at Temp | Completed By | Status | Created By | Created At
+    var rowData = [
+      data.unixTimestamp,
       data.methodId,
       data.itemDescription,
       data.cookingMethod,
@@ -165,7 +125,6 @@ function doPost(e) {
       data.temperature,
       data.timeAtTemp,
       data.completedBy,
-      data.unixTimestamp,
       data.status,
       data.createdBy,
       data.createdAt
@@ -181,23 +140,19 @@ function doPost(e) {
 
     Logger.log('Successfully added batch ' + data.batchNumber + ' for method: ' + data.methodId)
 
-    return ContentService.createTextOutput(
-      JSON.stringify({
-        success: true,
-        message: 'Batch added successfully',
-        methodId: data.methodId,
-        batchNumber: data.batchNumber
-      })
-    ).setMimeType(ContentService.MimeType.JSON)
+    return createResponse({
+      success: true,
+      message: 'Batch added successfully',
+      methodId: data.methodId,
+      batchNumber: data.batchNumber
+    })
 
   } catch (error) {
     Logger.log('Error in doPost: ' + error.toString())
-    return ContentService.createTextOutput(
-      JSON.stringify({
-        success: false,
-        error: error.toString()
-      })
-    ).setMimeType(ContentService.MimeType.JSON)
+    return createResponse({
+      success: false,
+      error: error.toString()
+    })
   }
 }
 
@@ -205,15 +160,37 @@ function doPost(e) {
  * Updates the status of all rows for a specific method
  */
 function updateMethodStatus(sheet, methodId, newStatus) {
-  const data = sheet.getDataRange().getValues()
+  var data = sheet.getDataRange().getValues()
 
-  for (let i = 1; i < data.length; i++) { // Skip header
-    if (data[i][0] === methodId) { // Method ID is in column 0
+  for (var i = 1; i < data.length; i++) { // Skip header
+    if (data[i][1] === methodId) { // Method ID is in column 1 (index 1)
       sheet.getRange(i + 1, 10).setValue(newStatus) // Status is in column 10 (index 9)
     }
   }
 
   Logger.log('Updated status to "' + newStatus + '" for method: ' + methodId)
+}
+
+/**
+ * Get the sheet
+ */
+function getSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet()
+  var sheet = ss.getSheetByName(SHEET_NAME)
+
+  if (!sheet) {
+    throw new Error('Sheet not found: ' + SHEET_NAME + '. Please create a sheet with this name.')
+  }
+
+  return sheet
+}
+
+/**
+ * Create JSON response
+ */
+function createResponse(obj) {
+  var json = JSON.stringify(obj)
+  return ContentService.createTextOutput(json).setMimeType(ContentService.MimeType.JSON)
 }
 
 /**
@@ -223,7 +200,8 @@ function testScript() {
   Logger.log('Testing Proving Methods Google Apps Script...')
 
   // Test data for creating a new method with batch 1
-  const testData = {
+  var testData = {
+    unixTimestamp: Math.floor(Date.now() / 1000),
     methodId: 'method-test-123',
     itemDescription: '2kg chicken roast x4',
     cookingMethod: 'Put in pre-heated oven at 220°C for 2 hours',
@@ -232,23 +210,22 @@ function testScript() {
     temperature: 75,
     timeAtTemp: '30 minutes',
     completedBy: 'Test User',
-    unixTimestamp: Math.floor(Date.now() / 1000),
     status: 'in-progress',
     createdBy: 'Test User',
     createdAt: new Date().toISOString()
   }
 
   // Test POST
-  const postEvent = {
+  var postEvent = {
     postData: {
       contents: JSON.stringify(testData)
     }
   }
 
-  const postResult = doPost(postEvent)
+  var postResult = doPost(postEvent)
   Logger.log('POST test result: ' + postResult.getContent())
 
   // Test GET
-  const getResult = doGet({})
+  var getResult = doGet({})
   Logger.log('GET test result: ' + getResult.getContent())
 }
