@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,11 +16,18 @@ interface MarkRecoveredWizardProps {
 
 export function MarkRecoveredWizard({ open, onClose, onSuccess, record }: MarkRecoveredWizardProps) {
   const { updateRecordStatus } = useStaffSicknessStore()
-  const [dateReturned, setDateReturned] = useState(new Date().toISOString().split('T')[0])
+  const [dateReturned, setDateReturned] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Initialize date when record changes
+  useEffect(() => {
+    if (record) {
+      setDateReturned(record.dateReturned || new Date().toISOString().split('T')[0])
+    }
+  }, [record])
+
   const handleClose = () => {
-    setDateReturned(new Date().toISOString().split('T')[0])
+    setDateReturned('')
     onClose()
   }
 
@@ -79,7 +86,7 @@ export function MarkRecoveredWizard({ open, onClose, onSuccess, record }: MarkRe
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-green-600" />
-            Mark as Recovered
+            {record?.status === 'returned' ? 'Edit Return Date' : 'Mark as Recovered'}
           </DialogTitle>
         </DialogHeader>
 
@@ -128,7 +135,7 @@ export function MarkRecoveredWizard({ open, onClose, onSuccess, record }: MarkRe
             disabled={isSubmitting || !dateReturned}
             className="h-12 flex-1"
           >
-            {isSubmitting ? 'Updating...' : 'Mark as Recovered'}
+            {isSubmitting ? 'Updating...' : record?.status === 'returned' ? 'Update Return Date' : 'Mark as Recovered'}
           </Button>
         </div>
       </DialogContent>

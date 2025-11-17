@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress'
 import { useAuthStore } from '@/store/authStore'
 import { useStaffSicknessStore, saveSicknessToGoogleSheets } from '@/store/staffSicknessStore'
 import { SicknessRecord } from '@/types'
-import { Calendar, User, Stethoscope, CalendarCheck, Edit2, FileText } from 'lucide-react'
+import { Calendar, User, Stethoscope, Edit2, FileText } from 'lucide-react'
 
 interface AddSicknessRecordWizardProps {
   open: boolean
@@ -213,21 +213,19 @@ export function AddSicknessRecordWizard({ open, onClose, onSuccess }: AddSicknes
           {step === 4 && (
             <div className="space-y-6">
               <div className="space-y-4">
-                <Label className="text-base">Date returned to work (Optional)</Label>
+                <Label htmlFor="dateReturned" className="text-base">Date returned to work (Optional)</Label>
                 <p className="text-sm text-muted-foreground">
                   Leave blank if still sick
                 </p>
-                <div className="relative">
-                  <CalendarCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10 pointer-events-none" />
-                  <Input
-                    type="date"
-                    value={dateReturned}
-                    onChange={(e) => setDateReturned(e.target.value)}
-                    min={dateSick}
-                    max={new Date().toISOString().split('T')[0]}
-                    className="h-16 text-xl pl-12"
-                  />
-                </div>
+                <Input
+                  id="dateReturned"
+                  type="date"
+                  value={dateReturned}
+                  onChange={(e) => setDateReturned(e.target.value)}
+                  min={dateSick}
+                  max={new Date().toISOString().split('T')[0]}
+                  className="h-16 text-xl"
+                />
               </div>
 
               <div className="space-y-4">

@@ -137,23 +137,19 @@ export function StaffSickness() {
                       </td>
                       <td className="py-3">{record.checkedBy}</td>
                       <td className="py-3">
-                        {record.status === 'sick' && !record.dateReturned ? (
-                          <div className="flex items-center justify-center">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleMarkRecovered(record)}
-                              className="h-8 w-8 p-0 hover:bg-green-100 dark:hover:bg-green-900/20"
-                              title="Mark as recovered"
-                            >
-                              <CheckCircle2 className="h-4 w-4 text-green-600" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-center">
-                            <span className="text-xs text-muted-foreground">-</span>
-                          </div>
-                        )}
+                        <div className="flex items-center justify-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleMarkRecovered(record)}
+                            className="h-8 w-8 p-0 hover:bg-green-100 dark:hover:bg-green-900/20"
+                            title={record.status === 'returned' ? 'Edit return date' : 'Mark as recovered'}
+                          >
+                            <CheckCircle2
+                              className={`h-4 w-4 ${record.status === 'returned' ? 'text-green-600' : 'text-muted-foreground'}`}
+                            />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
