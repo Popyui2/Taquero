@@ -62,7 +62,7 @@ export function ProvingMethods() {
       {/* Header */}
       <div className="space-y-2 text-center md:text-left">
         <h2 className="text-3xl font-bold tracking-tight">
-          Proving Your Method
+          Proving the Cooking Method
         </h2>
         <p className="text-muted-foreground text-lg">
           Validate cooking methods with 3 consecutive successful batches
@@ -88,9 +88,11 @@ export function ProvingMethods() {
             </div>
             <div>
               <CardTitle>Your Methods</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Last 99 methods (in-progress and proven)
-              </p>
+              {methods.length >= 100 && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Last 99 methods (in-progress and proven)
+                </p>
+              )}
             </div>
           </div>
         </CardHeader>
