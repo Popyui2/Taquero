@@ -74,7 +74,7 @@ export function StaffList() {
       {/* Header with Add button */}
       <div className="flex items-center justify-between print:hidden">
         <div>
-          <h2 className="text-2xl font-semibold">Staff Members</h2>
+          <h2 className="text-2xl font-semibold">Staff Training Records</h2>
           <p className="text-muted-foreground text-sm mt-1">
             {staffMembers.length} team member{staffMembers.length !== 1 ? 's' : ''}
           </p>
@@ -95,20 +95,21 @@ export function StaffList() {
 
       {/* Staff cards grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 print:hidden">
-        {staffMembers.map((staff) => (
+        {staffMembers.map((staff, index) => (
           <Card
             key={staff.id}
             onClick={() => handleStaffClick(staff.id)}
-            className="p-6 cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] min-h-[80px]"
+            className="p-6 cursor-pointer group transition-all duration-300 ease-in-out hover:scale-[1.02] hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 active:scale-[0.98] active:translate-y-0 min-h-[80px] animate-in fade-in slide-in-from-bottom-4"
             style={{
               touchAction: 'manipulation',
               WebkitTapHighlightColor: 'transparent',
+              animationDelay: `${index * 50}ms`,
             }}
           >
             <div className="flex items-start gap-4">
               {/* Icon */}
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="h-6 w-6 text-primary" />
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center transition-all duration-300 group-hover:bg-primary/20 group-hover:scale-110">
+                <User className="h-6 w-6 text-primary transition-transform duration-300 group-hover:scale-110" />
               </div>
 
               {/* Info */}

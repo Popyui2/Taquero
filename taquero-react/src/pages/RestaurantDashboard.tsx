@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { ModuleCard } from '@/components/dashboard/ModuleCard'
+import { ClipboardList, Package, Banknote, Truck } from 'lucide-react'
 
 export function RestaurantDashboard() {
   const navigate = useNavigate()
@@ -20,7 +21,7 @@ export function RestaurantDashboard() {
           id="restaurant-fcp"
           title="FCP Recordkeeping"
           description="All 13 food control plan sections"
-          icon="📋"
+          icon={ClipboardList}
           onClick={() => navigate('/restaurant/fcp')}
         />
 
@@ -28,7 +29,7 @@ export function RestaurantDashboard() {
           id="inventory"
           title="Inventory Management"
           description="Stocktaking & shopping lists"
-          icon="📦"
+          icon={Package}
           onClick={() => navigate('/restaurant/inventory')}
         />
 
@@ -36,7 +37,7 @@ export function RestaurantDashboard() {
           id="financial"
           title="Financial Data"
           description="CSV intake & data visualization"
-          icon="💰"
+          icon={Banknote}
           onClick={() => navigate('/restaurant/financial')}
         />
 
@@ -44,7 +45,7 @@ export function RestaurantDashboard() {
           id="events"
           title="Caravan Events"
           description="Event management & scheduling"
-          icon="🚐"
+          icon={Truck}
           onClick={() => navigate('/restaurant/events')}
         />
       </div>

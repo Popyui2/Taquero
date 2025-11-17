@@ -11,6 +11,8 @@ import { RestaurantFCP } from '@/pages/RestaurantFCP'
 import { ManufacturingFCP } from '@/pages/ManufacturingFCP'
 import { FridgeTemps } from '@/pages/modules/FridgeTemps'
 import { ModulePlaceholder } from '@/pages/modules/ModulePlaceholder'
+import { CookingProteinsBatch } from '@/pages/CookingProteinsBatch'
+import { ProvingMethods } from '@/pages/modules/ProvingMethods'
 import { StaffList } from '@/components/staff-training/StaffList'
 import { StaffDetail } from '@/components/staff-training/StaffDetail'
 import { AddStaffForm } from '@/components/staff-training/AddStaffForm'
@@ -152,12 +154,7 @@ function App() {
           />
           <Route
             path="/module/cooking-poultry-batch"
-            element={
-              <ModulePlaceholder
-                title="Cooking Poultry - Batch Checks"
-                description="Batch checks for poultry, minced meat, liver"
-              />
-            }
+            element={<CookingProteinsBatch />}
           />
           <Route
             path="/module/proving-method"
@@ -179,12 +176,7 @@ function App() {
           />
           <Route
             path="/module/proving-time-temp"
-            element={
-              <ModulePlaceholder
-                title="Proving Time/Temp Cooking"
-                description="Time/temperature validation"
-              />
-            }
+            element={<ProvingMethods />}
           />
           <Route
             path="/module/proving-cooling"

@@ -1,5 +1,20 @@
 import { useNavigate } from 'react-router-dom'
 import { ModuleCard } from '@/components/dashboard/ModuleCard'
+import {
+  Users,
+  Droplets,
+  Thermometer,
+  Sparkles,
+  Wrench,
+  UtensilsCrossed,
+  CheckCircle2,
+  Flame,
+  Timer,
+  Snowflake,
+  Box,
+  AlertTriangle,
+  MessageSquare,
+} from 'lucide-react'
 
 export function RestaurantFCP() {
   const navigate = useNavigate()
@@ -25,35 +40,35 @@ export function RestaurantFCP() {
             id="staff-training"
             title="Staff Training Records"
             description="Training logs & certifications"
-            icon="👥"
+            icon={Users}
             onClick={() => navigate('/module/staff-training')}
           />
           <ModuleCard
             id="personal-hygiene"
             title="Personal Hygiene"
             description="Hygiene management & records"
-            icon="🧼"
+            icon={Droplets}
             onClick={() => navigate('/module/personal-hygiene')}
           />
           <ModuleCard
             id="fridge-temps"
             title="Fridge/Chiller Temps"
             description="Temperature monitoring logs"
-            icon="🌡️"
+            icon={Thermometer}
             onClick={() => navigate('/module/fridge-temps')}
           />
           <ModuleCard
             id="cleaning-closing"
             title="Cleaning & Closing"
             description="Daily cleaning schedules"
-            icon="🧹"
+            icon={Sparkles}
             onClick={() => navigate('/module/cleaning-closing')}
           />
           <ModuleCard
             id="equipment-maintenance"
             title="Equipment Maintenance"
             description="Facilities & water supply records"
-            icon="🔧"
+            icon={Wrench}
             onClick={() => navigate('/module/equipment-maintenance')}
           />
         </div>
@@ -67,58 +82,58 @@ export function RestaurantFCP() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <ModuleCard
             id="cooking-poultry-batch"
-            title="Cooking Poultry - Batch Checks"
-            description="Batch checks for poultry, minced meat, liver"
-            icon="🍗"
+            title="Cooking Proteins - Batch"
+            description="Batch checks for chicken, beef, pork"
+            icon={UtensilsCrossed}
             onClick={() => navigate('/module/cooking-poultry-batch')}
           />
           <ModuleCard
             id="proving-method"
             title="Proving the Method"
             description="Method validation records"
-            icon="✅"
+            icon={CheckCircle2}
             onClick={() => navigate('/module/proving-method')}
           />
           <ModuleCard
             id="proving-reheating"
             title="Proving Reheating Method"
             description="Reheating validation"
-            icon="♨️"
+            icon={Flame}
             onClick={() => navigate('/module/proving-reheating')}
           />
           <ModuleCard
             id="proving-time-temp"
             title="Proving Time/Temp Cooking"
             description="Time/temperature validation"
-            icon="⏱️"
+            icon={Timer}
             onClick={() => navigate('/module/proving-time-temp')}
           />
           <ModuleCard
             id="proving-cooling"
             title="Proving Cooling Method"
             description="Cooling method validation"
-            icon="❄️"
+            icon={Snowflake}
             onClick={() => navigate('/module/proving-cooling')}
           />
           <ModuleCard
             id="cooling-batch"
             title="Cooling Food - Batch Checks"
             description="Freshly cooked food cooling logs"
-            icon="🧊"
+            icon={Box}
             onClick={() => navigate('/module/cooling-batch')}
           />
           <ModuleCard
             id="something-wrong"
             title="When Something Goes Wrong"
             description="Incident reports & corrective actions"
-            icon="⚠️"
+            icon={AlertTriangle}
             onClick={() => navigate('/module/something-wrong')}
           />
           <ModuleCard
             id="customer-complaints"
             title="Customer Complaints"
             description="Complaint tracking & resolution"
-            icon="💬"
+            icon={MessageSquare}
             onClick={() => navigate('/module/customer-complaints')}
           />
         </div>
