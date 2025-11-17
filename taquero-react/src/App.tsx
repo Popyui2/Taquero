@@ -14,6 +14,7 @@ import { ModulePlaceholder } from '@/pages/modules/ModulePlaceholder'
 import { CookingProteinsBatch } from '@/pages/CookingProteinsBatch'
 import { ProvingMethods } from '@/pages/modules/ProvingMethods'
 import { ProvingCooling } from '@/pages/modules/ProvingCooling'
+import { ProvingReheating } from '@/pages/modules/ProvingReheating'
 import { StaffSickness } from '@/pages/modules/StaffSickness'
 import { CoolingBatchChecks } from '@/pages/modules/CoolingBatchChecks'
 import { StaffList } from '@/components/staff-training/StaffList'
@@ -165,12 +166,7 @@ function App() {
           />
           <Route
             path="/module/proving-reheating"
-            element={
-              <ModulePlaceholder
-                title="Proving Reheating Method"
-                description="Reheating validation"
-              />
-            }
+            element={<ProvingReheating />}
           />
           <Route
             path="/module/proving-time-temp"

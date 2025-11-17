@@ -140,3 +140,23 @@ export interface CoolingBatchCheckRecord {
   completedBy: string // Staff name who did the check
   timestamp: string // ISO timestamp when recorded
 }
+
+// Proving Reheating Method Types
+export interface ReheatingBatch {
+  batchNumber: 1 | 2 | 3
+  date: string // ISO format date
+  internalTemp: number // Must be ≥75°C at coolest part (liquid) or middle (solid)
+  completedBy: string // Staff name
+  timestamp: string // ISO timestamp when recorded
+}
+
+export interface ReheatingMethod {
+  id: string
+  itemDescription: string // e.g., "5 litres vegetable soup"
+  reheatingMethod: string // Full method description
+  status: 'in-progress' | 'proven' // in-progress = 0-2 batches, proven = 3 batches
+  batches: ReheatingBatch[] // Array of 0-3 batches
+  createdAt: string // ISO timestamp when method was created
+  provenAt?: string // ISO timestamp when 3rd batch completed (only if status = proven)
+  createdBy: string // Staff name who created the method
+}
