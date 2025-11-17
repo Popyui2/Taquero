@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, AlertCircle, CheckCircle2, Loader2, HeartPulse, Calendar, User } from 'lucide-react'
+import { Plus, Loader2, HeartPulse } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useStaffSicknessStore } from '@/store/staffSicknessStore'
@@ -35,20 +35,10 @@ export function StaffSickness() {
     showToast('Sickness record added successfully', 'success')
   }
 
-  // Calculate stats
-  const sickRecords = records.filter(r => r.status === 'sick')
-  const returnedRecords = records.filter(r => r.status === 'returned')
-  const currentMonth = new Date().getMonth()
-  const currentYear = new Date().getFullYear()
-  const thisMonthRecords = records.filter(r => {
-    const date = new Date(r.dateSick)
-    return date.getMonth() === currentMonth && date.getFullYear() === currentYear
-  })
-
-  // Recent records (last 20)
+  // Recent records (last 50)
   const recentRecords = [...records]
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-    .slice(0, 20)
+    .slice(0, 50)
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
@@ -58,7 +48,7 @@ export function StaffSickness() {
           Staff Sickness
         </h2>
         <p className="text-muted-foreground text-lg">
-          Track staff health, sickness, and return to work records
+          Track staff health and sickness records
         </p>
       </div>
 
@@ -72,103 +62,6 @@ export function StaffSickness() {
         Record Staff Sickness
       </Button>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Currently Sick</CardTitle>
-            <AlertCircle className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{sickRecords.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Staff members off work
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">This Month</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{thisMonthRecords.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Total sickness records
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Returned to Work</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{returnedRecords.length}</div>
-            <p className="text-xs text-muted-foreground">
-              All-time recovered
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Currently Sick Staff */}
-      {sickRecords.length > 0 && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center">
-                <AlertCircle className="h-5 w-5 text-orange-600" />
-              </div>
-              <div>
-                <CardTitle>Currently Off Work</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Staff members currently sick
-                </p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {sickRecords.map((record) => (
-                <div
-                  key={record.id}
-                  className="border rounded-lg p-4 space-y-2 bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-900/30"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <h3 className="font-semibold">{record.staffName}</h3>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      Off since {new Date(record.dateSick).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </span>
-                  </div>
-
-                  {record.symptoms && (
-                    <div className="text-sm">
-                      <span className="font-medium">Symptoms:</span> {record.symptoms}
-                    </div>
-                  )}
-
-                  {record.actionTaken && (
-                    <div className="text-sm">
-                      <span className="font-medium">Action:</span> {record.actionTaken}
-                    </div>
-                  )}
-
-                  <div className="text-xs text-muted-foreground">
-                    Checked by {record.checkedBy}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* All Records Table */}
       <Card>
         <CardHeader>
@@ -179,7 +72,7 @@ export function StaffSickness() {
             <div>
               <CardTitle>Sickness Records</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Last 20 records
+                All staff sickness records
               </p>
             </div>
           </div>
@@ -207,7 +100,6 @@ export function StaffSickness() {
                     <th className="pb-3 font-medium">Date Returned</th>
                     <th className="pb-3 font-medium">Action Taken</th>
                     <th className="pb-3 font-medium">Checked By</th>
-                    <th className="pb-3 font-medium">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -229,19 +121,6 @@ export function StaffSickness() {
                         {record.actionTaken || '-'}
                       </td>
                       <td className="py-3">{record.checkedBy}</td>
-                      <td className="py-3">
-                        {record.status === 'sick' ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-300 text-xs font-medium">
-                            <AlertCircle className="h-3 w-3" />
-                            Sick
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 text-xs font-medium">
-                            <CheckCircle2 className="h-3 w-3" />
-                            Returned
-                          </span>
-                        )}
-                      </td>
                     </tr>
                   ))}
                 </tbody>

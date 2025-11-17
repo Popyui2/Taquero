@@ -20,7 +20,7 @@ export function AddSicknessRecordWizard({ open, onClose, onSuccess }: AddSicknes
   const { currentUser } = useAuthStore()
   const { addRecord } = useStaffSicknessStore()
 
-  // Current step (1-5)
+  // Current step (1-4)
   const [step, setStep] = useState(1)
 
   // Form data
@@ -29,12 +29,11 @@ export function AddSicknessRecordWizard({ open, onClose, onSuccess }: AddSicknes
   const [dateSick, setDateSick] = useState(new Date().toISOString().split('T')[0])
   const [dateReturned, setDateReturned] = useState('')
   const [actionTaken, setActionTaken] = useState('')
-  const [stillSick, setStillSick] = useState(true)
 
   const [hasPassedStep1, setHasPassedStep1] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const totalSteps = 5
+  const totalSteps = 4
   const progress = (step / totalSteps) * 100
 
   // Reset form
@@ -45,7 +44,6 @@ export function AddSicknessRecordWizard({ open, onClose, onSuccess }: AddSicknes
     setDateSick(new Date().toISOString().split('T')[0])
     setDateReturned('')
     setActionTaken('')
-    setStillSick(true)
     setHasPassedStep1(false)
   }
 
@@ -83,17 +81,18 @@ export function AddSicknessRecordWizard({ open, onClose, onSuccess }: AddSicknes
     setIsSubmitting(true)
 
     const recordId = `sick-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    const hasReturnDate = dateReturned.trim() !== ''
 
     const newRecord: SicknessRecord = {
       id: recordId,
       staffName,
       symptoms: symptoms.trim() || undefined,
       dateSick,
-      dateReturned: stillSick ? undefined : dateReturned,
+      dateReturned: hasReturnDate ? dateReturned : undefined,
       actionTaken: actionTaken.trim() || undefined,
       checkedBy: currentUser.name,
       timestamp: new Date().toISOString(),
-      status: stillSick ? 'sick' : 'returned',
+      status: hasReturnDate ? 'returned' : 'sick',
     }
 
     try {
@@ -210,59 +209,29 @@ export function AddSicknessRecordWizard({ open, onClose, onSuccess }: AddSicknes
             </div>
           )}
 
-          {/* STEP 4: Date Returned or Still Sick */}
+          {/* STEP 4: Date Returned (Optional), Action Taken (Optional) & Review */}
           {step === 4 && (
-            <div className="space-y-4">
-              <Label className="text-base">Have they returned to work?</Label>
-
+            <div className="space-y-6">
               <div className="space-y-4">
-                <div className="flex gap-4">
-                  <Button
-                    type="button"
-                    variant={stillSick ? 'default' : 'outline'}
-                    onClick={() => {
-                      setStillSick(true)
-                      setDateReturned('')
-                    }}
-                    className="flex-1 h-16"
-                  >
-                    Still Sick
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={!stillSick ? 'default' : 'outline'}
-                    onClick={() => setStillSick(false)}
-                    className="flex-1 h-16"
-                  >
-                    Returned to Work
-                  </Button>
+                <Label className="text-base">Date returned to work (Optional)</Label>
+                <p className="text-sm text-muted-foreground">
+                  Leave blank if still sick
+                </p>
+                <div className="relative">
+                  <CalendarCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10 pointer-events-none" />
+                  <Input
+                    type="date"
+                    value={dateReturned}
+                    onChange={(e) => setDateReturned(e.target.value)}
+                    min={dateSick}
+                    max={new Date().toISOString().split('T')[0]}
+                    className="h-16 text-xl pl-12"
+                  />
                 </div>
-
-                {!stillSick && (
-                  <div className="space-y-2">
-                    <Label>Date returned to work</Label>
-                    <div className="relative">
-                      <CalendarCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10 pointer-events-none" />
-                      <Input
-                        type="date"
-                        value={dateReturned}
-                        onChange={(e) => setDateReturned(e.target.value)}
-                        min={dateSick}
-                        max={new Date().toISOString().split('T')[0]}
-                        className="h-16 text-xl pl-12"
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
-            </div>
-          )}
 
-          {/* STEP 5: Action Taken (Optional) & Review */}
-          {step === 5 && (
-            <div className="space-y-4">
               <div className="space-y-4">
-                <Label className="text-base">Action taken? (Optional)</Label>
+                <Label className="text-base">Action taken (Optional)</Label>
                 <p className="text-sm text-muted-foreground">
                   Record any actions taken (e.g., "Stayed home, symptoms stopped 02/04/17")
                 </p>
@@ -315,17 +284,19 @@ export function AddSicknessRecordWizard({ open, onClose, onSuccess }: AddSicknes
                     </Button>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex-1">
-                      <div className="text-xs text-muted-foreground mb-1">Status</div>
-                      <div className="font-medium">
-                        {stillSick ? 'Still Sick' : `Returned on ${new Date(dateReturned).toLocaleDateString('en-NZ', { day: 'numeric', month: 'long', year: 'numeric' })}`}
+                  {dateReturned && (
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="text-xs text-muted-foreground mb-1">Date Returned</div>
+                        <div className="font-medium">
+                          {new Date(dateReturned).toLocaleDateString('en-NZ', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </div>
                       </div>
+                      <Button variant="ghost" size="sm" onClick={() => handleJumpToStep(4)} className="h-8 w-8 p-0">
+                        <Edit2 className="h-3 w-3" />
+                      </Button>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => handleJumpToStep(4)} className="h-8 w-8 p-0">
-                      <Edit2 className="h-3 w-3" />
-                    </Button>
-                  </div>
+                  )}
 
                   {actionTaken && (
                     <div className="p-3 border rounded-lg">
@@ -363,8 +334,7 @@ export function AddSicknessRecordWizard({ open, onClose, onSuccess }: AddSicknes
               onClick={handleNext}
               disabled={
                 (step === 1 && !staffName.trim()) ||
-                (step === 3 && !dateSick) ||
-                (step === 4 && !stillSick && !dateReturned)
+                (step === 3 && !dateSick)
               }
               className="h-12 min-h-[48px] flex-1"
             >
