@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
 import { useAuthStore } from '@/store/authStore'
-import { useProvingMethodStore } from '@/store/provingMethodStore'
+import { useProvingMethodStore, saveBatchToGoogleSheets } from '@/store/provingMethodStore'
 import { ProvingMethod, ValidationBatch } from '@/types'
 import { Calendar, Clock, Edit2, Thermometer } from 'lucide-react'
 
@@ -108,6 +108,14 @@ export function NewMethodWizard({ open, onClose, onSuccess }: NewMethodWizardPro
     }
 
     try {
+      // Save to Google Sheets
+      const saveResult = await saveBatchToGoogleSheets(newMethod, firstBatch)
+
+      if (!saveResult.success) {
+        console.warn('⚠️ Failed to save to Google Sheets:', saveResult.error)
+        // Continue anyway - data is saved locally
+      }
+
       // Add to local store
       createMethod(newMethod)
 

@@ -2,8 +2,65 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { ProvingMethod, ValidationBatch } from '@/types'
 
-// Google Sheets webhook URL - will be updated later
-const GOOGLE_SHEETS_WEBHOOK = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'
+// Google Sheets webhook URL - update this with your deployed Apps Script URL
+const GOOGLE_SHEETS_URL = ''
+
+// Helper function to save batch to Google Sheets
+export async function saveBatchToGoogleSheets(
+  method: ProvingMethod,
+  batch: ValidationBatch
+): Promise<{ success: boolean; error?: string }> {
+  if (!GOOGLE_SHEETS_URL) {
+    console.warn('⚠️ Google Sheets URL not configured')
+    return { success: false, error: 'Google Sheets URL not configured' }
+  }
+
+  try {
+    const payload = {
+      methodId: method.id,
+      itemDescription: method.itemDescription,
+      cookingMethod: method.cookingMethod,
+      batchNumber: batch.batchNumber,
+      date: batch.date,
+      temperature: batch.temperature,
+      timeAtTemp: batch.timeAtTemp,
+      completedBy: batch.completedBy,
+      unixTimestamp: Math.floor(new Date(batch.timestamp).getTime() / 1000),
+      status: batch.batchNumber === 3 ? 'proven' : method.status,
+      createdBy: method.createdBy,
+      createdAt: method.createdAt,
+    }
+
+    console.log('📤 Saving batch to Google Sheets:', payload)
+
+    const response = await fetch(GOOGLE_SHEETS_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const result = await response.json()
+
+    if (result.success) {
+      console.log('✅ Batch saved to Google Sheets successfully')
+      return { success: true }
+    } else {
+      throw new Error(result.error || 'Failed to save')
+    }
+  } catch (error) {
+    console.error('❌ Error saving to Google Sheets:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
 
 interface ProvingMethodState {
   // State
@@ -35,12 +92,17 @@ export const useProvingMethodStore = create<ProvingMethodState>()(
 
       // Fetch data from Google Sheets
       fetchFromGoogleSheets: async () => {
+        if (!GOOGLE_SHEETS_URL) {
+          console.warn('⚠️ Google Sheets URL not configured - skipping fetch')
+          return
+        }
+
         console.log('🔄 fetchFromGoogleSheets called for proving methods')
 
         set({ isLoading: true, fetchError: null })
 
         try {
-          const response = await fetch(GOOGLE_SHEETS_WEBHOOK, {
+          const response = await fetch(GOOGLE_SHEETS_URL, {
             method: 'GET',
           })
 

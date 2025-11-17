@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
-import { useProvingMethodStore } from '@/store/provingMethodStore'
+import { useProvingMethodStore, saveBatchToGoogleSheets } from '@/store/provingMethodStore'
 import { useAuthStore } from '@/store/authStore'
 import { ProvingMethod, ValidationBatch } from '@/types'
 
@@ -49,7 +49,7 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
     }
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!currentUser) {
       alert('Error: No user logged in')
       return
@@ -62,6 +62,14 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
       timeAtTemp: `${timeValue} ${timeValue === '1' ? 'minute' : 'minutes'}`,
       completedBy: currentUser.name,
       timestamp: new Date().toISOString()
+    }
+
+    // Save to Google Sheets
+    const saveResult = await saveBatchToGoogleSheets(method, batch)
+
+    if (!saveResult.success) {
+      console.warn('⚠️ Failed to save to Google Sheets:', saveResult.error)
+      // Continue anyway - data is saved locally
     }
 
     addBatchToMethod(method.id, batch)
