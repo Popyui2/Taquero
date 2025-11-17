@@ -25,6 +25,7 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [temperature, setTemperature] = useState('')
   const [timeValue, setTimeValue] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const totalSteps = 4 // Date, Temp, Time, Review
   const nextBatchNumber = (method.batches.length + 1) as 1 | 2 | 3
@@ -55,30 +56,41 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
       return
     }
 
-    const batch: ValidationBatch = {
-      batchNumber: nextBatchNumber,
-      date: date,
-      temperature: parseFloat(temperature),
-      timeAtTemp: `${timeValue} ${timeValue === '1' ? 'minute' : 'minutes'}`,
-      completedBy: currentUser.name,
-      timestamp: new Date().toISOString()
+    setIsSubmitting(true)
+
+    try {
+      const batch: ValidationBatch = {
+        batchNumber: nextBatchNumber,
+        date: date,
+        temperature: parseFloat(temperature),
+        timeAtTemp: `${timeValue} ${timeValue === '1' ? 'minute' : 'minutes'}`,
+        completedBy: currentUser.name,
+        timestamp: new Date().toISOString()
+      }
+
+      // Save to Google Sheets
+      const saveResult = await saveBatchToGoogleSheets(method, batch)
+
+      if (!saveResult.success) {
+        console.warn('⚠️ Failed to save to Google Sheets:', saveResult.error)
+        // Continue anyway - data is saved locally
+      }
+
+      addBatchToMethod(method.id, batch)
+
+      console.log('✅ Batch saved successfully')
+
+      // Check if this completes the method (becomes batch 3)
+      const willBeProven = nextBatchNumber === 3
+
+      handleClose()
+      onSuccess(willBeProven)
+    } catch (error) {
+      console.error('❌ Error saving batch:', error)
+      alert('Error saving batch. Please try again.')
+    } finally {
+      setIsSubmitting(false)
     }
-
-    // Save to Google Sheets
-    const saveResult = await saveBatchToGoogleSheets(method, batch)
-
-    if (!saveResult.success) {
-      console.warn('⚠️ Failed to save to Google Sheets:', saveResult.error)
-      // Continue anyway - data is saved locally
-    }
-
-    addBatchToMethod(method.id, batch)
-
-    // Check if this completes the method (becomes batch 3)
-    const willBeProven = nextBatchNumber === 3
-
-    handleClose()
-    onSuccess(willBeProven)
   }
 
   const canProceed = () => {
@@ -94,6 +106,16 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        {/* Loading Overlay */}
+        {isSubmitting && (
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              <div className="text-lg font-semibold">Saving to Google Sheets...</div>
+            </div>
+          </div>
+        )}
+
         <DialogHeader>
           <DialogTitle className="text-2xl">
             Add Batch {nextBatchNumber}/3
@@ -269,11 +291,11 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
             ) : (
               <Button
                 onClick={handleSubmit}
-                disabled={!canProceed()}
+                disabled={!canProceed() || isSubmitting}
                 className="flex-1"
                 size="lg"
               >
-                {nextBatchNumber === 3 ? 'Complete & Prove Method' : 'Record Batch'}
+                {isSubmitting ? 'Saving...' : nextBatchNumber === 3 ? 'Complete & Prove Method' : 'Record Batch'}
               </Button>
             )}
           </div>

@@ -143,7 +143,7 @@ export function NewMethodWizard({ open, onClose, onSuccess }: NewMethodWizardPro
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg">
             <div className="flex flex-col items-center gap-4">
               <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-              <div className="text-lg font-semibold">Creating Method...</div>
+              <div className="text-lg font-semibold">Saving to Google Sheets...</div>
             </div>
           </div>
         )}
