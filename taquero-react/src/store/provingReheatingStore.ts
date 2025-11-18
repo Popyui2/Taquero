@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { ReheatingMethod, ReheatingBatch } from '@/types'
 
 // Google Sheets webhook URL - update this with your deployed Apps Script URL
-const GOOGLE_SHEETS_URL = ''
+const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxDT8PJzuo1sPDVldlHDH-rkYJp5O6wleomkSFsKBBlu8GKLJmhjC2mlL54WQ1p41onJQ/exec'
 
 // Helper function to save batch to Google Sheets
 export async function saveReheatingBatchToGoogleSheets(
