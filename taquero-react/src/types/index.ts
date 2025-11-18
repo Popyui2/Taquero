@@ -160,3 +160,14 @@ export interface ReheatingMethod {
   provenAt?: string // ISO timestamp when 3rd batch completed (only if status = proven)
   createdBy: string // Staff name who created the method
 }
+
+// Allergen Record Types
+export interface AllergenRecord {
+  id: string
+  dishName: string // Name of the dish
+  ingredients: string // Comma-separated or free text list of ingredients
+  allergens: string[] // Array of allergen names selected from the required list
+  createdBy: string // Staff name who created the record
+  createdAt: string // ISO timestamp when record was created
+  updatedAt?: string // ISO timestamp when record was last updated (for edit tracking)
+}

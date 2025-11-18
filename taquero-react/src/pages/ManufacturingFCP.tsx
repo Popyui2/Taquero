@@ -12,6 +12,7 @@ import {
   Box,
   Settings,
   Building2,
+  Utensils,
 } from 'lucide-react'
 
 export function ManufacturingFCP() {
@@ -68,6 +69,13 @@ export function ManufacturingFCP() {
             description="Facilities & water supply records"
             icon={Wrench}
             onClick={() => navigate('/module/equipment-maintenance')}
+          />
+          <ModuleCard
+            id="allergens"
+            title="Allergens in My Food"
+            description="Track allergens to inform customers"
+            icon={Utensils}
+            onClick={() => navigate('/module/allergens')}
           />
         </div>
       </div>

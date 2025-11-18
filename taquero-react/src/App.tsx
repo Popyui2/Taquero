@@ -17,6 +17,7 @@ import { ProvingCooling } from '@/pages/modules/ProvingCooling'
 import { ProvingReheating } from '@/pages/modules/ProvingReheating'
 import { StaffSickness } from '@/pages/modules/StaffSickness'
 import { CoolingBatchChecks } from '@/pages/modules/CoolingBatchChecks'
+import { Allergens } from '@/pages/modules/Allergens'
 import { StaffList } from '@/components/staff-training/StaffList'
 import { StaffDetail } from '@/components/staff-training/StaffDetail'
 import { AddStaffForm } from '@/components/staff-training/AddStaffForm'
@@ -197,6 +198,10 @@ function App() {
                 description="Complaint tracking & resolution"
               />
             }
+          />
+          <Route
+            path="/module/allergens"
+            element={<Allergens />}
           />
           <Route
             path="/module/processes-controls"
