@@ -44,6 +44,7 @@ function initializeSheet() {
       'Address',
       'Order Days',
       'Delivery Days',
+      'Custom Arrangement',
       'Goods Supplied',
       'Comments',
       'Created By',
@@ -85,7 +86,7 @@ function doGet(e) {
     // Convert rows to supplier record objects (filter out deleted records)
     var records = rows
       .filter(function(row) {
-        return row[15] !== 'deleted' // Filter out deleted records
+        return row[16] !== 'deleted' // Filter out deleted records
       })
       .map(function(row) {
         return {
@@ -98,12 +99,13 @@ function doGet(e) {
           address: row[7],
           orderDays: row[8] ? row[8].split(',').map(function(d) { return d.trim() }) : [],
           deliveryDays: row[9] ? row[9].split(',').map(function(d) { return d.trim() }) : [],
-          goodsSupplied: row[10],
-          comments: row[11] || null,
-          createdBy: row[12],
-          createdAt: row[13],
-          updatedAt: row[14] || null,
-          status: row[15] || 'active'
+          customArrangement: row[10] || null,
+          goodsSupplied: row[11],
+          comments: row[12] || null,
+          createdBy: row[13],
+          createdAt: row[14],
+          updatedAt: row[15] || null,
+          status: row[16] || 'active'
         }
       })
 
@@ -164,6 +166,7 @@ function doPost(e) {
       data.address,
       Array.isArray(data.orderDays) ? data.orderDays.join(', ') : data.orderDays,
       Array.isArray(data.deliveryDays) ? data.deliveryDays.join(', ') : data.deliveryDays,
+      data.customArrangement || '',
       data.goodsSupplied,
       data.comments || '',
       data.createdBy,

@@ -226,30 +226,44 @@ export function MySuppliers() {
                                   <div>
                                     <strong className="text-sm">Days to place orders:</strong>
                                     <div className="flex flex-wrap gap-1 mt-1">
-                                      {record.orderDays.map((day, idx) => (
-                                        <span
-                                          key={idx}
-                                          className="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-                                        >
-                                          {day}
-                                        </span>
-                                      ))}
+                                      {record.orderDays.length > 0 ? (
+                                        record.orderDays.map((day, idx) => (
+                                          <span
+                                            key={idx}
+                                            className="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                                          >
+                                            {day}
+                                          </span>
+                                        ))
+                                      ) : (
+                                        <p className="text-sm text-muted-foreground">N/A</p>
+                                      )}
                                     </div>
                                   </div>
                                   <div>
                                     <strong className="text-sm">Days to receive delivery:</strong>
                                     <div className="flex flex-wrap gap-1 mt-1">
-                                      {record.deliveryDays.map((day, idx) => (
-                                        <span
-                                          key={idx}
-                                          className="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                                        >
-                                          {day}
-                                        </span>
-                                      ))}
+                                      {record.deliveryDays.length > 0 ? (
+                                        record.deliveryDays.map((day, idx) => (
+                                          <span
+                                            key={idx}
+                                            className="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                                          >
+                                            {day}
+                                          </span>
+                                        ))
+                                      ) : (
+                                        <p className="text-sm text-muted-foreground">N/A</p>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
+                                {record.customArrangement && (
+                                  <div>
+                                    <strong className="text-sm">Custom arrangement:</strong>
+                                    <p className="text-sm text-muted-foreground mt-1 whitespace-pre-line">{record.customArrangement}</p>
+                                  </div>
+                                )}
                                 <div>
                                   <strong className="text-sm">Goods supplied:</strong>
                                   <p className="text-sm text-muted-foreground mt-1 whitespace-pre-line">{record.goodsSupplied}</p>

@@ -36,6 +36,7 @@ export function AddSupplierWizard({ open, onClose, onSuccess, editingRecord }: A
   const [address, setAddress] = useState('')
   const [orderDays, setOrderDays] = useState<string[]>([])
   const [deliveryDays, setDeliveryDays] = useState<string[]>([])
+  const [customArrangement, setCustomArrangement] = useState('')
   const [goodsSupplied, setGoodsSupplied] = useState('')
   const [comments, setComments] = useState('')
 
@@ -50,13 +51,14 @@ export function AddSupplierWizard({ open, onClose, onSuccess, editingRecord }: A
   useEffect(() => {
     if (editingRecord && open) {
       setBusinessName(editingRecord.businessName)
-      setSiteRegistrationNumber(editingRecord.siteRegistrationNumber)
+      setSiteRegistrationNumber(editingRecord.siteRegistrationNumber || '')
       setContactPerson(editingRecord.contactPerson)
-      setPhone(editingRecord.phone)
-      setEmail(editingRecord.email)
+      setPhone(editingRecord.phone || '')
+      setEmail(editingRecord.email || '')
       setAddress(editingRecord.address)
       setOrderDays(editingRecord.orderDays)
       setDeliveryDays(editingRecord.deliveryDays)
+      setCustomArrangement(editingRecord.customArrangement || '')
       setGoodsSupplied(editingRecord.goodsSupplied)
       setComments(editingRecord.comments || '')
     }
@@ -73,6 +75,7 @@ export function AddSupplierWizard({ open, onClose, onSuccess, editingRecord }: A
     setAddress('')
     setOrderDays([])
     setDeliveryDays([])
+    setCustomArrangement('')
     setGoodsSupplied('')
     setComments('')
     setHasPassedStep1(false)
@@ -130,13 +133,14 @@ export function AddSupplierWizard({ open, onClose, onSuccess, editingRecord }: A
         const updatedRecord: SupplierRecord = {
           ...editingRecord,
           businessName,
-          siteRegistrationNumber,
+          siteRegistrationNumber: siteRegistrationNumber.trim() || undefined,
           contactPerson,
-          phone,
-          email,
+          phone: phone.trim() || undefined,
+          email: email.trim() || undefined,
           address,
           orderDays,
           deliveryDays,
+          customArrangement: customArrangement.trim() || undefined,
           goodsSupplied,
           comments: comments.trim() || undefined,
           updatedAt: new Date().toISOString(),
@@ -153,13 +157,14 @@ export function AddSupplierWizard({ open, onClose, onSuccess, editingRecord }: A
         // Update local store
         updateRecord(editingRecord.id, {
           businessName,
-          siteRegistrationNumber,
+          siteRegistrationNumber: siteRegistrationNumber.trim() || undefined,
           contactPerson,
-          phone,
-          email,
+          phone: phone.trim() || undefined,
+          email: email.trim() || undefined,
           address,
           orderDays,
           deliveryDays,
+          customArrangement: customArrangement.trim() || undefined,
           goodsSupplied,
           comments: comments.trim() || undefined,
         })
@@ -170,13 +175,14 @@ export function AddSupplierWizard({ open, onClose, onSuccess, editingRecord }: A
         const newRecord: SupplierRecord = {
           id: recordId,
           businessName,
-          siteRegistrationNumber,
+          siteRegistrationNumber: siteRegistrationNumber.trim() || undefined,
           contactPerson,
-          phone,
-          email,
+          phone: phone.trim() || undefined,
+          email: email.trim() || undefined,
           address,
           orderDays,
           deliveryDays,
+          customArrangement: customArrangement.trim() || undefined,
           goodsSupplied,
           comments: comments.trim() || undefined,
           createdBy: currentUser.name,
@@ -211,9 +217,9 @@ export function AddSupplierWizard({ open, onClose, onSuccess, editingRecord }: A
   }
 
   // Validation
-  const canProceedFromStep1 = businessName.trim().length > 0 && siteRegistrationNumber.trim().length > 0
-  const canProceedFromStep2 = contactPerson.trim().length > 0 && phone.trim().length > 0 && email.trim().length > 0 && address.trim().length > 0
-  const canProceedFromStep3 = orderDays.length > 0 && deliveryDays.length > 0
+  const canProceedFromStep1 = businessName.trim().length > 0
+  const canProceedFromStep2 = contactPerson.trim().length > 0 && address.trim().length > 0
+  const canProceedFromStep3 = (orderDays.length > 0 && deliveryDays.length > 0) || customArrangement.trim().length > 0
   const canSave = goodsSupplied.trim().length > 0
 
   return (
@@ -274,7 +280,7 @@ export function AddSupplierWizard({ open, onClose, onSuccess, editingRecord }: A
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="siteRegistrationNumber">Site Registration Number *</Label>
+                    <Label htmlFor="siteRegistrationNumber">Site Registration Number (optional)</Label>
                     <Input
                       id="siteRegistrationNumber"
                       value={siteRegistrationNumber}
@@ -320,7 +326,7 @@ export function AddSupplierWizard({ open, onClose, onSuccess, editingRecord }: A
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone *</Label>
+                      <Label htmlFor="phone">Phone (optional)</Label>
                       <Input
                         id="phone"
                         value={phone}
@@ -330,7 +336,7 @@ export function AddSupplierWizard({ open, onClose, onSuccess, editingRecord }: A
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email *</Label>
+                      <Label htmlFor="email">Email (optional)</Label>
                       <Input
                         id="email"
                         type="email"
@@ -368,12 +374,12 @@ export function AddSupplierWizard({ open, onClose, onSuccess, editingRecord }: A
                   <div>
                     <h3 className="font-semibold text-lg">Order & Delivery Schedule</h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Select the days for ordering and delivery
+                      Select the days for ordering and delivery, or specify a custom arrangement
                     </p>
                   </div>
 
                   <div className="space-y-3">
-                    <Label>Days to place orders *</Label>
+                    <Label>Days to place orders</Label>
                     <div className="flex flex-wrap gap-2">
                       {DAYS_OF_WEEK.map((day) => (
                         <div key={day} className="flex items-center space-x-2">
@@ -394,7 +400,7 @@ export function AddSupplierWizard({ open, onClose, onSuccess, editingRecord }: A
                   </div>
 
                   <div className="space-y-3">
-                    <Label>Days to receive delivery *</Label>
+                    <Label>Days to receive delivery</Label>
                     <div className="flex flex-wrap gap-2">
                       {DAYS_OF_WEEK.map((day) => (
                         <div key={day} className="flex items-center space-x-2">
@@ -412,6 +418,20 @@ export function AddSupplierWizard({ open, onClose, onSuccess, editingRecord }: A
                         </div>
                       ))}
                     </div>
+                  </div>
+
+                  <div className="space-y-2 pt-3 border-t">
+                    <Label htmlFor="customArrangement">Custom arrangement (optional)</Label>
+                    <Textarea
+                      id="customArrangement"
+                      value={customArrangement}
+                      onChange={(e) => setCustomArrangement(e.target.value)}
+                      placeholder="e.g., We arrange deliveries on an ad-hoc basis&#10;No fixed schedule - call when needed"
+                      className="text-base min-h-[80px]"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Use this if you have a custom arrangement instead of fixed days
+                    </p>
                   </div>
                 </div>
               </div>

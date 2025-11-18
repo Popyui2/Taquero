@@ -177,13 +177,14 @@ export interface AllergenRecord {
 export interface SupplierRecord {
   id: string
   businessName: string // Name of the supplier business
-  siteRegistrationNumber: string // MPI registration number (e.g., MPI000010)
+  siteRegistrationNumber?: string // MPI registration number (e.g., MPI000010) - optional
   contactPerson: string // Name of contact person
-  phone: string // Contact phone number
-  email: string // Contact email address
+  phone?: string // Contact phone number - optional
+  email?: string // Contact email address - optional
   address: string // Full address of supplier
   orderDays: string[] // Days to place orders (Mon, Tue, Wed, Thu, Fri, Sat, Sun)
   deliveryDays: string[] // Days to receive delivery (Mon, Tue, Wed, Thu, Fri, Sat, Sun)
+  customArrangement?: string // Custom arrangement for ordering/delivery (alternative to day selection)
   goodsSupplied: string // List of products/goods supplied
   comments?: string // Optional additional notes
   createdBy: string // Staff name who created the record
