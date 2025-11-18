@@ -102,16 +102,6 @@ export function Allergens() {
         </p>
       </div>
 
-      {/* Info Note */}
-      <Card className="border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/20">
-        <CardContent className="pt-6">
-          <p className="text-sm text-muted-foreground">
-            <strong>Note:</strong> Recording this information is optional but helps your staff know what's in your food.
-            Remember to keep this up to date when recipes are changed or updated.
-          </p>
-        </CardContent>
-      </Card>
-
       {/* Add Record Button */}
       <Button
         size="lg"

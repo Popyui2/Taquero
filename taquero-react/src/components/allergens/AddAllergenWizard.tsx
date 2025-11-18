@@ -22,7 +22,6 @@ interface AddAllergenWizardProps {
 const ALLERGEN_GROUPS = {
   common: [
     'Gluten (wheat, barley, rye, oats)',
-    'Wheat',
     'Milk',
     'Egg',
     'Soy',
