@@ -56,6 +56,13 @@ export function RestaurantFCP() {
             icon="🔧"
             onClick={() => navigate('/module/equipment-maintenance')}
           />
+          <ModuleCard
+            id="supplier-deliveries"
+            title="Supplier Deliveries"
+            description="Track deliveries for food safety & traceability"
+            icon="🚚"
+            onClick={() => navigate('/module/supplier-deliveries')}
+          />
         </div>
       </div>
 

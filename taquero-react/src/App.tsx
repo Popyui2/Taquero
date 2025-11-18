@@ -10,6 +10,7 @@ import { ManufacturingDashboard } from '@/pages/ManufacturingDashboard'
 import { RestaurantFCP } from '@/pages/RestaurantFCP'
 import { ManufacturingFCP } from '@/pages/ManufacturingFCP'
 import { FridgeTemps } from '@/pages/modules/FridgeTemps'
+import { SupplierDeliveries } from '@/pages/modules/SupplierDeliveries'
 import { ModulePlaceholder } from '@/pages/modules/ModulePlaceholder'
 import { StaffList } from '@/components/staff-training/StaffList'
 import { StaffDetail } from '@/components/staff-training/StaffDetail'
@@ -119,6 +120,7 @@ function App() {
 
           {/* FCP Module Routes */}
           <Route path="/module/fridge-temps" element={<FridgeTemps />} />
+          <Route path="/module/supplier-deliveries" element={<SupplierDeliveries />} />
           <Route path="/module/staff-training" element={<StaffList />} />
           <Route path="/module/staff-training/add" element={<AddStaffForm />} />
           <Route path="/module/staff-training/:staffId" element={<StaffDetail />} />

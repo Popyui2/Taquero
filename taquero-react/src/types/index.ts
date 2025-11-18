@@ -48,3 +48,22 @@ export interface StaffMember {
   createdAt: string // ISO format
   trainingRecords: TrainingRecord[]
 }
+
+export interface DeliveryRecord {
+  id: string
+  deliveryDate: string // ISO format
+  supplierName: string
+  supplierContact: string
+  batchLotId?: string // Optional - not all suppliers have proper systems
+  typeOfFood: string
+  quantity: number
+  unit: 'kg' | 'L' | 'units' | 'boxes' | 'trays'
+  requiresTempCheck: boolean
+  temperature?: number // Only if requiresTempCheck is true
+  taskDoneBy: string
+  notes?: string // Optional
+  createdBy: string
+  createdAt: string
+  updatedAt?: string
+  status: 'active' | 'deleted'
+}
