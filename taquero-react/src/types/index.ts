@@ -172,3 +172,22 @@ export interface AllergenRecord {
   updatedAt?: string // ISO timestamp when record was last updated (for edit tracking)
   status: 'active' | 'deleted' // Status of the record (active or soft deleted)
 }
+
+// Trusted Supplier Record Types
+export interface SupplierRecord {
+  id: string
+  businessName: string // Name of the supplier business
+  siteRegistrationNumber: string // MPI registration number (e.g., MPI000010)
+  contactPerson: string // Name of contact person
+  phone: string // Contact phone number
+  email: string // Contact email address
+  address: string // Full address of supplier
+  orderDays: string[] // Days to place orders (Mon, Tue, Wed, Thu, Fri, Sat, Sun)
+  deliveryDays: string[] // Days to receive delivery (Mon, Tue, Wed, Thu, Fri, Sat, Sun)
+  goodsSupplied: string // List of products/goods supplied
+  comments?: string // Optional additional notes
+  createdBy: string // Staff name who created the record
+  createdAt: string // ISO timestamp when record was created
+  updatedAt?: string // ISO timestamp when record was last updated (for edit tracking)
+  status: 'active' | 'deleted' // Status of the record (active or soft deleted)
+}

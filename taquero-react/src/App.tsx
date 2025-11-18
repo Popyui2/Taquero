@@ -18,6 +18,7 @@ import { ProvingReheating } from '@/pages/modules/ProvingReheating'
 import { StaffSickness } from '@/pages/modules/StaffSickness'
 import { CoolingBatchChecks } from '@/pages/modules/CoolingBatchChecks'
 import { Allergens } from '@/pages/modules/Allergens'
+import { MySuppliers } from '@/pages/modules/MySuppliers'
 import { StaffList } from '@/components/staff-training/StaffList'
 import { StaffDetail } from '@/components/staff-training/StaffDetail'
 import { AddStaffForm } from '@/components/staff-training/AddStaffForm'
@@ -202,6 +203,10 @@ function App() {
           <Route
             path="/module/allergens"
             element={<Allergens />}
+          />
+          <Route
+            path="/module/suppliers"
+            element={<MySuppliers />}
           />
           <Route
             path="/module/processes-controls"

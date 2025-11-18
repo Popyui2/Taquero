@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   MessageSquare,
   Utensils,
+  Truck,
 } from 'lucide-react'
 
 export function RestaurantFCP() {
@@ -76,6 +77,13 @@ export function RestaurantFCP() {
             description="Track allergens to inform customers"
             icon={Utensils}
             onClick={() => navigate('/module/allergens')}
+          />
+          <ModuleCard
+            id="suppliers"
+            title="My Trusted Suppliers"
+            description="Track suppliers for food safety"
+            icon={Truck}
+            onClick={() => navigate('/module/suppliers')}
           />
         </div>
       </div>
