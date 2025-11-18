@@ -103,6 +103,10 @@ export function AddSupplierWizard({ open, onClose, onSuccess, editingRecord }: A
 
   // Toggle day selection
   const toggleOrderDay = (day: string) => {
+    // Clear custom arrangement when selecting days
+    if (customArrangement.trim().length > 0) {
+      setCustomArrangement('')
+    }
     setOrderDays((prev) =>
       prev.includes(day)
         ? prev.filter((d) => d !== day)
@@ -111,11 +115,25 @@ export function AddSupplierWizard({ open, onClose, onSuccess, editingRecord }: A
   }
 
   const toggleDeliveryDay = (day: string) => {
+    // Clear custom arrangement when selecting days
+    if (customArrangement.trim().length > 0) {
+      setCustomArrangement('')
+    }
     setDeliveryDays((prev) =>
       prev.includes(day)
         ? prev.filter((d) => d !== day)
         : [...prev, day]
     )
+  }
+
+  // Handle custom arrangement change
+  const handleCustomArrangementChange = (value: string) => {
+    // Clear day selections when typing custom arrangement
+    if (value.trim().length > 0 && (orderDays.length > 0 || deliveryDays.length > 0)) {
+      setOrderDays([])
+      setDeliveryDays([])
+    }
+    setCustomArrangement(value)
   }
 
   // Save record
@@ -425,7 +443,7 @@ export function AddSupplierWizard({ open, onClose, onSuccess, editingRecord }: A
                     <Textarea
                       id="customArrangement"
                       value={customArrangement}
-                      onChange={(e) => setCustomArrangement(e.target.value)}
+                      onChange={(e) => handleCustomArrangementChange(e.target.value)}
                       placeholder="e.g., We arrange deliveries on an ad-hoc basis&#10;No fixed schedule - call when needed"
                       className="text-base min-h-[80px]"
                     />
