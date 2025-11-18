@@ -23,6 +23,7 @@ export async function saveAllergenToGoogleSheets(
       createdBy: record.createdBy,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
+      status: record.status,
       unixTimestamp: Math.floor(new Date(record.createdAt).getTime() / 1000),
     }
 
@@ -45,9 +46,9 @@ export async function saveAllergenToGoogleSheets(
   }
 }
 
-// Helper function to delete record from Google Sheets
+// Helper function to soft delete record from Google Sheets (mark as deleted)
 export async function deleteAllergenFromGoogleSheets(
-  recordId: string
+  record: AllergenRecord
 ): Promise<{ success: boolean; error?: string }> {
   if (!GOOGLE_SHEETS_URL) {
     console.warn('⚠️ Google Sheets URL not configured')
@@ -55,16 +56,26 @@ export async function deleteAllergenFromGoogleSheets(
   }
 
   try {
+    // Mark as deleted by updating the status field
+    const payload = {
+      id: record.id,
+      dishName: record.dishName,
+      ingredients: record.ingredients,
+      allergens: record.allergens,
+      createdBy: record.createdBy,
+      createdAt: record.createdAt,
+      updatedAt: new Date().toISOString(),
+      status: 'deleted',
+      unixTimestamp: Math.floor(new Date(record.createdAt).getTime() / 1000),
+    }
+
     await fetch(GOOGLE_SHEETS_URL, {
       method: 'POST',
       mode: 'no-cors' as RequestMode,
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        action: 'delete',
-        id: recordId,
-      }),
+      body: JSON.stringify(payload),
     })
 
     return { success: true }
@@ -159,16 +170,20 @@ export const useAllergensStore = create<AllergensState>()(
         }))
       },
 
-      // Delete a record
+      // Delete a record (soft delete - mark as deleted)
       deleteRecord: (recordId: string) => {
         set((state) => ({
-          records: state.records.filter((record) => record.id !== recordId),
+          records: state.records.map((record) =>
+            record.id === recordId
+              ? { ...record, status: 'deleted' as const, updatedAt: new Date().toISOString() }
+              : record
+          ),
         }))
       },
 
-      // Get all records
+      // Get all records (filter out deleted)
       getRecords: () => {
-        return get().records
+        return get().records.filter((record) => record.status !== 'deleted')
       },
 
       // Get record by ID

@@ -41,7 +41,8 @@ function initializeSheet() {
       'Allergens',
       'Created By',
       'Created At',
-      'Updated At'
+      'Updated At',
+      'Status'
     ]
 
     sheet.getRange(1, 1, 1, headers.length).setValues([headers])
@@ -74,18 +75,23 @@ function doGet(e) {
     var headers = data[0]
     var rows = data.slice(1)
 
-    // Convert rows to allergen record objects
-    var records = rows.map(function(row) {
-      return {
-        id: row[1],
-        dishName: row[2],
-        ingredients: row[3],
-        allergens: row[4] ? row[4].split(',').map(function(a) { return a.trim() }) : [],
-        createdBy: row[5],
-        createdAt: row[6],
-        updatedAt: row[7] || null
-      }
-    })
+    // Convert rows to allergen record objects (filter out deleted records)
+    var records = rows
+      .filter(function(row) {
+        return row[8] !== 'deleted' // Filter out deleted records
+      })
+      .map(function(row) {
+        return {
+          id: row[1],
+          dishName: row[2],
+          ingredients: row[3],
+          allergens: row[4] ? row[4].split(',').map(function(a) { return a.trim() }) : [],
+          createdBy: row[5],
+          createdAt: row[6],
+          updatedAt: row[7] || null,
+          status: row[8] || 'active'
+        }
+      })
 
     // Sort by creation date (newest first)
     records.sort(function(a, b) {
@@ -141,7 +147,8 @@ function doPost(e) {
       Array.isArray(data.allergens) ? data.allergens.join(', ') : data.allergens,
       data.createdBy,
       data.createdAt,
-      data.updatedAt || ''
+      data.updatedAt || '',
+      data.status || 'active'
     ]
 
     if (existingRowIndex > 0) {

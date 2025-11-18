@@ -161,6 +161,7 @@ export function AddAllergenWizard({ open, onClose, onSuccess, editingRecord }: A
           allergens: selectedAllergens,
           createdBy: currentUser.name,
           createdAt: new Date().toISOString(),
+          status: 'active',
         }
 
         // Save to Google Sheets

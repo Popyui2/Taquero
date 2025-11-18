@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Loader2, Utensils, Pencil, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useAllergensStore } from '@/store/allergensStore'
+import { useAllergensStore, deleteAllergenFromGoogleSheets } from '@/store/allergensStore'
 import { Toast, ToastContainer } from '@/components/ui/toast'
 import { AddAllergenWizard } from '@/components/allergens/AddAllergenWizard'
 import { AllergenRecord } from '@/types'
@@ -64,8 +64,12 @@ export function Allergens() {
     setDeleteConfirmOpen(true)
   }
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (recordToDelete) {
+      // Mark as deleted in Google Sheets
+      await deleteAllergenFromGoogleSheets(recordToDelete)
+
+      // Mark as deleted locally
       deleteRecord(recordToDelete.id)
       showToast('Allergen record deleted successfully', 'success')
       setRecordToDelete(null)

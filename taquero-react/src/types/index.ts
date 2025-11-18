@@ -170,4 +170,5 @@ export interface AllergenRecord {
   createdBy: string // Staff name who created the record
   createdAt: string // ISO timestamp when record was created
   updatedAt?: string // ISO timestamp when record was last updated (for edit tracking)
+  status: 'active' | 'deleted' // Status of the record (active or soft deleted)
 }
