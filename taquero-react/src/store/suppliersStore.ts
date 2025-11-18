@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { SupplierRecord } from '@/types'
 
 // Google Sheets webhook URL - update this with your deployed Apps Script URL
-const GOOGLE_SHEETS_URL = ''
+const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxBp8M_cohQeaUNZP5R5nQrJ00XcQUfUCSF92_dAFj9ppPGkBE769DuAo-cMMNiGGcY/exec'
 
 // Helper function to save record to Google Sheets
 export async function saveSupplierToGoogleSheets(
