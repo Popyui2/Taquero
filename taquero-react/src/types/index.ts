@@ -304,3 +304,30 @@ export interface IncidentRecord {
   updatedAt?: string // ISO timestamp when record was last updated (for edit tracking)
   status: 'active' | 'deleted' // Status of the record (active or soft deleted)
 }
+
+// ============================================================================
+// Traceability Record Types
+// ============================================================================
+
+/**
+ * Represents a traceability exercise log
+ * Documents product tracing from supplier to customer
+ * Required by MPI to prove traceability system works
+ */
+export interface TraceabilityRecord {
+  id: string
+  traceDate: string // Date when trace exercise was performed
+  productType: string // Type of product traced (e.g., "Beef mince", "Dumpling wrapper")
+  brand: string // Brand name
+  batchLotInfo: string // Batch or lot number information
+  supplierName: string // Name of supplier
+  supplierContact: string // Supplier contact details (phone, email, address)
+  manufacturerName: string // Manufacturer name (can be same as supplier)
+  manufacturerContact: string // Manufacturer contact details
+  dateReceived?: string // Optional: Date product was received
+  performedBy: string // Person who performed the trace
+  otherInfo?: string // Optional: Additional information (certificates, registration, transportation, specs)
+  createdAt: string // ISO timestamp when record was created
+  updatedAt?: string // ISO timestamp when record was last updated
+  status: 'active' | 'deleted' // Status of the record
+}

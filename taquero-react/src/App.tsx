@@ -25,6 +25,7 @@ import { B2BSales } from '@/pages/modules/B2BSales'
 import { CleaningClosing } from '@/pages/modules/CleaningClosing'
 import { EquipmentMaintenance } from '@/pages/modules/EquipmentMaintenance'
 import { SomethingWentWrong } from '@/pages/modules/SomethingWentWrong'
+import TraceYourFood from '@/pages/modules/TraceYourFood'
 import { StaffList } from '@/components/staff-training/StaffList'
 import { StaffDetail } from '@/components/staff-training/StaffDetail'
 import { AddStaffForm } from '@/components/staff-training/AddStaffForm'
@@ -114,12 +115,7 @@ function App() {
           <Route path="/manufacturing/fcp" element={<ManufacturingFCP />} />
           <Route
             path="/manufacturing/traceability"
-            element={
-              <ModulePlaceholder
-                title="Traceability System"
-                description="Track ingredients & products"
-              />
-            }
+            element={<TraceYourFood />}
           />
           <Route
             path="/manufacturing/b2b"
