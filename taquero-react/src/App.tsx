@@ -23,6 +23,7 @@ import { SupplierDeliveries } from '@/pages/modules/SupplierDeliveries'
 import { TransportTempChecks } from '@/pages/modules/TransportTempChecks'
 import { B2BSales } from '@/pages/modules/B2BSales'
 import { CleaningClosing } from '@/pages/modules/CleaningClosing'
+import { EquipmentMaintenance } from '@/pages/modules/EquipmentMaintenance'
 import { StaffList } from '@/components/staff-training/StaffList'
 import { StaffDetail } from '@/components/staff-training/StaffDetail'
 import { AddStaffForm } from '@/components/staff-training/AddStaffForm'
@@ -145,12 +146,7 @@ function App() {
           />
           <Route
             path="/module/equipment-maintenance"
-            element={
-              <ModulePlaceholder
-                title="Equipment Maintenance"
-                description="Facilities & water supply records"
-              />
-            }
+            element={<EquipmentMaintenance />}
           />
           <Route
             path="/module/cooking-poultry-batch"

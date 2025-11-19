@@ -257,3 +257,17 @@ export interface CleaningRecord {
   updatedAt?: string // ISO timestamp when record was last updated (for edit tracking)
   status: 'active' | 'deleted' // Status of the record (active or soft deleted)
 }
+
+// Equipment Maintenance Record Types
+export interface MaintenanceRecord {
+  id: string
+  equipmentName: string // Equipment/facility requiring maintenance (e.g., "Grease Trap", "Fridge #1")
+  dateCompleted: string // ISO format date when check/repair was done
+  performedBy: string // Who performed the maintenance (service provider or staff name)
+  maintenanceDescription: string // Description of what was done
+  checkingFrequency?: string // Optional: How often this should be done (e.g., "6 monthly", "Monthly")
+  notes?: string // Optional additional notes
+  createdAt: string // ISO timestamp when record was created
+  updatedAt?: string // ISO timestamp when record was last updated (for edit tracking)
+  status: 'active' | 'deleted' // Status of the record (active or soft deleted)
+}
