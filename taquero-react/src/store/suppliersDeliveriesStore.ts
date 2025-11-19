@@ -2,8 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { SupplierDeliveryRecord } from '@/types'
 
-// TODO: Add your deployed Google Apps Script URL here
-const GOOGLE_SHEETS_URL = ''
+const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbySJO0jwPwx04IFLE9ZfNQRGKPzNW0X9h64fOZfjnag3SZ9sH2Bh49SDntXrK8ycOaq9Q/exec'
 
 /**
  * Save a supplier delivery record to Google Sheets
