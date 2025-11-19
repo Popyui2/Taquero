@@ -19,6 +19,7 @@ import { StaffSickness } from '@/pages/modules/StaffSickness'
 import { CoolingBatchChecks } from '@/pages/modules/CoolingBatchChecks'
 import { Allergens } from '@/pages/modules/Allergens'
 import { MySuppliers } from '@/pages/modules/MySuppliers'
+import { SupplierDeliveries } from '@/pages/modules/SupplierDeliveries'
 import { StaffList } from '@/components/staff-training/StaffList'
 import { StaffDetail } from '@/components/staff-training/StaffDetail'
 import { AddStaffForm } from '@/components/staff-training/AddStaffForm'
@@ -207,6 +208,10 @@ function App() {
           <Route
             path="/module/suppliers"
             element={<MySuppliers />}
+          />
+          <Route
+            path="/module/supplier-deliveries"
+            element={<SupplierDeliveries />}
           />
           <Route
             path="/module/processes-controls"

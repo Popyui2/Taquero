@@ -192,3 +192,24 @@ export interface SupplierRecord {
   updatedAt?: string // ISO timestamp when record was last updated (for edit tracking)
   status: 'active' | 'deleted' // Status of the record (active or soft deleted)
 }
+
+// Supplier Delivery Record Types
+export type DeliveryUnit = 'kg' | 'L' | 'units' | 'boxes' | 'trays'
+
+export interface SupplierDeliveryRecord {
+  id: string
+  deliveryDate: string // ISO format date (user can edit, defaults to today)
+  supplierName: string // Manually entered supplier name
+  supplierContact: string // Manually entered supplier contact details
+  batchLotId?: string // Batch/Lot ID from invoice/label (optional but recommended)
+  typeOfFood: string // Type of food delivered (text input)
+  quantity: number // Amount delivered
+  unit: DeliveryUnit // Unit of measurement
+  requiresTempCheck: boolean // Whether this food requires temperature control
+  temperature?: number // Temperature in °C (required if requiresTempCheck = true)
+  taskDoneBy: string // Staff name who received the delivery
+  notes?: string // Optional additional notes
+  createdAt: string // ISO timestamp when record was created
+  updatedAt?: string // ISO timestamp when record was last updated (for edit tracking)
+  status: 'active' | 'deleted' // Status of the record (active or soft deleted)
+}

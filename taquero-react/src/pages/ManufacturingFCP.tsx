@@ -14,6 +14,7 @@ import {
   Building2,
   Utensils,
   Truck,
+  PackageCheck,
 } from 'lucide-react'
 
 export function ManufacturingFCP() {
@@ -84,6 +85,13 @@ export function ManufacturingFCP() {
             description="Track suppliers for food safety"
             icon={Truck}
             onClick={() => navigate('/module/suppliers')}
+          />
+          <ModuleCard
+            id="supplier-deliveries"
+            title="Trusted Supplier Deliveries"
+            description="Record deliveries for traceability"
+            icon={PackageCheck}
+            onClick={() => navigate('/module/supplier-deliveries')}
           />
         </div>
       </div>
