@@ -20,6 +20,7 @@ import { CoolingBatchChecks } from '@/pages/modules/CoolingBatchChecks'
 import { Allergens } from '@/pages/modules/Allergens'
 import { MySuppliers } from '@/pages/modules/MySuppliers'
 import { SupplierDeliveries } from '@/pages/modules/SupplierDeliveries'
+import { TransportTempChecks } from '@/pages/modules/TransportTempChecks'
 import { StaffList } from '@/components/staff-training/StaffList'
 import { StaffDetail } from '@/components/staff-training/StaffDetail'
 import { AddStaffForm } from '@/components/staff-training/AddStaffForm'
@@ -212,6 +213,10 @@ function App() {
           <Route
             path="/module/supplier-deliveries"
             element={<SupplierDeliveries />}
+          />
+          <Route
+            path="/module/transport-temp-checks"
+            element={<TransportTempChecks />}
           />
           <Route
             path="/module/processes-controls"

@@ -213,3 +213,16 @@ export interface SupplierDeliveryRecord {
   updatedAt?: string // ISO timestamp when record was last updated (for edit tracking)
   status: 'active' | 'deleted' // Status of the record (active or soft deleted)
 }
+
+// Transported Food Temperature Check Types
+export interface TransportTempCheckRecord {
+  id: string
+  checkDate: string // ISO format date (user can edit, defaults to today)
+  typeOfFood: string // Type of food being transported
+  temperature: number // Temperature in °C (taken after >4 hours out of temp control)
+  taskDoneBy: string // Staff name who performed the check
+  notes?: string // Optional additional notes
+  createdAt: string // ISO timestamp when record was created
+  updatedAt?: string // ISO timestamp when record was last updated (for edit tracking)
+  status: 'active' | 'deleted' // Status of the record (active or soft deleted)
+}

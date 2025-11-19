@@ -138,6 +138,13 @@ export function RestaurantFCP() {
             onClick={() => navigate('/module/cooling-batch')}
           />
           <ModuleCard
+            id="transport-temp-checks"
+            title="Transported Food Temperature Checks"
+            description="Temp checks for food transported >4 hours"
+            icon={Truck}
+            onClick={() => navigate('/module/transport-temp-checks')}
+          />
+          <ModuleCard
             id="something-wrong"
             title="When Something Goes Wrong"
             description="Incident reports & corrective actions"
