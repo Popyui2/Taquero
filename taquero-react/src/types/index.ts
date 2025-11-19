@@ -226,3 +226,21 @@ export interface TransportTempCheckRecord {
   updatedAt?: string // ISO timestamp when record was last updated (for edit tracking)
   status: 'active' | 'deleted' // Status of the record (active or soft deleted)
 }
+
+// B2B Sales Record Types (Selling Food to Other Businesses)
+export type B2BUnit = 'units' | 'kg' | 'L' | 'boxes' | 'trays' | 'dozen'
+
+export interface B2BSaleRecord {
+  id: string
+  businessName: string // Name of the business customer
+  contactDetails: string // Contact information (address, phone, email)
+  productSupplied: string // Product/food item supplied
+  quantity: number // Amount supplied
+  unit: B2BUnit // Unit of measurement
+  dateSupplied: string // ISO format date (user can edit, defaults to today)
+  taskDoneBy: string // Staff name who completed the sale
+  notes?: string // Optional additional notes
+  createdAt: string // ISO timestamp when record was created
+  updatedAt?: string // ISO timestamp when record was last updated (for edit tracking)
+  status: 'active' | 'deleted' // Status of the record (active or soft deleted)
+}

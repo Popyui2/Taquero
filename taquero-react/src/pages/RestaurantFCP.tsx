@@ -15,6 +15,7 @@ import {
   Utensils,
   Truck,
   PackageCheck,
+  Building2,
 } from 'lucide-react'
 
 export function RestaurantFCP() {
@@ -92,6 +93,13 @@ export function RestaurantFCP() {
             description="Record deliveries for traceability"
             icon={PackageCheck}
             onClick={() => navigate('/module/supplier-deliveries')}
+          />
+          <ModuleCard
+            id="b2b-sales"
+            title="Selling Food to Businesses"
+            description="Track B2B sales to other businesses"
+            icon={Building2}
+            onClick={() => navigate('/module/b2b-sales')}
           />
         </div>
       </div>
