@@ -2,8 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { TransportTempCheckRecord } from '@/types'
 
-// TODO: Add your deployed Google Apps Script URL here
-const GOOGLE_SHEETS_URL = ''
+const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzijEByks2fbcUU-JsyJmPfmv7AoPz4XtqjZ-IpD92AYHI1iRkFqnFc9WMJitb5TSZT8Q/exec'
 
 /**
  * Save a transport temperature check record to Google Sheets
