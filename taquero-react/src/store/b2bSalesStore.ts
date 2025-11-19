@@ -2,8 +2,8 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { B2BSaleRecord } from '@/types'
 
-// TODO: Add your deployed Google Apps Script URL here
-const GOOGLE_SHEETS_URL = ''
+const GOOGLE_SHEETS_URL =
+  'https://script.google.com/macros/s/AKfycbwFXF0DwiXO2zziIBv3EQQoOC8Drhjht4N-1EVHizPORaIZL26JFsx6JfVehnrnRrpC/exec'
 
 /**
  * Save a B2B sale record to Google Sheets
