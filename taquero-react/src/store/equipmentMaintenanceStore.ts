@@ -2,7 +2,8 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { MaintenanceRecord } from '@/types'
 
-const GOOGLE_SHEETS_URL = ''
+const GOOGLE_SHEETS_URL =
+  'https://script.google.com/macros/s/AKfycbxRjOXZMvklsqZSv5N0uBP1pt4i5N12YX0k4IpphABdzEMNSIDoNEpP-pffj0FGb_Jy/exec'
 
 /**
  * Save a maintenance record to Google Sheets
