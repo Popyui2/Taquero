@@ -43,15 +43,12 @@ export function AddIncidentWizard({ onComplete, onCancel }: AddIncidentWizardPro
   // Step 4: Preventive Action
   const [preventiveAction, setPreventiveAction] = useState('')
 
-  // Step 5: Food Safety Actions
-  const [foodSafetyAction, setFoodSafetyAction] = useState('')
-
-  // Step 6: Severity & Follow-up
+  // Step 5: Severity & Follow-up
   const [severity, setSeverity] = useState<IncidentSeverity>('moderate')
   const [followUpDate, setFollowUpDate] = useState('')
   const [notes, setNotes] = useState('')
 
-  const totalSteps = 6
+  const totalSteps = 5
   const progressValue = (step / totalSteps) * 100
 
   const validateStep1 = () => {
@@ -70,10 +67,6 @@ export function AddIncidentWizard({ onComplete, onCancel }: AddIncidentWizardPro
     return preventiveAction.trim().length >= 10
   }
 
-  const validateStep5 = () => {
-    return foodSafetyAction.trim().length >= 10
-  }
-
   const handleNext = () => {
     if (step === 1 && !validateStep1()) {
       alert('Please enter who is responsible for reporting this incident.')
@@ -89,10 +82,6 @@ export function AddIncidentWizard({ onComplete, onCancel }: AddIncidentWizardPro
     }
     if (step === 4 && !validateStep4()) {
       alert('Please describe preventive actions (at least 10 characters).')
-      return
-    }
-    if (step === 5 && !validateStep5()) {
-      alert('Please describe how you kept food safe (at least 10 characters).')
       return
     }
 
@@ -139,7 +128,6 @@ export function AddIncidentWizard({ onComplete, onCancel }: AddIncidentWizardPro
       whatWentWrong,
       whatDidToFix,
       preventiveAction,
-      foodSafetyAction,
       severity,
       incidentStatus: 'open',
       followUpDate: followUpDate.trim().length > 0 ? followUpDate : undefined,
@@ -317,35 +305,8 @@ export function AddIncidentWizard({ onComplete, onCancel }: AddIncidentWizardPro
         </Card>
       )}
 
-      {/* Step 5: Food Safety Actions */}
+      {/* Step 5: Severity & Follow-up */}
       {step === 5 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Food Safety Actions</CardTitle>
-            <CardDescription>How did you keep food safe?</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="foodSafetyAction">
-                Food Safety Measures <span className="text-red-500">*</span>
-              </Label>
-              <Textarea
-                id="foodSafetyAction"
-                placeholder="Describe how you kept food safe..."
-                value={foodSafetyAction}
-                onChange={(e) => setFoodSafetyAction(e.target.value)}
-                rows={4}
-              />
-              <p className="text-xs text-muted-foreground">
-                Example: Moved food to beer fridge, Checked temp for food: all still at 5°C, Used most of it today
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Step 6: Severity & Follow-up */}
-      {step === 6 && (
         <Card>
           <CardHeader>
             <CardTitle>Severity & Follow-up</CardTitle>

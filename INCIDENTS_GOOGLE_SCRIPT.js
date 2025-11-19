@@ -2,7 +2,7 @@
  * Google Apps Script for When Something Goes Wrong Module
  *
  * This script manages incident reporting for food safety issues
- * Tracks what went wrong, fixes, preventive actions, and food safety measures
+ * Tracks what went wrong, fixes, and preventive actions
  *
  * Spreadsheet Structure:
  * Column A: ID
@@ -13,15 +13,14 @@
  * Column F: What Went Wrong
  * Column G: What Did to Fix
  * Column H: Preventive Action
- * Column I: Food Safety Action
- * Column J: Severity
- * Column K: Incident Status
- * Column L: Follow-up Date
- * Column M: Notes
- * Column N: Created At
- * Column O: Updated At
- * Column P: Status
- * Column Q: Unix Timestamp (for sorting)
+ * Column I: Severity
+ * Column J: Incident Status
+ * Column K: Follow-up Date
+ * Column L: Notes
+ * Column M: Created At
+ * Column N: Updated At
+ * Column O: Status
+ * Column P: Unix Timestamp (for sorting)
  */
 
 function doGet(e) {
@@ -31,7 +30,7 @@ function doGet(e) {
 
     // Skip header row and filter out deleted records
     const records = data.slice(1)
-      .filter(row => row[15] !== 'deleted') // Column P: Status
+      .filter(row => row[14] !== 'deleted') // Column O: Status
       .map(row => ({
         id: row[0],
         incidentDate: row[1],
@@ -41,14 +40,13 @@ function doGet(e) {
         whatWentWrong: row[5],
         whatDidToFix: row[6],
         preventiveAction: row[7],
-        foodSafetyAction: row[8],
-        severity: row[9],
-        incidentStatus: row[10],
-        followUpDate: row[11] || undefined,
-        notes: row[12] || undefined,
-        createdAt: row[13],
-        updatedAt: row[14] || undefined,
-        status: row[15]
+        severity: row[8],
+        incidentStatus: row[9],
+        followUpDate: row[10] || undefined,
+        notes: row[11] || undefined,
+        createdAt: row[12],
+        updatedAt: row[13] || undefined,
+        status: row[14]
       }));
 
     return ContentService.createTextOutput(
@@ -69,8 +67,7 @@ function doPost(e) {
 
     // Validate required fields
     if (!data.id || !data.incidentDate || !data.personResponsible ||
-        !data.whatWentWrong || !data.whatDidToFix ||
-        !data.preventiveAction || !data.foodSafetyAction) {
+        !data.whatWentWrong || !data.whatDidToFix || !data.preventiveAction) {
       throw new Error('Missing required fields');
     }
 
@@ -95,15 +92,14 @@ function doPost(e) {
       data.whatWentWrong,                // F: What Went Wrong
       data.whatDidToFix,                 // G: What Did to Fix
       data.preventiveAction,             // H: Preventive Action
-      data.foodSafetyAction,             // I: Food Safety Action
-      data.severity,                     // J: Severity
-      data.incidentStatus,               // K: Incident Status
-      data.followUpDate || '',           // L: Follow-up Date
-      data.notes || '',                  // M: Notes
-      data.createdAt,                    // N: Created At
-      data.updatedAt || '',              // O: Updated At
-      data.status || 'active',           // P: Status
-      data.unixTimestamp || Math.floor(new Date(data.createdAt).getTime() / 1000) // Q: Unix Timestamp
+      data.severity,                     // I: Severity
+      data.incidentStatus,               // J: Incident Status
+      data.followUpDate || '',           // K: Follow-up Date
+      data.notes || '',                  // L: Notes
+      data.createdAt,                    // M: Created At
+      data.updatedAt || '',              // N: Updated At
+      data.status || 'active',           // O: Status
+      data.unixTimestamp || Math.floor(new Date(data.createdAt).getTime() / 1000) // P: Unix Timestamp
     ];
 
     if (rowIndex > 0) {

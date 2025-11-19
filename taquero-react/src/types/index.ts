@@ -295,7 +295,7 @@ export interface IncidentRecord {
   whatWentWrong: string // Description of the incident
   whatDidToFix: string // Immediate corrective action taken
   preventiveAction: string // What will be done to prevent recurrence
-  foodSafetyAction: string // How food safety was maintained
+  foodSafetyAction?: string // Optional: How food safety was maintained
   severity: IncidentSeverity // Impact level
   incidentStatus: IncidentStatus // Open or resolved
   followUpDate?: string // Optional date to verify corrective action
