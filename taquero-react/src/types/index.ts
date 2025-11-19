@@ -244,3 +244,16 @@ export interface B2BSaleRecord {
   updatedAt?: string // ISO timestamp when record was last updated (for edit tracking)
   status: 'active' | 'deleted' // Status of the record (active or soft deleted)
 }
+
+// Cleaning & Closing Record Types
+export interface CleaningRecord {
+  id: string
+  cleaningTask: string // Items and areas cleaned (e.g., "Preparation benches")
+  dateCompleted: string // ISO format date (user can edit, defaults to today)
+  cleaningMethod: string // How it was cleaned (detailed method/procedure)
+  completedBy: string // Staff name who completed the cleaning
+  notes?: string // Optional additional notes
+  createdAt: string // ISO timestamp when record was created
+  updatedAt?: string // ISO timestamp when record was last updated (for edit tracking)
+  status: 'active' | 'deleted' // Status of the record (active or soft deleted)
+}
