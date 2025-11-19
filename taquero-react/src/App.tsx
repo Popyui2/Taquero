@@ -24,6 +24,7 @@ import { TransportTempChecks } from '@/pages/modules/TransportTempChecks'
 import { B2BSales } from '@/pages/modules/B2BSales'
 import { CleaningClosing } from '@/pages/modules/CleaningClosing'
 import { EquipmentMaintenance } from '@/pages/modules/EquipmentMaintenance'
+import { SomethingWentWrong } from '@/pages/modules/SomethingWentWrong'
 import { StaffList } from '@/components/staff-training/StaffList'
 import { StaffDetail } from '@/components/staff-training/StaffDetail'
 import { AddStaffForm } from '@/components/staff-training/AddStaffForm'
@@ -179,12 +180,7 @@ function App() {
           />
           <Route
             path="/module/something-wrong"
-            element={
-              <ModulePlaceholder
-                title="When Something Goes Wrong"
-                description="Incident reports & corrective actions"
-              />
-            }
+            element={<SomethingWentWrong />}
           />
           <Route
             path="/module/customer-complaints"

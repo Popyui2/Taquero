@@ -271,3 +271,36 @@ export interface MaintenanceRecord {
   updatedAt?: string // ISO timestamp when record was last updated (for edit tracking)
   status: 'active' | 'deleted' // Status of the record (active or soft deleted)
 }
+
+// When Something Goes Wrong - Incident Record Types
+export type IncidentCategory =
+  | 'equipment-failure'
+  | 'temperature-issue'
+  | 'contamination'
+  | 'supplier-problem'
+  | 'staff-error'
+  | 'facility-issue'
+  | 'other'
+
+export type IncidentSeverity = 'minor' | 'moderate' | 'major'
+
+export type IncidentStatus = 'open' | 'resolved'
+
+export interface IncidentRecord {
+  id: string
+  incidentDate: string // ISO format date when incident occurred
+  personResponsible: string // Who noticed/reported the incident
+  staffInvolved: string // Comma-separated list of staff involved
+  category: IncidentCategory // Type of incident
+  whatWentWrong: string // Description of the incident
+  whatDidToFix: string // Immediate corrective action taken
+  preventiveAction: string // What will be done to prevent recurrence
+  foodSafetyAction: string // How food safety was maintained
+  severity: IncidentSeverity // Impact level
+  incidentStatus: IncidentStatus // Open or resolved
+  followUpDate?: string // Optional date to verify corrective action
+  notes?: string // Optional additional notes
+  createdAt: string // ISO timestamp when record was created
+  updatedAt?: string // ISO timestamp when record was last updated (for edit tracking)
+  status: 'active' | 'deleted' // Status of the record (active or soft deleted)
+}
