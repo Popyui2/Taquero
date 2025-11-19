@@ -2,7 +2,8 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { IncidentRecord } from '@/types'
 
-const GOOGLE_SHEETS_URL = ''
+const GOOGLE_SHEETS_URL =
+  'https://script.google.com/macros/s/AKfycbzU0Uo5khxjHvPXYhhhKBD1qCQ2Oc92YUfindWbmqHhX92Xgh9KWkn8o47p8zcWnv4b/exec'
 
 /**
  * Save an incident record to Google Sheets
