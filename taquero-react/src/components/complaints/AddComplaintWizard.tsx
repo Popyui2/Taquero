@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ComplaintRecord, ComplaintType, ComplaintStatus } from '@/types'
+import { ComplaintRecord, ComplaintType } from '@/types'
 import {
   useComplaintsStore,
   saveComplaintRecordToGoogleSheets,
@@ -40,13 +40,11 @@ export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardP
   // Step 4: Investigation & Cause
   const [causeInvestigation, setCauseInvestigation] = useState('')
 
-  // Step 5: Actions Taken
-  const [actionTakenImmediate, setActionTakenImmediate] = useState('')
+  // Step 5: Preventive Actions
   const [actionTakenPreventive, setActionTakenPreventive] = useState('')
 
   // Step 6: Resolution
   const [resolvedBy, setResolvedBy] = useState(currentUser?.name || '')
-  const [complaintStatus, setComplaintStatus] = useState<ComplaintStatus>('Under Investigation')
   const [linkedIncidentId, setLinkedIncidentId] = useState('')
   const [notes, setNotes] = useState('')
 
@@ -60,14 +58,6 @@ export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardP
     'Temperature Issue',
     'Allergen Issue',
     'Other',
-  ]
-
-  const statusOptions: ComplaintStatus[] = [
-    'Under Investigation',
-    'Resolved - Our Fault',
-    'Resolved - Not Our Fault',
-    'Resolved - Inconclusive',
-    'Ongoing',
   ]
 
   // Validation functions
@@ -92,9 +82,7 @@ export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardP
   }
 
   const validateStep5 = () => {
-    return (
-      actionTakenImmediate.trim().length > 0 && actionTakenPreventive.trim().length > 0
-    )
+    return actionTakenPreventive.trim().length > 0
   }
 
   const validateStep6 = () => {
@@ -139,11 +127,10 @@ export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardP
       complaintDescription,
       complaintType: complaintType,
       causeInvestigation,
-      actionTakenImmediate,
       actionTakenPreventive,
       resolvedBy,
       resolutionDate: new Date().toISOString().split('T')[0],
-      complaintStatus,
+      complaintStatus: 'Under Investigation',
       linkedIncidentId: linkedIncidentId.trim().length > 0 ? linkedIncidentId : undefined,
       notes: notes.trim().length > 0 ? notes : undefined,
       createdAt: new Date().toISOString(),
@@ -331,34 +318,22 @@ export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardP
         </Card>
       )}
 
-      {/* Step 5: Actions Taken */}
+      {/* Step 5: Preventive Actions */}
       {step === 5 && (
         <Card>
           <CardHeader>
-            <CardTitle>Actions Taken</CardTitle>
-            <CardDescription>What did you do immediately and to prevent recurrence?</CardDescription>
+            <CardTitle>Preventive Actions</CardTitle>
+            <CardDescription>What action was taken to stop it happening again?</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="actionTakenImmediate">Action Taken Immediately *</Label>
-              <Textarea
-                id="actionTakenImmediate"
-                placeholder="e.g., I showed Mr Smith our cooking records for Monday's batch of pies.&#10;I also showed him our hot holding record.&#10;I suggested he speaks to the local council EHO about the matter..."
-                value={actionTakenImmediate}
-                onChange={(e) => setActionTakenImmediate(e.target.value)}
-                rows={6}
-                required
-              />
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="actionTakenPreventive">Action Taken to Stop It Happening Again *</Label>
               <Textarea
                 id="actionTakenPreventive"
-                placeholder="e.g., Retrain staff on proper cooking temps&#10;Update our cooking checklist&#10;Increase monitoring frequency"
+                placeholder="e.g., I showed Mr Smith our cooking records for Monday's batch of pies.&#10;I also showed him our hot holding record.&#10;I suggested he speaks to the local council EHO about the matter and if he was still ill his doctor would be able to help as well.&#10;&#10;OR&#10;&#10;Retrain staff on proper cooking temps&#10;Update our cooking checklist&#10;Increase monitoring frequency"
                 value={actionTakenPreventive}
                 onChange={(e) => setActionTakenPreventive(e.target.value)}
-                rows={6}
+                rows={8}
                 required
               />
             </div>
@@ -371,7 +346,7 @@ export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardP
         <Card>
           <CardHeader>
             <CardTitle>Resolution</CardTitle>
-            <CardDescription>Who resolved this and what's the status?</CardDescription>
+            <CardDescription>Who managed this complaint?</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -383,27 +358,6 @@ export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardP
                 onChange={(e) => setResolvedBy(e.target.value)}
                 required
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Status *</Label>
-              <div className="grid grid-cols-1 gap-2">
-                {statusOptions.map((status) => (
-                  <Card
-                    key={status}
-                    className={`cursor-pointer transition-colors ${
-                      complaintStatus === status
-                        ? 'border-primary bg-primary/10'
-                        : 'hover:bg-muted/50'
-                    }`}
-                    onClick={() => setComplaintStatus(status)}
-                  >
-                    <CardContent className="p-4">
-                      <p className="text-sm font-medium">{status}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
             </div>
 
             <div className="space-y-2">
@@ -445,7 +399,7 @@ export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardP
                   {new Date(purchaseDate).toLocaleDateString()} at {purchaseTime}
                 </p>
                 <p>
-                  <span className="font-medium">Status:</span> {complaintStatus}
+                  <span className="font-medium">Managed By:</span> {resolvedBy}
                 </p>
               </div>
             </div>

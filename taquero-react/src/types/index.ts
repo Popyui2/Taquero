@@ -373,7 +373,7 @@ export interface ComplaintRecord {
   complaintDescription: string // What is the complaint?
   complaintType?: ComplaintType // Optional complaint categorization
   causeInvestigation: string // Cause investigation and findings
-  actionTakenImmediate: string // Immediate action taken
+  actionTakenImmediate?: string // Optional: Immediate action taken
   actionTakenPreventive: string // Action to prevent recurrence
   resolvedBy: string // Staff member who resolved
   resolutionDate: string // Date resolved
