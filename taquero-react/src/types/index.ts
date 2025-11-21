@@ -331,3 +331,56 @@ export interface TraceabilityRecord {
   updatedAt?: string // ISO timestamp when record was last updated
   status: 'active' | 'deleted' // Status of the record
 }
+
+// ============================================================================
+// Customer Complaint Record Types
+// ============================================================================
+
+/**
+ * Complaint types for categorization
+ */
+export type ComplaintType =
+  | 'Illness/Sickness'
+  | 'Foreign Object'
+  | 'Quality Issue'
+  | 'Temperature Issue'
+  | 'Allergen Issue'
+  | 'Other'
+
+/**
+ * Complaint resolution status
+ */
+export type ComplaintStatus =
+  | 'Under Investigation'
+  | 'Resolved - Our Fault'
+  | 'Resolved - Not Our Fault'
+  | 'Resolved - Inconclusive'
+  | 'Ongoing'
+
+/**
+ * Represents a customer complaint record
+ * Tracks complaints, investigations, and resolutions
+ * Required by MPI to show complaints are taken seriously
+ */
+export interface ComplaintRecord {
+  id: string
+  customerName: string // Customer name
+  customerContact: string // Phone or email
+  purchaseDate: string // Date of purchase
+  purchaseTime: string // Time of purchase (approximate)
+  foodItem: string // Food item purchased
+  batchLotNumber?: string // Optional batch/lot number
+  complaintDescription: string // What is the complaint?
+  complaintType?: ComplaintType // Optional complaint categorization
+  causeInvestigation: string // Cause investigation and findings
+  actionTakenImmediate: string // Immediate action taken
+  actionTakenPreventive: string // Action to prevent recurrence
+  resolvedBy: string // Staff member who resolved
+  resolutionDate: string // Date resolved
+  complaintStatus: ComplaintStatus // Current status
+  linkedIncidentId?: string // Optional link to "When Something Goes Wrong" record
+  notes?: string // Optional additional notes
+  createdAt: string // ISO timestamp when record was created
+  updatedAt?: string // ISO timestamp when record was last updated
+  status: 'active' | 'deleted' // Status of the record
+}

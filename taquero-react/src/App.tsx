@@ -26,6 +26,7 @@ import { CleaningClosing } from '@/pages/modules/CleaningClosing'
 import { EquipmentMaintenance } from '@/pages/modules/EquipmentMaintenance'
 import { SomethingWentWrong } from '@/pages/modules/SomethingWentWrong'
 import TraceYourFood from '@/pages/modules/TraceYourFood'
+import CustomerComplaints from '@/pages/modules/CustomerComplaints'
 import { StaffList } from '@/components/staff-training/StaffList'
 import { StaffDetail } from '@/components/staff-training/StaffDetail'
 import { AddStaffForm } from '@/components/staff-training/AddStaffForm'
@@ -180,12 +181,7 @@ function App() {
           />
           <Route
             path="/module/customer-complaints"
-            element={
-              <ModulePlaceholder
-                title="Customer Complaints"
-                description="Complaint tracking & resolution"
-              />
-            }
+            element={<CustomerComplaints />}
           />
           <Route
             path="/module/allergens"
