@@ -45,7 +45,6 @@ export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardP
 
   // Step 6: Resolution
   const [resolvedBy, setResolvedBy] = useState(currentUser?.name || '')
-  const [linkedIncidentId, setLinkedIncidentId] = useState('')
   const [notes, setNotes] = useState('')
 
   const totalSteps = 6
@@ -131,7 +130,6 @@ export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardP
       resolvedBy,
       resolutionDate: new Date().toISOString().split('T')[0],
       complaintStatus: 'Under Investigation',
-      linkedIncidentId: linkedIncidentId.trim().length > 0 ? linkedIncidentId : undefined,
       notes: notes.trim().length > 0 ? notes : undefined,
       createdAt: new Date().toISOString(),
       status: 'active',
@@ -358,19 +356,6 @@ export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardP
                 onChange={(e) => setResolvedBy(e.target.value)}
                 required
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="linkedIncidentId">Link to "When Something Goes Wrong" Record</Label>
-              <Input
-                id="linkedIncidentId"
-                placeholder="Optional: Incident ID if you created one"
-                value={linkedIncidentId}
-                onChange={(e) => setLinkedIncidentId(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Optional: Link to related incident record
-              </p>
             </div>
 
             <div className="space-y-2">
