@@ -22,7 +22,7 @@ import {
   deleteComplaintRecordFromGoogleSheets,
 } from '@/store/complaintsStore'
 import { AddComplaintWizard } from '@/components/complaints/AddComplaintWizard'
-import { Plus, Trash2, ChevronDown, ChevronRight, AlertCircle } from 'lucide-react'
+import { Plus, Trash2, ChevronDown, ChevronRight, AlertCircle, MessageSquare } from 'lucide-react'
 import { ComplaintRecord } from '@/types'
 
 export default function CustomerComplaints() {
@@ -73,7 +73,7 @@ export default function CustomerComplaints() {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Customer Complaints Information</h1>
+          <h1 className="text-3xl font-bold flex items-center gap-2"><MessageSquare className="h-8 w-8" />Customer Complaints Information</h1>
           <p className="text-muted-foreground mt-2">
             Track and investigate customer complaints for MPI compliance
           </p>

@@ -61,8 +61,8 @@ export function ProvingCooling() {
     <div className="space-y-8 max-w-4xl mx-auto">
       {/* Header */}
       <div className="space-y-2 text-center md:text-left">
-        <h2 className="text-3xl font-bold tracking-tight">
-          Proving Cooling Method
+        <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+          <Snowflake className="h-8 w-8" />Proving Cooling Method
         </h2>
         <p className="text-muted-foreground text-lg">
           Validate cooling methods with 3 consecutive successful batches

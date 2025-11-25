@@ -41,7 +41,7 @@ export function RestaurantFCP() {
           <ModuleCard
             id="staff-training"
             title="Staff Training Records"
-            description="Training logs & certifications"
+            description="Training Records and Staff Info"
             icon={Users}
             onClick={() => navigate('/module/staff-training')}
           />
@@ -62,14 +62,14 @@ export function RestaurantFCP() {
           <ModuleCard
             id="cleaning-closing"
             title="Cleaning & Closing"
-            description="Daily cleaning schedules"
+            description="Cleaning and Closing Procedures"
             icon={Sparkles}
             onClick={() => navigate('/module/cleaning-closing')}
           />
           <ModuleCard
             id="equipment-maintenance"
             title="Equipment Maintenance"
-            description="Facilities & water supply records"
+            description="Equipment repair Records"
             icon={Wrench}
             onClick={() => navigate('/module/equipment-maintenance')}
           />

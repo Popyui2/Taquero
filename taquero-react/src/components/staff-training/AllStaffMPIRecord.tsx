@@ -9,15 +9,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Printer, FileText } from 'lucide-react'
+import { FileText } from 'lucide-react'
 import { formatDateNZ, getCurrentDateTimeNZ } from '@/lib/dateUtils'
 
 export function AllStaffMPIRecord() {
   const { staffMembers } = useStaffTrainingStore()
-
-  const handlePrint = () => {
-    window.print()
-  }
 
   if (staffMembers.length === 0) {
     return null
@@ -27,26 +23,16 @@ export function AllStaffMPIRecord() {
     <>
       <Card className="mt-8">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <FileText className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <CardTitle>Training Records - All Staff</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Official records for health inspector review
-                </p>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <FileText className="h-5 w-5 text-primary" />
             </div>
-            <Button
-              onClick={handlePrint}
-              variant="outline"
-              size="icon"
-              className="print:hidden h-10 w-10"
-            >
-              <Printer className="h-4 w-4" />
-            </Button>
+            <div>
+              <CardTitle>Training Records - All Staff</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Official records for health inspector review
+              </p>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -146,40 +132,6 @@ export function AllStaffMPIRecord() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Print Styles */}
-      <style>{`
-        @media print {
-          body {
-            background: white !important;
-          }
-          * {
-            color: black !important;
-            background: white !important;
-            border-color: #000 !important;
-          }
-          .print\\:hidden {
-            display: none !important;
-          }
-          @page {
-            margin: 1.5cm;
-            size: A4;
-          }
-          table {
-            page-break-inside: auto;
-          }
-          tr {
-            page-break-inside: avoid;
-            page-break-after: auto;
-          }
-          thead {
-            display: table-header-group;
-          }
-          h3 {
-            page-break-after: avoid;
-          }
-        }
-      `}</style>
     </>
   )
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Loader2, Building2, Pencil, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Loader2, Truck, Pencil, Trash2, ChevronDown, ChevronUp, Building2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useSuppliersStore, deleteSupplierFromGoogleSheets } from '@/store/suppliersStore'
@@ -98,7 +98,8 @@ export function MySuppliers() {
     <div className="space-y-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="space-y-2 text-center md:text-left">
-        <h2 className="text-3xl font-bold tracking-tight">
+        <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+          <Truck className="h-8 w-8" />
           My Trusted Suppliers
         </h2>
         <p className="text-muted-foreground text-lg">
@@ -106,7 +107,7 @@ export function MySuppliers() {
         </p>
       </div>
 
-      {/* Add Record Button */}
+      {/* Add Supplier Button */}
       <Button
         size="lg"
         onClick={() => {
@@ -119,180 +120,241 @@ export function MySuppliers() {
         Add Supplier
       </Button>
 
-      {/* All Records Table */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Building2 className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <CardTitle>Trusted Suppliers</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                {recentRecords.length > 0
-                  ? `${recentRecords.length} supplier${recentRecords.length !== 1 ? 's' : ''} registered`
-                  : 'No suppliers yet'}
-              </p>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : recentRecords.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <p className="text-lg font-medium">No suppliers yet</p>
-              <p className="text-sm mt-2">
-                Click "Add Supplier" to add your first trusted supplier
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b">
-                  <tr className="text-left text-sm text-muted-foreground">
-                    <th className="pb-3 font-medium w-8"></th>
-                    <th className="pb-3 font-medium">Business Name</th>
-                    <th className="pb-3 font-medium">Registration #</th>
-                    <th className="pb-3 font-medium">Contact</th>
-                    <th className="pb-3 font-medium">Phone</th>
-                    <th className="pb-3 font-medium text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {recentRecords.map((record) => {
-                    const isExpanded = expandedRows.has(record.id)
-                    return (
-                      <>
-                        <tr key={record.id} className="text-sm">
-                          <td className="py-3">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleRowExpanded(record.id)}
-                              className="h-6 w-6 p-0"
-                            >
-                              {isExpanded ? (
-                                <ChevronUp className="h-4 w-4" />
-                              ) : (
-                                <ChevronDown className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </td>
-                          <td className="py-3 font-medium">{record.businessName}</td>
-                          <td className="py-3 font-mono text-xs">{record.siteRegistrationNumber}</td>
-                          <td className="py-3">{record.contactPerson}</td>
-                          <td className="py-3">{record.phone}</td>
-                          <td className="py-3">
-                            <div className="flex items-center justify-center gap-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEdit(record)}
-                                className="h-8 w-8 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/20"
-                                title="Edit supplier"
-                              >
-                                <Pencil className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteClick(record)}
-                                className="h-8 w-8 p-0 hover:bg-red-100 dark:hover:bg-red-900/20"
-                                title="Delete supplier"
-                              >
-                                <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                        {isExpanded && (
-                          <tr key={`${record.id}-expanded`}>
-                            <td colSpan={6} className="py-4 px-4 bg-muted/30">
-                              <div className="space-y-3">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div>
-                                    <strong className="text-sm">Email:</strong>
-                                    <p className="text-sm text-muted-foreground mt-1">{record.email}</p>
-                                  </div>
-                                  <div>
-                                    <strong className="text-sm">Address:</strong>
-                                    <p className="text-sm text-muted-foreground mt-1 whitespace-pre-line">{record.address}</p>
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  <div>
-                                    <strong className="text-sm">Days to place orders:</strong>
-                                    <div className="flex flex-wrap gap-1 mt-1">
-                                      {record.orderDays.length > 0 ? (
-                                        record.orderDays.map((day, idx) => (
-                                          <span
-                                            key={idx}
-                                            className="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-                                          >
-                                            {day}
-                                          </span>
-                                        ))
-                                      ) : (
-                                        <p className="text-sm text-muted-foreground">N/A</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <strong className="text-sm">Days to receive delivery:</strong>
-                                    <div className="flex flex-wrap gap-1 mt-1">
-                                      {record.deliveryDays.length > 0 ? (
-                                        record.deliveryDays.map((day, idx) => (
-                                          <span
-                                            key={idx}
-                                            className="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                                          >
-                                            {day}
-                                          </span>
-                                        ))
-                                      ) : (
-                                        <p className="text-sm text-muted-foreground">N/A</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                                {record.customArrangement && (
-                                  <div>
-                                    <strong className="text-sm">Custom arrangement:</strong>
-                                    <p className="text-sm text-muted-foreground mt-1 whitespace-pre-line">{record.customArrangement}</p>
-                                  </div>
-                                )}
-                                <div>
-                                  <strong className="text-sm">Goods supplied:</strong>
-                                  <p className="text-sm text-muted-foreground mt-1 whitespace-pre-line">{record.goodsSupplied}</p>
-                                </div>
-                                {record.comments && (
-                                  <div>
-                                    <strong className="text-sm">Comments:</strong>
-                                    <p className="text-sm text-muted-foreground mt-1 whitespace-pre-line">{record.comments}</p>
-                                  </div>
-                                )}
-                                <div className="text-xs text-muted-foreground mt-2 pt-2 border-t">
-                                  Added by {record.createdBy} on {new Date(record.createdAt).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                  {record.updatedAt && (
-                                    <span> • Last updated: {new Date(record.updatedAt).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                                  )}
-                                </div>
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex flex-col items-center justify-center p-8 space-y-3">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Fetching Data</p>
+        </div>
+      )}
+
+      {/* Supplier Records Accordion */}
+      {!isLoading && recentRecords.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Trusted Suppliers</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {recentRecords.map((record, index) => {
+                const isExpanded = expandedRows.has(record.id)
+                return (
+                  <div
+                    key={record.id}
+                    className="border rounded-lg overflow-hidden transition-all duration-200 hover:border-primary/50"
+                    style={{
+                      animationDelay: `${index * 50}ms`,
+                    }}
+                  >
+                    {/* Collapsed Header */}
+                    <div
+                      className="flex items-center justify-between p-4 cursor-pointer bg-card hover:bg-muted/50 transition-colors"
+                      onClick={() => toggleRowExpanded(record.id)}
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div
+                          className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                            isExpanded ? 'bg-primary text-primary-foreground' : 'bg-primary/10'
+                          }`}
+                        >
+                          <Truck className={`h-5 w-5 ${isExpanded ? '' : 'text-primary'}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-lg truncate">{record.businessName}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {record.contactPerson} • {record.phone}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 ml-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEdit(record)
+                          }}
+                          className="h-9 w-9 p-0"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteClick(record)
+                          }}
+                          className="h-9 w-9 p-0"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-9 w-9 p-0"
+                        >
+                          {isExpanded ? (
+                            <ChevronUp className="h-5 w-5" />
+                          ) : (
+                            <ChevronDown className="h-5 w-5" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Expanded Content */}
+                    {isExpanded && (
+                      <div className="border-t bg-muted/30 p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                        {/* Contact Details */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                              Email
+                            </h4>
+                            <p className="text-sm">{record.email}</p>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                              Registration #
+                            </h4>
+                            <p className="text-sm font-mono">{record.siteRegistrationNumber}</p>
+                          </div>
+                        </div>
+
+                        {/* Address */}
+                        <div>
+                          <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                            Address
+                          </h4>
+                          <p className="text-sm whitespace-pre-line leading-relaxed">{record.address}</p>
+                        </div>
+
+                        {/* Order and Delivery Days */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                              Order Days
+                            </h4>
+                            {record.orderDays.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {record.orderDays.map((day, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                                  >
+                                    {day}
+                                  </span>
+                                ))}
                               </div>
-                            </td>
-                          </tr>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">N/A</p>
+                            )}
+                          </div>
+                          <div>
+                            <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                              Delivery Days
+                            </h4>
+                            {record.deliveryDays.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {record.deliveryDays.map((day, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="inline-block px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                                  >
+                                    {day}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">N/A</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Custom Arrangement */}
+                        {record.customArrangement && (
+                          <div>
+                            <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                              Custom Arrangement
+                            </h4>
+                            <p className="text-sm whitespace-pre-line leading-relaxed">{record.customArrangement}</p>
+                          </div>
                         )}
-                      </>
-                    )
-                  })}
-                </tbody>
-              </table>
+
+                        {/* Goods Supplied */}
+                        <div>
+                          <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                            Goods Supplied
+                          </h4>
+                          <p className="text-sm whitespace-pre-line leading-relaxed">{record.goodsSupplied}</p>
+                        </div>
+
+                        {/* Comments */}
+                        {record.comments && (
+                          <div>
+                            <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                              Comments
+                            </h4>
+                            <p className="text-sm whitespace-pre-line leading-relaxed">{record.comments}</p>
+                          </div>
+                        )}
+
+                        {/* Metadata */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t">
+                          <div>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wide">Created By</p>
+                            <p className="text-sm font-medium mt-1">{record.createdBy}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wide">Created</p>
+                            <p className="text-sm font-medium mt-1">
+                              {new Date(record.createdAt).toLocaleDateString('en-NZ', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
+                              })}
+                            </p>
+                          </div>
+                        </div>
+
+                        {record.updatedAt && (
+                          <div className="text-xs text-muted-foreground pt-2">
+                            Last updated: {new Date(record.updatedAt).toLocaleDateString('en-NZ', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && recentRecords.length === 0 && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center p-12">
+            <Truck className="h-16 w-16 text-muted-foreground mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No suppliers yet</h3>
+            <p className="text-muted-foreground text-center mb-6">
+              Start tracking your trusted suppliers for food safety
+            </p>
+            <Button onClick={() => setShowAddWizard(true)}>
+              <Plus className="mr-2 h-5 w-5" />
+              Add First Supplier
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Add/Edit Supplier Wizard */}
       <AddSupplierWizard

@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { useAuthStore } from '@/store/authStore'
 import { useAllergensStore, saveAllergenToGoogleSheets } from '@/store/allergensStore'
 import { AllergenRecord } from '@/types'
-import { Utensils, ListOrdered, AlertTriangle } from 'lucide-react'
+import { Utensils, ListOrdered, AlertTriangle, Loader2 } from 'lucide-react'
 
 interface AddAllergenWizardProps {
   open: boolean
@@ -18,37 +18,19 @@ interface AddAllergenWizardProps {
   editingRecord?: AllergenRecord | null
 }
 
-// Grouped allergen lists as per NZ MPI requirements
-const ALLERGEN_GROUPS = {
-  common: [
-    'Gluten (wheat, barley, rye, oats)',
-    'Milk',
-    'Egg',
-    'Soy',
-    'Peanuts',
-    'Fish',
-    'Sesame',
-    'Sulphites',
-  ],
-  treeNuts: [
-    'Almonds',
-    'Brazil nuts',
-    'Cashews',
-    'Hazelnuts',
-    'Macadamias',
-    'Pecans',
-    'Pine nuts',
-    'Pistachios',
-    'Walnuts',
-  ],
-  shellfish: [
-    'Crustacea (prawns, crab)',
-    'Molluscs (mussels, oysters)',
-  ],
-  other: [
-    'Lupin',
-  ],
-}
+// NZ MPI recognized allergens - single word names
+const ALLERGENS = [
+  'Gluten',
+  'Milk',
+  'Egg',
+  'Soy',
+  'Peanuts',
+  'Nuts',
+  'Fish',
+  'Sesame',
+  'Sulphites',
+  'Crustacea',
+]
 
 export function AddAllergenWizard({ open, onClose, onSuccess, editingRecord }: AddAllergenWizardProps) {
   const { currentUser } = useAuthStore()
@@ -201,9 +183,9 @@ export function AddAllergenWizard({ open, onClose, onSuccess, editingRecord }: A
         {/* Loading Overlay */}
         {isSubmitting && (
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg">
-            <div className="flex flex-col items-center gap-4">
-              <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-              <div className="text-lg font-semibold">Saving to Google Sheets...</div>
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Saving Data</p>
             </div>
           </div>
         )}
@@ -305,77 +287,10 @@ export function AddAllergenWizard({ open, onClose, onSuccess, editingRecord }: A
                     </p>
                   </div>
 
-                  {/* Common Allergens */}
+                  {/* Allergen Checkboxes */}
                   <div className="space-y-3">
-                    <h4 className="font-medium text-sm">Common Allergens</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {ALLERGEN_GROUPS.common.map((allergen) => (
-                        <div key={allergen} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`allergen-${allergen}`}
-                            checked={selectedAllergens.includes(allergen)}
-                            onCheckedChange={() => toggleAllergen(allergen)}
-                          />
-                          <Label
-                            htmlFor={`allergen-${allergen}`}
-                            className="text-sm font-normal cursor-pointer"
-                          >
-                            {allergen}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Tree Nuts */}
-                  <div className="space-y-3">
-                    <h4 className="font-medium text-sm">Tree Nuts</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {ALLERGEN_GROUPS.treeNuts.map((allergen) => (
-                        <div key={allergen} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`allergen-${allergen}`}
-                            checked={selectedAllergens.includes(allergen)}
-                            onCheckedChange={() => toggleAllergen(allergen)}
-                          />
-                          <Label
-                            htmlFor={`allergen-${allergen}`}
-                            className="text-sm font-normal cursor-pointer"
-                          >
-                            {allergen}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Shellfish */}
-                  <div className="space-y-3">
-                    <h4 className="font-medium text-sm">Shellfish</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {ALLERGEN_GROUPS.shellfish.map((allergen) => (
-                        <div key={allergen} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`allergen-${allergen}`}
-                            checked={selectedAllergens.includes(allergen)}
-                            onCheckedChange={() => toggleAllergen(allergen)}
-                          />
-                          <Label
-                            htmlFor={`allergen-${allergen}`}
-                            className="text-sm font-normal cursor-pointer"
-                          >
-                            {allergen}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Other */}
-                  <div className="space-y-3">
-                    <h4 className="font-medium text-sm">Other</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {ALLERGEN_GROUPS.other.map((allergen) => (
+                      {ALLERGENS.map((allergen) => (
                         <div key={allergen} className="flex items-center space-x-2">
                           <Checkbox
                             id={`allergen-${allergen}`}

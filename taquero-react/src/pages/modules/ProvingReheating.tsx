@@ -61,8 +61,8 @@ export function ProvingReheating() {
     <div className="space-y-8 max-w-4xl mx-auto">
       {/* Header */}
       <div className="space-y-2 text-center md:text-left">
-        <h2 className="text-3xl font-bold tracking-tight">
-          Proving Reheating Method
+        <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+          <Flame className="h-8 w-8" />Proving Reheating Method
         </h2>
         <p className="text-muted-foreground text-lg">
           Validate reheating methods with 3 consecutive successful batches

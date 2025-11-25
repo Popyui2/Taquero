@@ -137,7 +137,7 @@ export function TransportTempChecks() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       <div className="space-y-2 text-center md:text-left">
-        <h2 className="text-3xl font-bold tracking-tight">Transported Food Temperature Checks</h2>
+        <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2"><Truck className="h-8 w-8" />Transported Food Temperature Checks</h2>
         <p className="text-muted-foreground text-lg">
           Record temperature checks for food transported for more than 4 hours
         </p>

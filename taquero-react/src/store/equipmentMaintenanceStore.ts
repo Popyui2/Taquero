@@ -17,18 +17,24 @@ export async function saveMaintenanceRecordToGoogleSheets(
   }
 
   try {
+    // Send as array to preserve column order
+    const rowData = [
+      Math.floor(new Date(record.createdAt).getTime() / 1000), // Unix Timestamp
+      record.id,                           // ID
+      record.equipmentName,                // Equipment Name
+      record.dateCompleted,                // Date Completed
+      record.performedBy,                  // Performed By
+      record.maintenanceDescription,       // Maintenance Description
+      record.checkingFrequency || '',      // Checking Frequency
+      record.notes || '',                  // Notes
+      record.createdAt,                    // Created At
+      record.updatedAt || '',              // Updated At
+      record.status,                       // Status
+    ]
+
     const payload = {
-      id: record.id,
-      equipmentName: record.equipmentName,
-      dateCompleted: record.dateCompleted,
-      performedBy: record.performedBy,
-      maintenanceDescription: record.maintenanceDescription,
-      checkingFrequency: record.checkingFrequency,
-      notes: record.notes,
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
-      status: record.status,
-      unixTimestamp: Math.floor(new Date(record.createdAt).getTime() / 1000),
+      action: 'addRecord',
+      data: rowData
     }
 
     await fetch(GOOGLE_SHEETS_URL, {
@@ -63,18 +69,24 @@ export async function deleteMaintenanceRecordFromGoogleSheets(
 
   try {
     // Mark as deleted by updating the status field
+    // Send as array to preserve column order
+    const rowData = [
+      Math.floor(new Date(record.createdAt).getTime() / 1000), // Unix Timestamp
+      record.id,                           // ID
+      record.equipmentName,                // Equipment Name
+      record.dateCompleted,                // Date Completed
+      record.performedBy,                  // Performed By
+      record.maintenanceDescription,       // Maintenance Description
+      record.checkingFrequency || '',      // Checking Frequency
+      record.notes || '',                  // Notes
+      record.createdAt,                    // Created At
+      new Date().toISOString(),            // Updated At
+      'deleted',                           // Status
+    ]
+
     const payload = {
-      id: record.id,
-      equipmentName: record.equipmentName,
-      dateCompleted: record.dateCompleted,
-      performedBy: record.performedBy,
-      maintenanceDescription: record.maintenanceDescription,
-      checkingFrequency: record.checkingFrequency,
-      notes: record.notes,
-      createdAt: record.createdAt,
-      updatedAt: new Date().toISOString(),
-      status: 'deleted',
-      unixTimestamp: Math.floor(new Date(record.createdAt).getTime() / 1000),
+      action: 'updateRecord',
+      data: rowData
     }
 
     await fetch(GOOGLE_SHEETS_URL, {

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -10,13 +11,18 @@ import { MaintenanceRecord } from '@/types'
 import { useEquipmentMaintenanceStore, saveMaintenanceRecordToGoogleSheets } from '@/store/equipmentMaintenanceStore'
 
 interface AddMaintenanceRecordWizardProps {
-  onComplete: () => void
-  onCancel: () => void
+  open: boolean
+  onClose: () => void
+  onSuccess?: () => void
+  editingRecord?: MaintenanceRecord | null
 }
 
-export function AddMaintenanceRecordWizard({ onComplete, onCancel }: AddMaintenanceRecordWizardProps) {
+export function AddMaintenanceRecordWizard({ open, onClose, onSuccess, editingRecord }: AddMaintenanceRecordWizardProps) {
   const [step, setStep] = useState(1)
-  const addRecord = useEquipmentMaintenanceStore((state) => state.addRecord)
+  const { addRecord, updateRecord } = useEquipmentMaintenanceStore((state) => ({
+    addRecord: state.addRecord,
+    updateRecord: state.updateRecord
+  }))
 
   // Step 1: Equipment & Maintenance Details
   const [equipmentName, setEquipmentName] = useState('')
@@ -30,8 +36,47 @@ export function AddMaintenanceRecordWizard({ onComplete, onCancel }: AddMaintena
   const [checkingFrequency, setCheckingFrequency] = useState('')
   const [notes, setNotes] = useState('')
 
+  const [hasPassedStep1, setHasPassedStep1] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const isEditing = !!editingRecord
+
   const totalSteps = 2
   const progressValue = (step / totalSteps) * 100
+
+  // Load editing data
+  useEffect(() => {
+    if (editingRecord && open) {
+      setEquipmentName(editingRecord.equipmentName)
+      setMaintenanceDescription(editingRecord.maintenanceDescription)
+      setDateCompleted(editingRecord.dateCompleted)
+      setPerformedBy(editingRecord.performedBy)
+      setCheckingFrequency(editingRecord.checkingFrequency || '')
+      setNotes(editingRecord.notes || '')
+    }
+  }, [editingRecord, open])
+
+  // Reset form
+  const resetForm = () => {
+    setStep(1)
+    setEquipmentName('')
+    setMaintenanceDescription('')
+    setDateCompleted(new Date().toISOString().split('T')[0])
+    setPerformedBy('')
+    setCheckingFrequency('')
+    setNotes('')
+    setHasPassedStep1(false)
+  }
+
+  // Handle close with warning
+  const handleClose = () => {
+    if (hasPassedStep1) {
+      const confirmClose = window.confirm('You have unsaved data. Are you sure you want to close?')
+      if (!confirmClose) return
+    }
+    resetForm()
+    onClose()
+  }
 
   const validateStep1 = () => {
     return equipmentName.trim().length > 0 && maintenanceDescription.trim().length > 0
@@ -45,6 +90,10 @@ export function AddMaintenanceRecordWizard({ onComplete, onCancel }: AddMaintena
     if (step === 1 && !validateStep1()) {
       alert('Please fill in equipment name and maintenance description.')
       return
+    }
+
+    if (step === 1) {
+      setHasPassedStep1(true)
     }
 
     if (step < totalSteps) {
@@ -73,39 +122,85 @@ export function AddMaintenanceRecordWizard({ onComplete, onCancel }: AddMaintena
       return
     }
 
-    const recordId = `maintenance-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    setIsSubmitting(true)
 
-    const newRecord: MaintenanceRecord = {
-      id: recordId,
-      equipmentName,
-      dateCompleted,
-      performedBy,
-      maintenanceDescription,
-      checkingFrequency: checkingFrequency.trim().length > 0 ? checkingFrequency : undefined,
-      notes: notes.trim().length > 0 ? notes : undefined,
-      createdAt: new Date().toISOString(),
-      status: 'active',
+    try {
+      if (isEditing && editingRecord) {
+        // Update existing record
+        const updatedRecord: MaintenanceRecord = {
+          ...editingRecord,
+          equipmentName,
+          dateCompleted,
+          performedBy,
+          maintenanceDescription,
+          checkingFrequency: checkingFrequency.trim().length > 0 ? checkingFrequency : undefined,
+          notes: notes.trim().length > 0 ? notes : undefined,
+          updatedAt: new Date().toISOString(),
+        }
+
+        // Update local state
+        updateRecord(editingRecord.id, {
+          equipmentName,
+          dateCompleted,
+          performedBy,
+          maintenanceDescription,
+          checkingFrequency: checkingFrequency.trim().length > 0 ? checkingFrequency : undefined,
+          notes: notes.trim().length > 0 ? notes : undefined,
+          updatedAt: new Date().toISOString(),
+        })
+
+        // Save to Google Sheets
+        await saveMaintenanceRecordToGoogleSheets(updatedRecord)
+      } else {
+        // Create new record
+        const recordId = `maintenance-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+        const newRecord: MaintenanceRecord = {
+          id: recordId,
+          equipmentName,
+          dateCompleted,
+          performedBy,
+          maintenanceDescription,
+          checkingFrequency: checkingFrequency.trim().length > 0 ? checkingFrequency : undefined,
+          notes: notes.trim().length > 0 ? notes : undefined,
+          createdAt: new Date().toISOString(),
+          status: 'active',
+        }
+
+        // Add to local state immediately
+        addRecord(newRecord)
+
+        // Save to Google Sheets in the background
+        await saveMaintenanceRecordToGoogleSheets(newRecord)
+      }
+
+      resetForm()
+      onSuccess?.()
+      onClose()
+    } catch (error) {
+      console.error('Error saving maintenance record:', error)
+      alert('Error saving record. Please try again.')
+    } finally {
+      setIsSubmitting(false)
     }
-
-    // Add to local state immediately
-    addRecord(newRecord)
-
-    // Save to Google Sheets in the background
-    saveMaintenanceRecordToGoogleSheets(newRecord)
-
-    onComplete()
   }
 
   return (
-    <div className="space-y-6">
-      {/* Progress Bar */}
-      <div className="space-y-2">
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <span>Step {step} of {totalSteps}</span>
-          <span>{Math.round(progressValue)}%</span>
-        </div>
-        <Progress value={progressValue} className="w-full" />
-      </div>
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{isEditing ? 'Edit Maintenance Record' : 'Add Maintenance Record'}</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Progress Bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>Step {step} of {totalSteps}</span>
+              <span>{Math.round(progressValue)}%</span>
+            </div>
+            <Progress value={progressValue} className="w-full" />
+          </div>
 
       {/* Step 1: Equipment & Maintenance Details */}
       {step === 1 && (
@@ -227,18 +322,22 @@ export function AddMaintenanceRecordWizard({ onComplete, onCancel }: AddMaintena
         </Card>
       )}
 
-      {/* Navigation Buttons */}
-      <div className="flex justify-between gap-4">
-        <Button variant="outline" onClick={step === 1 ? onCancel : handleBack}>
-          {step === 1 ? 'Cancel' : 'Back'}
-        </Button>
+          {/* Navigation Buttons */}
+          <div className="flex justify-between gap-4">
+            <Button variant="outline" onClick={step === 1 ? handleClose : handleBack}>
+              {step === 1 ? 'Cancel' : 'Back'}
+            </Button>
 
-        {step < totalSteps ? (
-          <Button onClick={handleNext}>Next</Button>
-        ) : (
-          <Button onClick={handleSubmit}>Save Maintenance Record</Button>
-        )}
-      </div>
-    </div>
+            {step < totalSteps ? (
+              <Button onClick={handleNext}>Next</Button>
+            ) : (
+              <Button onClick={handleSubmit} disabled={!validateStep2() || isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save Maintenance Record'}
+              </Button>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

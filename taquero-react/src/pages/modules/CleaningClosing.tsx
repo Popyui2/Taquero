@@ -43,9 +43,9 @@ export function CleaningClosing() {
     }, 3000)
   }
 
-  const handleRecordAdded = () => {
-    addToast('Cleaning record saved successfully!')
-    fetchFromGoogleSheets()
+  const handleRecordAdded = async () => {
+    addToast('Cleaning procedure saved successfully!')
+    await fetchFromGoogleSheets()
   }
 
   const handleEditClick = (record: CleaningRecord) => {
@@ -64,9 +64,11 @@ export function CleaningClosing() {
     try {
       await deleteCleaningRecordFromGoogleSheets(recordToDelete)
       deleteRecord(recordToDelete.id)
-      addToast('Cleaning record deleted successfully!')
+      addToast('Cleaning procedure deleted successfully!')
       setDeleteConfirmOpen(false)
       setRecordToDelete(null)
+      // Refresh data to show the change
+      await fetchFromGoogleSheets()
     } catch (error) {
       console.error('Error deleting cleaning record:', error)
       addToast('Error deleting cleaning record', 'error')
@@ -105,128 +107,141 @@ export function CleaningClosing() {
   return (
     <div className="container mx-auto p-6 max-w-6xl space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Sparkles className="h-8 w-8" />
-            Cleaning & Closing
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Record cleaning tasks and methods for food safety compliance
-          </p>
-        </div>
-        <Button onClick={() => setShowAddWizard(true)} size="lg">
-          <Plus className="mr-2 h-5 w-5" />
-          Add Cleaning Record
-        </Button>
+      <div className="space-y-2 text-center md:text-left">
+        <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+          <Sparkles className="h-8 w-8" />
+          Cleaning & Closing
+        </h2>
+        <p className="text-muted-foreground text-lg">
+          Cleaning and closing procedures
+        </p>
       </div>
 
+      {/* Add Record Button */}
+      <Button
+        size="lg"
+        onClick={() => setShowAddWizard(true)}
+        className="h-12 px-6 min-h-[48px] w-full sm:w-auto"
+      >
+        <Plus className="h-5 w-5 mr-2" />
+        Add Cleaning Procedure
+      </Button>
+
       {/* Add/Edit Wizard Dialog */}
-      {showAddWizard && (
-        <Card className="border-2 border-primary">
-          <CardHeader>
-            <CardTitle>{editingRecord ? 'Edit' : 'Add'} Cleaning Record</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AddCleaningRecordWizard
-              onComplete={() => {
-                handleWizardClose()
-                handleRecordAdded()
-              }}
-              onCancel={handleWizardClose}
-            />
-          </CardContent>
-        </Card>
-      )}
+      <AddCleaningRecordWizard
+        open={showAddWizard}
+        onClose={handleWizardClose}
+        onSuccess={handleRecordAdded}
+        editingRecord={editingRecord}
+      />
 
       {/* Loading State */}
       {isLoading && (
-        <div className="flex items-center justify-center p-8">
+        <div className="flex flex-col items-center justify-center p-8 space-y-3">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Fetching Data</p>
         </div>
       )}
 
-      {/* Records Table */}
+      {/* Procedures Accordion List */}
       {!isLoading && activeRecords.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Recent Cleaning Records (Last 20)</CardTitle>
+            <CardTitle>Registered Cleaning Procedures</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-3 font-semibold">Date</th>
-                    <th className="text-left p-3 font-semibold">Cleaning Task</th>
-                    <th className="text-left p-3 font-semibold">Completed By</th>
-                    <th className="text-right p-3 font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {activeRecords.map((record) => {
-                    const isExpanded = expandedRows.has(record.id)
-                    return (
-                      <>
-                        <tr key={record.id} className="border-b hover:bg-muted/50">
-                          <td className="p-3">{formatDate(record.dateCompleted)}</td>
-                          <td className="p-3 font-medium">{record.cleaningTask}</td>
-                          <td className="p-3">{record.completedBy}</td>
-                          <td className="p-3">
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toggleRowExpanded(record.id)}
-                              >
-                                {isExpanded ? (
-                                  <ChevronUp className="h-4 w-4" />
-                                ) : (
-                                  <ChevronDown className="h-4 w-4" />
-                                )}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEditClick(record)}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteClick(record)}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                        {isExpanded && (
-                          <tr className="bg-muted/30">
-                            <td colSpan={4} className="p-4">
-                              <div className="space-y-2 text-sm">
-                                <div>
-                                  <span className="font-semibold">Cleaning Method:</span>
-                                  <p className="mt-1 text-muted-foreground whitespace-pre-wrap">
-                                    {record.cleaningMethod}
-                                  </p>
-                                </div>
-                                {record.notes && (
-                                  <div>
-                                    <span className="font-semibold">Notes:</span>
-                                    <p className="mt-1 text-muted-foreground">{record.notes}</p>
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
+            <div className="space-y-2">
+              {activeRecords.map((record, index) => {
+                const isExpanded = expandedRows.has(record.id)
+                return (
+                  <div
+                    key={record.id}
+                    className="border rounded-lg overflow-hidden transition-all duration-200 hover:border-primary/50"
+                    style={{
+                      animationDelay: `${index * 50}ms`,
+                    }}
+                  >
+                    {/* Collapsed Header */}
+                    <div
+                      className="flex items-center justify-between p-4 cursor-pointer bg-card hover:bg-muted/50 transition-colors"
+                      onClick={() => toggleRowExpanded(record.id)}
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div
+                          className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                            isExpanded ? 'bg-primary text-primary-foreground' : 'bg-primary/10'
+                          }`}
+                        >
+                          <Sparkles className={`h-5 w-5 ${isExpanded ? '' : 'text-primary'}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-lg truncate">{record.cleaningTask}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Created by {record.completedBy} • {formatDate(record.dateCompleted)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 ml-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEditClick(record)
+                          }}
+                          className="h-9 w-9 p-0"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteClick(record)
+                          }}
+                          className="h-9 w-9 p-0"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-9 w-9 p-0"
+                        >
+                          {isExpanded ? (
+                            <ChevronUp className="h-5 w-5" />
+                          ) : (
+                            <ChevronDown className="h-5 w-5" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Expanded Content */}
+                    {isExpanded && (
+                      <div className="border-t bg-muted/30 p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div>
+                          <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                            Cleaning Method
+                          </h4>
+                          <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                            {record.cleaningMethod}
+                          </p>
+                        </div>
+                        {record.notes && (
+                          <div>
+                            <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                              Additional Notes
+                            </h4>
+                            <p className="text-sm text-muted-foreground">{record.notes}</p>
+                          </div>
                         )}
-                      </>
-                    )
-                  })}
-                </tbody>
-              </table>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </CardContent>
         </Card>
@@ -237,13 +252,13 @@ export function CleaningClosing() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center p-12">
             <Sparkles className="h-16 w-16 text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No cleaning records yet</h3>
+            <h3 className="text-xl font-semibold mb-2">No cleaning procedures yet</h3>
             <p className="text-muted-foreground text-center mb-6">
-              Start recording your cleaning tasks to maintain food safety standards
+              Start documenting procedures for recordkeeping
             </p>
             <Button onClick={() => setShowAddWizard(true)}>
               <Plus className="mr-2 h-5 w-5" />
-              Add First Cleaning Record
+              Add First Cleaning Procedure
             </Button>
           </CardContent>
         </Card>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Loader2, Snowflake } from 'lucide-react'
+import { Plus, Loader2, Box } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useCoolingBatchCheckStore } from '@/store/coolingBatchCheckStore'
@@ -44,8 +44,8 @@ export function CoolingBatchChecks() {
     <div className="space-y-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="space-y-2 text-center md:text-left">
-        <h2 className="text-3xl font-bold tracking-tight">
-          Cooling Batch Checks
+        <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+          <Box className="h-8 w-8" />Cooling Batch Checks
         </h2>
         <p className="text-muted-foreground text-lg">
           Weekly cooling checks for freshly cooked food
@@ -67,7 +67,7 @@ export function CoolingBatchChecks() {
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Snowflake className="h-5 w-5 text-primary" />
+              <Box className="h-5 w-5 text-primary" />
             </div>
             <div>
               <CardTitle>Batch Check Records</CardTitle>

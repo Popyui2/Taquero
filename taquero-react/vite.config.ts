@@ -4,7 +4,7 @@ import path from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  base: '/Taquero/',
+  base: process.env.NODE_ENV === 'production' ? '/Taquero/' : '/',
   plugins: [
     react(),
     VitePWA({
