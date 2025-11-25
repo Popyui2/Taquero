@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, CheckCircle2, Loader2, ChefHat } from 'lucide-react'
+import { Plus, CheckCircle2, Loader2, Flame } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
@@ -61,8 +61,8 @@ export function ProvingMethods() {
     <div className="space-y-8 max-w-4xl mx-auto">
       {/* Header */}
       <div className="space-y-2 text-center md:text-left">
-        <h2 className="text-3xl font-bold tracking-tight">
-          Proving the Cooking Method
+        <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+          <Flame className="h-8 w-8" />Proving the Cooking Method
         </h2>
         <p className="text-muted-foreground text-lg">
           Validate cooking methods with 3 consecutive successful batches
@@ -84,7 +84,7 @@ export function ProvingMethods() {
         <CardHeader>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <ChefHat className="h-5 w-5 text-primary" />
+              <Flame className="h-5 w-5 text-primary" />
             </div>
             <div>
               <CardTitle>Your Methods</CardTitle>
@@ -98,8 +98,9 @@ export function ProvingMethods() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
+            <div className="flex flex-col items-center justify-center py-12 space-y-3">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Fetching Data</p>
             </div>
           ) : recentMethods.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">

@@ -90,8 +90,9 @@ export function CookingProteinsBatch() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
+            <div className="flex flex-col items-center justify-center py-12 space-y-3">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Fetching Data</p>
             </div>
           ) : batchChecks.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">

@@ -61,8 +61,8 @@ export function ProvingReheating() {
     <div className="space-y-8 max-w-4xl mx-auto">
       {/* Header */}
       <div className="space-y-2 text-center md:text-left">
-        <h2 className="text-3xl font-bold tracking-tight">
-          Proving Reheating Method
+        <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+          <Flame className="h-8 w-8" />Proving Reheating Method
         </h2>
         <p className="text-muted-foreground text-lg">
           Validate reheating methods with 3 consecutive successful batches
@@ -98,8 +98,9 @@ export function ProvingReheating() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
+            <div className="flex flex-col items-center justify-center py-12 space-y-3">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Fetching Data</p>
             </div>
           ) : recentMethods.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">

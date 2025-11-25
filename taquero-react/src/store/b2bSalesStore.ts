@@ -17,20 +17,26 @@ export async function saveB2BSaleToGoogleSheets(
   }
 
   try {
+    // Send as array to preserve column order
+    const rowData = [
+      Math.floor(new Date(record.createdAt).getTime() / 1000), // Unix Timestamp
+      record.id,                           // ID
+      record.businessName,                 // Business Name
+      record.contactDetails,               // Contact Details
+      record.productSupplied,              // Product Supplied
+      record.quantity,                     // Quantity
+      record.unit,                         // Units
+      record.dateSupplied,                 // Date Supplied
+      record.taskDoneBy,                   // Task Done By
+      record.notes || '',                  // Notes
+      record.createdAt,                    // Created At
+      record.updatedAt || '',              // Updated At
+      record.status,                       // Status
+    ]
+
     const payload = {
-      id: record.id,
-      businessName: record.businessName,
-      contactDetails: record.contactDetails,
-      productSupplied: record.productSupplied,
-      quantity: record.quantity,
-      unit: record.unit,
-      dateSupplied: record.dateSupplied,
-      taskDoneBy: record.taskDoneBy,
-      notes: record.notes,
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
-      status: record.status,
-      unixTimestamp: Math.floor(new Date(record.createdAt).getTime() / 1000),
+      action: 'addRecord',
+      data: rowData
     }
 
     await fetch(GOOGLE_SHEETS_URL, {
@@ -64,21 +70,26 @@ export async function deleteB2BSaleFromGoogleSheets(
   }
 
   try {
-    // Mark as deleted by updating the status field
+    // Send as array to preserve column order
+    const rowData = [
+      Math.floor(new Date(record.createdAt).getTime() / 1000), // Unix Timestamp
+      record.id,                           // ID
+      record.businessName,                 // Business Name
+      record.contactDetails,               // Contact Details
+      record.productSupplied,              // Product Supplied
+      record.quantity,                     // Quantity
+      record.unit,                         // Units
+      record.dateSupplied,                 // Date Supplied
+      record.taskDoneBy,                   // Task Done By
+      record.notes || '',                  // Notes
+      record.createdAt,                    // Created At
+      new Date().toISOString(),            // Updated At
+      'deleted',                           // Status
+    ]
+
     const payload = {
-      id: record.id,
-      businessName: record.businessName,
-      contactDetails: record.contactDetails,
-      productSupplied: record.productSupplied,
-      quantity: record.quantity,
-      unit: record.unit,
-      dateSupplied: record.dateSupplied,
-      taskDoneBy: record.taskDoneBy,
-      notes: record.notes,
-      createdAt: record.createdAt,
-      updatedAt: new Date().toISOString(),
-      status: 'deleted',
-      unixTimestamp: Math.floor(new Date(record.createdAt).getTime() / 1000),
+      action: 'updateRecord',
+      data: rowData
     }
 
     await fetch(GOOGLE_SHEETS_URL, {

@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useStaffTrainingStore } from '@/store/staffTrainingStore'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Printer } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { format } from 'date-fns'
 
 export function StaffTrainingRecordMPI() {
@@ -23,16 +23,12 @@ export function StaffTrainingRecordMPI() {
     )
   }
 
-  const handlePrint = () => {
-    window.print()
-  }
-
   const startDate = staff.createdAt ? format(new Date(staff.createdAt), 'dd/MM/yyyy') : format(new Date(), 'dd/MM/yyyy')
 
   return (
     <div className="min-h-screen">
-      {/* Print-hidden controls */}
-      <div className="print:hidden max-w-6xl mx-auto px-4 py-4 flex items-center justify-between bg-background sticky top-0 z-10 border-b">
+      {/* Controls */}
+      <div className="max-w-6xl mx-auto px-4 py-4 bg-background sticky top-0 z-10 border-b">
         <Button
           variant="ghost"
           size="sm"
@@ -41,14 +37,10 @@ export function StaffTrainingRecordMPI() {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Staff Detail
         </Button>
-        <Button onClick={handlePrint} size="sm">
-          <Printer className="h-4 w-4 mr-2" />
-          Print Record
-        </Button>
       </div>
 
       {/* MPI Format Document */}
-      <div className="max-w-6xl mx-auto px-8 py-8 print:px-12 print:py-8">
+      <div className="max-w-6xl mx-auto px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-start justify-between mb-6">
@@ -190,58 +182,6 @@ export function StaffTrainingRecordMPI() {
           <p className="mt-2">This document complies with MPI Food Control Plan requirements for staff training record keeping.</p>
         </div>
       </div>
-
-      {/* Print Styles */}
-      <style>{`
-        @media print {
-          body {
-            background: white !important;
-          }
-          @page {
-            margin: 1.5cm;
-            size: A4;
-          }
-          .print\\:hidden {
-            display: none !important;
-          }
-          .print\\:bg-white {
-            background: white !important;
-          }
-          .print\\:bg-gray-50 {
-            background: #f9fafb !important;
-          }
-          .print\\:bg-gray-100 {
-            background: #f3f4f6 !important;
-          }
-          .print\\:bg-blue-800 {
-            background: #1e40af !important;
-          }
-          .print\\:text-black {
-            color: black !important;
-          }
-          .print\\:text-white {
-            color: white !important;
-          }
-          .print\\:text-gray-700 {
-            color: #374151 !important;
-          }
-          .print\\:text-gray-600 {
-            color: #4b5563 !important;
-          }
-          .print\\:border-black {
-            border-color: black !important;
-          }
-          .print\\:border-white {
-            border-color: white !important;
-          }
-          .print\\:border-gray-400 {
-            border-color: #9ca3af !important;
-          }
-          .print\\:border-gray-800 {
-            border-color: #1f2937 !important;
-          }
-        }
-      `}</style>
     </div>
   )
 }
