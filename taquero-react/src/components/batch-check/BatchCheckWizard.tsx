@@ -62,6 +62,7 @@ export function BatchCheckWizard({ open, onClose, onSuccess }: BatchCheckWizardP
     setTimeAtTemp('')
     setTimeUnit('minutes')
     setHasPassedStep1(false)
+    setIsSubmitting(false)
   }
 
   // Handle close with warning
