@@ -315,33 +315,54 @@ export function AddIncidentWizard({ onComplete, onCancel }: AddIncidentWizardPro
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Severity <span className="text-red-500">*</span></Label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-3">
                 <Button
                   type="button"
                   variant={severity === 'minor' ? 'default' : 'outline'}
                   onClick={() => setSeverity('minor')}
-                  className="h-auto py-3"
+                  className="w-full h-auto py-4 px-4 flex items-start justify-start text-left"
                 >
-                  🟢 Minor
-                  <span className="block text-xs mt-1">No food affected</span>
+                  <div className="flex items-start gap-3 w-full">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center mt-0.5">
+                      <div className="w-3 h-3 rounded-full bg-white" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold">Minor</div>
+                      <div className="text-xs text-muted-foreground mt-1">No food affected</div>
+                    </div>
+                  </div>
                 </Button>
                 <Button
                   type="button"
                   variant={severity === 'moderate' ? 'default' : 'outline'}
                   onClick={() => setSeverity('moderate')}
-                  className="h-auto py-3"
+                  className="w-full h-auto py-4 px-4 flex items-start justify-start text-left"
                 >
-                  🟡 Moderate
-                  <span className="block text-xs mt-1">Food affected but safe</span>
+                  <div className="flex items-start gap-3 w-full">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center mt-0.5">
+                      <div className="w-3 h-3 rounded-full bg-white" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold">Moderate</div>
+                      <div className="text-xs text-muted-foreground mt-1">Food affected but safe</div>
+                    </div>
+                  </div>
                 </Button>
                 <Button
                   type="button"
                   variant={severity === 'major' ? 'default' : 'outline'}
                   onClick={() => setSeverity('major')}
-                  className="h-auto py-3"
+                  className="w-full h-auto py-4 px-4 flex items-start justify-start text-left"
                 >
-                  🔴 Major
-                  <span className="block text-xs mt-1">Unsafe food produced</span>
+                  <div className="flex items-start gap-3 w-full">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-500 flex items-center justify-center mt-0.5">
+                      <div className="w-3 h-3 rounded-full bg-white" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold">Major</div>
+                      <div className="text-xs text-muted-foreground mt-1">Unsafe food produced</div>
+                    </div>
+                  </div>
                 </Button>
               </div>
             </div>

@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { ComplaintRecord } from '@/types'
 
-const GOOGLE_SHEETS_URL = ''
+const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzzGSSfovn3OofuDeeVNVdmJnvjT6vcMkBSiG1Lg1rLJBpZxhRP2CQawD-xzIsup7qc/exec'
 
 /**
  * Save a complaint record to Google Sheets
@@ -17,6 +17,7 @@ export async function saveComplaintRecordToGoogleSheets(
 
   try {
     const payload = {
+      unixTimestamp: Math.floor(new Date(record.createdAt).getTime() / 1000),
       id: record.id,
       customerName: record.customerName,
       customerContact: record.customerContact,
@@ -37,7 +38,6 @@ export async function saveComplaintRecordToGoogleSheets(
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
       status: record.status,
-      unixTimestamp: Math.floor(new Date(record.createdAt).getTime() / 1000),
     }
 
     await fetch(GOOGLE_SHEETS_URL, {
@@ -73,6 +73,7 @@ export async function deleteComplaintRecordFromGoogleSheets(
   try {
     // Mark as deleted by updating the status field
     const payload = {
+      unixTimestamp: Math.floor(new Date(record.createdAt).getTime() / 1000),
       id: record.id,
       customerName: record.customerName,
       customerContact: record.customerContact,
@@ -93,7 +94,6 @@ export async function deleteComplaintRecordFromGoogleSheets(
       createdAt: record.createdAt,
       updatedAt: new Date().toISOString(),
       status: 'deleted',
-      unixTimestamp: Math.floor(new Date(record.createdAt).getTime() / 1000),
     }
 
     await fetch(GOOGLE_SHEETS_URL, {

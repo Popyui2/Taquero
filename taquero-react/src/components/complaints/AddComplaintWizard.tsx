@@ -11,7 +11,7 @@ import {
   saveComplaintRecordToGoogleSheets,
 } from '@/store/complaintsStore'
 import { useAuthStore } from '@/store/authStore'
-import { ChevronLeft, ChevronRight, Save } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Save, Loader2 } from 'lucide-react'
 
 interface AddComplaintWizardProps {
   onComplete: () => void
@@ -20,6 +20,7 @@ interface AddComplaintWizardProps {
 
 export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardProps) {
   const [step, setStep] = useState(1)
+  const [isSaving, setIsSaving] = useState(false)
   const addRecord = useComplaintsStore((state) => state.addRecord)
   const currentUser = useAuthStore((state) => state.currentUser)
 
@@ -40,7 +41,8 @@ export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardP
   // Step 4: Investigation & Cause
   const [causeInvestigation, setCauseInvestigation] = useState('')
 
-  // Step 5: Preventive Actions
+  // Step 5: Actions Taken
+  const [actionTakenImmediate, setActionTakenImmediate] = useState('')
   const [actionTakenPreventive, setActionTakenPreventive] = useState('')
 
   // Step 6: Resolution
@@ -81,7 +83,7 @@ export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardP
   }
 
   const validateStep5 = () => {
-    return actionTakenPreventive.trim().length > 0
+    return actionTakenImmediate.trim().length > 0 && actionTakenPreventive.trim().length > 0
   }
 
   const validateStep6 = () => {
@@ -111,37 +113,45 @@ export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardP
   }
 
   const handleSubmit = async () => {
-    if (!canProceed()) return
+    if (!canProceed() || isSaving) return
 
-    const recordId = `complaint-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    setIsSaving(true)
 
-    const newRecord: ComplaintRecord = {
-      id: recordId,
-      customerName,
-      customerContact,
-      purchaseDate,
-      purchaseTime,
-      foodItem,
-      batchLotNumber: batchLotNumber.trim().length > 0 ? batchLotNumber : undefined,
-      complaintDescription,
-      complaintType: complaintType,
-      causeInvestigation,
-      actionTakenPreventive,
-      resolvedBy,
-      resolutionDate: new Date().toISOString().split('T')[0],
-      complaintStatus: 'Under Investigation',
-      notes: notes.trim().length > 0 ? notes : undefined,
-      createdAt: new Date().toISOString(),
-      status: 'active',
+    try {
+      const recordId = `complaint-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+      const newRecord: ComplaintRecord = {
+        id: recordId,
+        customerName,
+        customerContact,
+        purchaseDate,
+        purchaseTime,
+        foodItem,
+        batchLotNumber: batchLotNumber.trim().length > 0 ? batchLotNumber : undefined,
+        complaintDescription,
+        complaintType: complaintType,
+        causeInvestigation,
+        actionTakenImmediate,
+        actionTakenPreventive,
+        resolvedBy,
+        resolutionDate: new Date().toISOString().split('T')[0],
+        complaintStatus: 'Under Investigation',
+        notes: notes.trim().length > 0 ? notes : undefined,
+        createdAt: new Date().toISOString(),
+        status: 'active',
+      }
+
+      // Save to local store
+      addRecord(newRecord)
+
+      // Save to Google Sheets
+      await saveComplaintRecordToGoogleSheets(newRecord)
+
+      onComplete()
+    } catch (error) {
+      console.error('Error saving complaint:', error)
+      setIsSaving(false)
     }
-
-    // Save to local store
-    addRecord(newRecord)
-
-    // Save to Google Sheets
-    await saveComplaintRecordToGoogleSheets(newRecord)
-
-    onComplete()
   }
 
   return (
@@ -316,24 +326,38 @@ export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardP
         </Card>
       )}
 
-      {/* Step 5: Preventive Actions */}
+      {/* Step 5: Actions Taken */}
       {step === 5 && (
         <Card>
           <CardHeader>
-            <CardTitle>Preventive Actions</CardTitle>
-            <CardDescription>What action was taken to stop it happening again?</CardDescription>
+            <CardTitle>Actions Taken</CardTitle>
+            <CardDescription>What did you do immediately? What will you do to prevent it?</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="actionTakenPreventive">Action Taken to Stop It Happening Again *</Label>
+              <Label htmlFor="actionTakenImmediate">Immediate Action Taken *</Label>
               <Textarea
-                id="actionTakenPreventive"
-                placeholder="e.g., I showed Mr Smith our cooking records for Monday's batch of pies.&#10;I also showed him our hot holding record.&#10;I suggested he speaks to the local council EHO about the matter and if he was still ill his doctor would be able to help as well.&#10;&#10;OR&#10;&#10;Retrain staff on proper cooking temps&#10;Update our cooking checklist&#10;Increase monitoring frequency"
-                value={actionTakenPreventive}
-                onChange={(e) => setActionTakenPreventive(e.target.value)}
-                rows={8}
+                id="actionTakenImmediate"
+                placeholder="e.g., Apologized to customer&#10;Offered refund&#10;Checked batch records&#10;Reviewed our procedures with customer"
+                value={actionTakenImmediate}
+                onChange={(e) => setActionTakenImmediate(e.target.value)}
+                rows={5}
                 required
               />
+              <p className="text-xs text-muted-foreground">What you did right away to address the complaint</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="actionTakenPreventive">Preventive Action *</Label>
+              <Textarea
+                id="actionTakenPreventive"
+                placeholder="e.g., Retrain staff on proper cooking temps&#10;Update our cooking checklist&#10;Increase monitoring frequency&#10;Review supplier quality"
+                value={actionTakenPreventive}
+                onChange={(e) => setActionTakenPreventive(e.target.value)}
+                rows={5}
+                required
+              />
+              <p className="text-xs text-muted-foreground">What you'll do to prevent this happening again</p>
             </div>
           </CardContent>
         </Card>
@@ -405,9 +429,18 @@ export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardP
             <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
         ) : (
-          <Button onClick={handleSubmit} disabled={!canProceed()}>
-            <Save className="w-4 h-4 mr-2" />
-            Save Complaint
+          <Button onClick={handleSubmit} disabled={!canProceed() || isSaving}>
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save Complaint
+              </>
+            )}
           </Button>
         )}
       </div>

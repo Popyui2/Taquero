@@ -206,9 +206,6 @@ export function AddTransportTempCheckWizard({
             <p className="font-medium text-blue-700 dark:text-blue-400">
               Only for food transported for more than 4 hours
             </p>
-            <p className="text-blue-600 dark:text-blue-400 mt-1">
-              Record temperature after food has been out of temperature control for more than 4 hours during transport.
-            </p>
           </div>
         </div>
 
@@ -250,7 +247,7 @@ export function AddTransportTempCheckWizard({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="typeOfFood">Type of Food</Label>
+                  <Label htmlFor="typeOfFood">List the transported food</Label>
                   <Input
                     id="typeOfFood"
                     value={typeOfFood}
@@ -286,35 +283,16 @@ export function AddTransportTempCheckWizard({
                 />
               </div>
 
-              {showTempWarning && (
-                <div
-                  className={`flex items-start gap-2 p-4 border rounded-lg mt-3 ${
-                    tempWarningLevel === 'danger'
-                      ? 'bg-red-500/10 border-red-500/20'
-                      : 'bg-yellow-500/10 border-yellow-500/20'
-                  }`}
-                >
-                  <AlertTriangle
-                    className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
-                      tempWarningLevel === 'danger'
-                        ? 'text-red-600 dark:text-red-500'
-                        : 'text-yellow-600 dark:text-yellow-500'
-                    }`}
-                  />
-                  <p
-                    className={`text-sm ${
-                      tempWarningLevel === 'danger'
-                        ? 'text-red-700 dark:text-red-400'
-                        : 'text-yellow-700 dark:text-yellow-400'
-                    }`}
-                  >
-                    {tempWarningMessage}
+              {showTempWarning && tempWarningLevel === 'danger' && (
+                <div className="flex items-start gap-2 p-4 border rounded-lg mt-3 bg-red-500/10 border-red-500/20">
+                  <p className="text-sm text-red-700 dark:text-red-400 font-medium">
+                    Food Temperature is unsafe
                   </p>
                 </div>
               )}
 
               <div className="mt-4 p-4 bg-secondary/50 rounded-lg">
-                <p className="text-sm font-medium mb-2">2/4 Hour Rule Reference:</p>
+                <p className="text-sm font-medium mb-2">Temperature References</p>
                 <ul className="text-sm space-y-1 text-muted-foreground">
                   <li>• ≤5°C: Safe temperature</li>
                   <li>• 5-8°C: Borderline - monitor closely</li>

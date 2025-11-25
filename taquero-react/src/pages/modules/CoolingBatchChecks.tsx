@@ -57,6 +57,24 @@ export function CoolingBatchChecks() {
     })
   }
 
+  const formatTime = (timeString: string) => {
+    // Handle ISO datetime strings (e.g., "1899-12-30T01:45:00.000Z")
+    // or simple HH:MM format
+    if (timeString.includes('T')) {
+      const date = new Date(timeString)
+      return date.toLocaleTimeString('en-NZ', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      })
+    }
+    // Already in HH:MM format, convert to 12-hour with AM/PM
+    const [hours, minutes] = timeString.split(':').map(Number)
+    const period = hours >= 12 ? 'PM' : 'AM'
+    const displayHours = hours % 12 || 12
+    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`
+  }
+
   // Recent records (last 50)
   const recentRecords = [...records]
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
@@ -158,7 +176,7 @@ export function CoolingBatchChecks() {
                             </h4>
                             <p className="text-sm">
                               <span className="font-mono font-semibold">{record.startTemp}°C</span>
-                              <span className="text-muted-foreground ml-2">at {record.startTime}</span>
+                              <span className="text-muted-foreground ml-2">at {formatTime(record.startTime)}</span>
                             </p>
                           </div>
                           <div>
@@ -167,7 +185,7 @@ export function CoolingBatchChecks() {
                             </h4>
                             <p className="text-sm">
                               <span className="font-mono font-semibold">{record.secondTempCheck}°C</span>
-                              <span className="text-muted-foreground ml-2">at {record.secondTimeCheck}</span>
+                              <span className="text-muted-foreground ml-2">at {formatTime(record.secondTimeCheck)}</span>
                             </p>
                           </div>
                           <div>
@@ -176,7 +194,7 @@ export function CoolingBatchChecks() {
                             </h4>
                             <p className="text-sm">
                               <span className="font-mono font-semibold">{record.thirdTempCheck}°C</span>
-                              <span className="text-muted-foreground ml-2">at {record.thirdTimeCheck}</span>
+                              <span className="text-muted-foreground ml-2">at {formatTime(record.thirdTimeCheck)}</span>
                             </p>
                           </div>
                         </div>

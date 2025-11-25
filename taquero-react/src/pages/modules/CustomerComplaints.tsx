@@ -1,14 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -22,12 +14,25 @@ import {
   deleteComplaintRecordFromGoogleSheets,
 } from '@/store/complaintsStore'
 import { AddComplaintWizard } from '@/components/complaints/AddComplaintWizard'
-import { Plus, Trash2, ChevronDown, ChevronRight, AlertCircle, MessageSquare } from 'lucide-react'
+import { Plus, Trash2, ChevronDown, ChevronUp, AlertCircle, MessageSquare, Loader2, Pencil } from 'lucide-react'
 import { ComplaintRecord } from '@/types'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 export default function CustomerComplaints() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [recordToDelete, setRecordToDelete] = useState<ComplaintRecord | null>(null)
+
   const records = useComplaintsStore((state) => state.getRecords())
   const deleteRecord = useComplaintsStore((state) => state.deleteRecord)
   const fetchFromGoogleSheets = useComplaintsStore((state) => state.fetchFromGoogleSheets)
@@ -37,11 +42,17 @@ export default function CustomerComplaints() {
     fetchFromGoogleSheets()
   }, [fetchFromGoogleSheets])
 
-  const handleDelete = async (record: ComplaintRecord) => {
-    if (window.confirm('Are you sure you want to delete this complaint record?')) {
-      deleteRecord(record.id)
-      await deleteComplaintRecordFromGoogleSheets(record)
-    }
+  const handleDeleteClick = (record: ComplaintRecord) => {
+    setRecordToDelete(record)
+    setDeleteConfirmOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!recordToDelete) return
+    deleteRecord(recordToDelete.id)
+    await deleteComplaintRecordFromGoogleSheets(recordToDelete)
+    setDeleteConfirmOpen(false)
+    setRecordToDelete(null)
   }
 
   const toggleRow = (recordId: string) => {
@@ -54,233 +65,222 @@ export default function CustomerComplaints() {
     setExpandedRows(newExpanded)
   }
 
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'destructive' | 'secondary' | 'outline'> = {
-      'Under Investigation': 'default',
-      'Resolved - Our Fault': 'destructive',
-      'Resolved - Not Our Fault': 'secondary',
-      'Resolved - Inconclusive': 'outline',
-      'Ongoing': 'default',
-    }
-    return (
-      <Badge variant={variants[status] || 'default'}>
-        {status}
-      </Badge>
-    )
+  const formatDate = (isoDate: string) => {
+    const date = new Date(isoDate)
+    return date.toLocaleDateString('en-NZ', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2"><MessageSquare className="h-8 w-8" />Customer Complaints Information</h1>
-          <p className="text-muted-foreground mt-2">
-            Track and investigate customer complaints for MPI compliance
-          </p>
-        </div>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Complaint
-        </Button>
+    <div className="container mx-auto p-6 max-w-6xl space-y-6">
+      {/* Header */}
+      <div className="space-y-2 text-center md:text-left">
+        <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+          <MessageSquare className="h-8 w-8 text-red-500" />
+          Customer Complaints Information
+        </h2>
+        <p className="text-muted-foreground text-lg">
+          Document complaints that customers expressed to you
+        </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Complaint Log</CardTitle>
-          <CardDescription>
-            Document complaints, investigations, and resolutions to show MPI you take complaints seriously
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading records...</div>
-          ) : records.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No complaint records yet</p>
-              <p className="text-sm">Start by adding your first customer complaint</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12"></TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Food Item</TableHead>
-                  <TableHead>Complaint Type</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Resolved By</TableHead>
-                  <TableHead className="w-24">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {records.map((record) => {
-                  const isExpanded = expandedRows.has(record.id)
-                  return (
-                    <>
-                      <TableRow key={record.id} className="cursor-pointer hover:bg-muted/50">
-                        <TableCell onClick={() => toggleRow(record.id)}>
+      {/* Add Complaint Button */}
+      <Button
+        size="lg"
+        onClick={() => setIsAddDialogOpen(true)}
+        variant="destructive"
+        className="h-12 px-6 min-h-[48px] w-full sm:w-auto"
+      >
+        <Plus className="h-5 w-5 mr-2" />
+        Add Complaint
+      </Button>
+
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex flex-col items-center justify-center p-8 space-y-3">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Fetching Data</p>
+        </div>
+      )}
+
+      {/* Complaints Accordion */}
+      {!isLoading && records.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Complaint Records</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {records.map((record, index) => {
+                const isExpanded = expandedRows.has(record.id)
+                return (
+                  <div
+                    key={record.id}
+                    className="border rounded-lg overflow-hidden transition-all duration-200 hover:border-primary/50"
+                    style={{
+                      animationDelay: `${index * 50}ms`,
+                    }}
+                  >
+                    {/* Collapsed Header */}
+                    <div className="flex items-center justify-between p-4 bg-card hover:bg-muted/50 transition-colors">
+                      <div
+                        className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+                        onClick={() => toggleRow(record.id)}
+                      >
+                        <div
+                          className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                            isExpanded ? 'bg-red-500 text-white' : 'bg-red-500/10'
+                          }`}
+                        >
+                          <MessageSquare className={`h-5 w-5 ${isExpanded ? '' : 'text-red-500'}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-lg truncate">
+                            {record.customerName} - {record.foodItem}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {formatDate(record.purchaseDate)} • {record.complaintStatus}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 ml-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteClick(record)
+                          }}
+                          className="h-9 w-9 p-0 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleRow(record.id)}
+                          className="h-9 w-9 p-0"
+                        >
                           {isExpanded ? (
-                            <ChevronDown className="w-4 h-4" />
+                            <ChevronUp className="h-5 w-5" />
                           ) : (
-                            <ChevronRight className="w-4 h-4" />
+                            <ChevronDown className="h-5 w-5" />
                           )}
-                        </TableCell>
-                        <TableCell onClick={() => toggleRow(record.id)}>
-                          {new Date(record.purchaseDate).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell onClick={() => toggleRow(record.id)}>
-                          {record.customerName}
-                        </TableCell>
-                        <TableCell onClick={() => toggleRow(record.id)}>{record.foodItem}</TableCell>
-                        <TableCell onClick={() => toggleRow(record.id)}>
-                          {record.complaintType ? (
-                            <Badge variant="outline">{record.complaintType}</Badge>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell onClick={() => toggleRow(record.id)}>
-                          {getStatusBadge(record.complaintStatus)}
-                        </TableCell>
-                        <TableCell onClick={() => toggleRow(record.id)}>
-                          {record.resolvedBy}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDelete(record)
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
+                        </Button>
+                      </div>
+                    </div>
 
-                      {/* Expanded Details Row */}
-                      {isExpanded && (
-                        <TableRow key={`${record.id}-details`}>
-                          <TableCell colSpan={8} className="bg-muted/30">
-                            <div className="p-4 space-y-4">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <h4 className="font-semibold text-sm mb-2">Customer Details</h4>
-                                  <div className="space-y-1 text-sm">
-                                    <p>
-                                      <span className="text-muted-foreground">Name:</span>{' '}
-                                      {record.customerName}
-                                    </p>
-                                    <p>
-                                      <span className="text-muted-foreground">Contact:</span>{' '}
-                                      {record.customerContact}
-                                    </p>
-                                  </div>
-                                </div>
+                    {/* Expanded Content */}
+                    {isExpanded && (
+                      <div className="border-t bg-muted/30 p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                        {/* Complaint Description */}
+                        <div>
+                          <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                            Complaint
+                          </h4>
+                          <p className="text-sm whitespace-pre-line leading-relaxed">{record.complaintDescription}</p>
+                        </div>
 
-                                <div>
-                                  <h4 className="font-semibold text-sm mb-2">Purchase Details</h4>
-                                  <div className="space-y-1 text-sm">
-                                    <p>
-                                      <span className="text-muted-foreground">Date:</span>{' '}
-                                      {new Date(record.purchaseDate).toLocaleDateString()}
-                                    </p>
-                                    <p>
-                                      <span className="text-muted-foreground">Time:</span>{' '}
-                                      {record.purchaseTime}
-                                    </p>
-                                    <p>
-                                      <span className="text-muted-foreground">Food:</span>{' '}
-                                      {record.foodItem}
-                                    </p>
-                                    {record.batchLotNumber && (
-                                      <p>
-                                        <span className="text-muted-foreground">Batch/Lot:</span>{' '}
-                                        {record.batchLotNumber}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
+                        {/* Customer & Purchase Details */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                              Customer Contact
+                            </h4>
+                            <p className="text-sm">{record.customerContact}</p>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                              Purchase Time
+                            </h4>
+                            <p className="text-sm">{record.purchaseTime}</p>
+                          </div>
+                        </div>
 
-                              <div>
-                                <h4 className="font-semibold text-sm mb-2">Complaint</h4>
-                                <p className="text-sm whitespace-pre-wrap">
-                                  {record.complaintDescription}
-                                </p>
-                              </div>
+                        {record.batchLotNumber && (
+                          <div>
+                            <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                              Batch/Lot Number
+                            </h4>
+                            <p className="text-sm font-mono">{record.batchLotNumber}</p>
+                          </div>
+                        )}
 
-                              <div>
-                                <h4 className="font-semibold text-sm mb-2">
-                                  Investigation & Cause
-                                </h4>
-                                <p className="text-sm whitespace-pre-wrap">
-                                  {record.causeInvestigation}
-                                </p>
-                              </div>
+                        {/* Investigation */}
+                        <div>
+                          <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                            Investigation & Cause
+                          </h4>
+                          <p className="text-sm whitespace-pre-line leading-relaxed">{record.causeInvestigation}</p>
+                        </div>
 
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <h4 className="font-semibold text-sm mb-2">
-                                    Action Taken Immediately
-                                  </h4>
-                                  <p className="text-sm whitespace-pre-wrap">
-                                    {record.actionTakenImmediate}
-                                  </p>
-                                </div>
+                        {/* Actions Taken */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                              Immediate Action
+                            </h4>
+                            <p className="text-sm whitespace-pre-line leading-relaxed">{record.actionTakenImmediate}</p>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                              Preventive Action
+                            </h4>
+                            <p className="text-sm whitespace-pre-line leading-relaxed">{record.actionTakenPreventive}</p>
+                          </div>
+                        </div>
 
-                                <div>
-                                  <h4 className="font-semibold text-sm mb-2">
-                                    Action to Prevent Recurrence
-                                  </h4>
-                                  <p className="text-sm whitespace-pre-wrap">
-                                    {record.actionTakenPreventive}
-                                  </p>
-                                </div>
-                              </div>
+                        {/* Resolution */}
+                        <div>
+                          <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                            Resolved By
+                          </h4>
+                          <p className="text-sm">{record.resolvedBy} on {formatDate(record.resolutionDate)}</p>
+                        </div>
 
-                              {record.linkedIncidentId && (
-                                <div>
-                                  <h4 className="font-semibold text-sm mb-2">
-                                    Linked Incident Record
-                                  </h4>
-                                  <p className="text-sm">
-                                    <Badge>{record.linkedIncidentId}</Badge>
-                                  </p>
-                                </div>
-                              )}
+                        {/* Notes */}
+                        {record.notes && (
+                          <div>
+                            <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+                              Additional Notes
+                            </h4>
+                            <p className="text-sm whitespace-pre-line leading-relaxed">{record.notes}</p>
+                          </div>
+                        )}
 
-                              {record.notes && (
-                                <div>
-                                  <h4 className="font-semibold text-sm mb-2">Additional Notes</h4>
-                                  <p className="text-sm whitespace-pre-wrap">{record.notes}</p>
-                                </div>
-                              )}
+                        {/* Metadata */}
+                        <div className="pt-2 border-t text-xs text-muted-foreground space-y-1">
+                          <p>Recorded: {formatDate(record.createdAt)}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-                              <div className="pt-2 border-t text-xs text-muted-foreground">
-                                <p>
-                                  Resolved: {new Date(record.resolutionDate).toLocaleDateString()}{' '}
-                                  by {record.resolvedBy}
-                                </p>
-                                <p>
-                                  Record created: {new Date(record.createdAt).toLocaleString()}
-                                </p>
-                              </div>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      {/* Empty State */}
+      {!isLoading && records.length === 0 && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center p-12">
+            <MessageSquare className="h-16 w-16 text-muted-foreground mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No complaint records yet</h3>
+            <p className="text-muted-foreground text-center mb-6">
+              Start documenting customer complaints for MPI compliance
+            </p>
+            <Button onClick={() => setIsAddDialogOpen(true)} variant="destructive">
+              <Plus className="mr-2 h-5 w-5" />
+              Add First Complaint
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Add Complaint Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -297,6 +297,25 @@ export default function CustomerComplaints() {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Complaint Record?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this customer complaint record.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

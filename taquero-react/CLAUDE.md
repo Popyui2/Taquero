@@ -1,20 +1,44 @@
 # Claude Context - Taquero FCP Management System
 
-**Last Updated:** 2025-11-25
+**Last Updated:** 2025-11-26
 **Current Branch:** main
 **Project Owner:** Martin (luiric1998@gmail.com)
 **Business:** Hot Like A Mexican - Wellington, NZ
 
 ---
 
-## Recent Changes (2025-11-25)
+## Recent Changes (2025-11-26)
 
-### Repository Cleanup
-- **Merged latest code** from `claude/continue-session-01KSUyX6yVetUkyyBJukrTGu` to `main`
-- **Deleted old Claude branches** locally (5 branches from previous sessions)
-- **Force pushed to GitHub** - main branch now has all latest features
-- **Fixed directory structure** - React app files now at root level (not nested in taquero-react/)
-- **Installed missing dependencies**: @radix-ui/react-progress, @radix-ui/react-label, @radix-ui/react-checkbox
+### Major Module Refinements - Pre-Inspection Polish
+- **Cooling Batch Checks**: Fixed time display format (ISO datetime → readable 12-hour format with AM/PM)
+- **Transport Temp Checks**: Converted from table to accordion layout, updated wizard UI labels
+- **When Something Goes Wrong (Incidents)**:
+  - Moved button below title with red/destructive variant
+  - Converted wizard to modal dialog
+  - Redesigned severity selection (vertical stack, colored circles instead of emojis)
+  - Converted table to accordion layout
+  - Added incident resolution tracking (Mark Follow-up Complete button)
+  - Fixed Google Sheets integration with proper column mapping including Incident Status
+- **Customer Complaints**:
+  - Moved button below title with red/destructive variant
+  - Updated description to "Document complaints that customers expressed to you"
+  - Converted table to accordion layout matching other modules
+  - Added delete confirmation dialog
+  - Removed unnecessary color status dots
+  - Created complete Google Apps Script from scratch (21 columns)
+  - Fixed missing `actionTakenImmediate` field in wizard
+  - Added loading state to prevent duplicate submissions
+  - Fixed Unix Timestamp placement (now first column in payload)
+  - Updated loading text to "Fetching Data"
+
+### Module Consistency Achieved
+All critical modules now follow consistent patterns:
+- Accordion-style layouts for tablet-friendly viewing
+- Edit/Delete buttons in accordion headers
+- Red/destructive styling for critical modules
+- Buttons positioned below titles
+- Proper Google Sheets integration with Unix Timestamp in Column A
+- Loading states with "Fetching Data" text
 
 ### Git Configuration
 - Set git user: Martin <luiric1998@gmail.com>
