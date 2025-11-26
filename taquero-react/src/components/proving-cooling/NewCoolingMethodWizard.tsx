@@ -5,10 +5,21 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
+import { DatePicker } from '@/components/ui/date-picker'
 import { useAuthStore } from '@/store/authStore'
 import { useCoolingMethodStore, saveCoolingBatchToGoogleSheets } from '@/store/provingCoolingStore'
 import { CoolingMethod, CoolingBatch } from '@/types'
 import { Calendar, Clock, Snowflake, Thermometer } from 'lucide-react'
+
+const formatDateToDDMMYYYY = (isoDate: string) => {
+  const [year, month, day] = isoDate.split('-')
+  return `${day}/${month}/${year}`
+}
+
+const formatDateToISO = (ddmmyyyy: string) => {
+  const [day, month, year] = ddmmyyyy.split('/')
+  return `${year}-${month}-${day}`
+}
 
 interface NewCoolingMethodWizardProps {
   open: boolean
@@ -34,7 +45,7 @@ export function NewCoolingMethodWizard({ open, onClose, onSuccess }: NewCoolingM
   const [thirdTempCheck, setThirdTempCheck] = useState('')
 
   // Auto-filled date
-  const [date] = useState(new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState(formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]))
 
   const [hasPassedStep1, setHasPassedStep1] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -92,7 +103,7 @@ export function NewCoolingMethodWizard({ open, onClose, onSuccess }: NewCoolingM
     // Create first batch
     const firstBatch: CoolingBatch = {
       batchNumber: 1,
-      date,
+      date: formatDateToISO(date),
       startTime,
       startTemp: parseFloat(startTemp),
       secondTimeCheck,
@@ -200,14 +211,11 @@ export function NewCoolingMethodWizard({ open, onClose, onSuccess }: NewCoolingM
           {step === 3 && (
             <div className="space-y-4">
               <Label className="text-base">Date of Batch 1</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-                <Input
-                  type="date"
-                  value={date}
-                  className="h-16 text-xl pl-12"
-                />
-              </div>
+              <DatePicker
+                value={date}
+                onChange={setDate}
+                placeholder="DD/MM/YYYY"
+              />
             </div>
           )}
 

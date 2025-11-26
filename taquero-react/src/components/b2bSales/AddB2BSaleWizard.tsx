@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { DatePicker } from '@/components/ui/date-picker'
 import { useAuthStore } from '@/store/authStore'
 import { useB2BSalesStore, saveB2BSaleToGoogleSheets } from '@/store/b2bSalesStore'
 import { B2BSaleRecord, B2BUnit } from '@/types'
@@ -50,6 +51,18 @@ export function AddB2BSaleWizard({
   const totalSteps = 4
   const progress = (step / totalSteps) * 100
 
+  // Helper function to convert ISO date to DD/MM/YYYY
+  const formatDateToDDMMYYYY = (isoDate: string) => {
+    const [year, month, day] = isoDate.split('-')
+    return `${day}/${month}/${year}`
+  }
+
+  // Helper function to convert DD/MM/YYYY to ISO date
+  const formatDateToISO = (ddmmyyyy: string) => {
+    const [day, month, year] = ddmmyyyy.split('/')
+    return `${year}-${month}-${day}`
+  }
+
   // Load editing data
   useEffect(() => {
     if (editingRecord && open) {
@@ -58,7 +71,7 @@ export function AddB2BSaleWizard({
       setProductSupplied(editingRecord.productSupplied)
       setQuantity(editingRecord.quantity.toString())
       setUnit(editingRecord.unit)
-      setDateSupplied(editingRecord.dateSupplied)
+      setDateSupplied(formatDateToDDMMYYYY(editingRecord.dateSupplied))
       setNotes(editingRecord.notes || '')
     }
   }, [editingRecord, open])
@@ -67,7 +80,7 @@ export function AddB2BSaleWizard({
   useEffect(() => {
     if (open && !editingRecord) {
       const today = new Date().toISOString().split('T')[0]
-      setDateSupplied(today)
+      setDateSupplied(formatDateToDDMMYYYY(today))
     }
   }, [open, editingRecord])
 
@@ -124,7 +137,7 @@ export function AddB2BSaleWizard({
           productSupplied: productSupplied.trim(),
           quantity: parseFloat(quantity),
           unit,
-          dateSupplied,
+          dateSupplied: formatDateToISO(dateSupplied),
           notes: notes.trim() || undefined,
           updatedAt: new Date().toISOString(),
         }
@@ -136,7 +149,7 @@ export function AddB2BSaleWizard({
           productSupplied: productSupplied.trim(),
           quantity: parseFloat(quantity),
           unit,
-          dateSupplied,
+          dateSupplied: formatDateToISO(dateSupplied),
           notes: notes.trim() || undefined,
         })
       } else {
@@ -150,7 +163,7 @@ export function AddB2BSaleWizard({
           productSupplied: productSupplied.trim(),
           quantity: parseFloat(quantity),
           unit,
-          dateSupplied,
+          dateSupplied: formatDateToISO(dateSupplied),
           taskDoneBy: currentUser.name,
           notes: notes.trim() || undefined,
           createdAt: new Date().toISOString(),
@@ -315,12 +328,10 @@ export function AddB2BSaleWizard({
 
               <div className="space-y-2">
                 <Label htmlFor="dateSupplied">Date Supplied</Label>
-                <Input
-                  id="dateSupplied"
-                  type="date"
+                <DatePicker
                   value={dateSupplied}
-                  onChange={(e) => setDateSupplied(e.target.value)}
-                  className="h-16 text-xl"
+                  onChange={setDateSupplied}
+                  placeholder="DD/MM/YYYY"
                 />
               </div>
             </div>

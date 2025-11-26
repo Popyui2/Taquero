@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Sparkles } from 'lucide-react'
@@ -15,6 +16,16 @@ interface AddCleaningRecordWizardProps {
   onClose: () => void
   onSuccess?: () => void
   editingRecord?: CleaningRecord | null
+}
+
+const formatDateToDDMMYYYY = (isoDate: string) => {
+  const [year, month, day] = isoDate.split('-')
+  return `${day}/${month}/${year}`
+}
+
+const formatDateToISO = (ddmmyyyy: string) => {
+  const [day, month, year] = ddmmyyyy.split('/')
+  return `${year}-${month}-${day}`
 }
 
 export function AddCleaningRecordWizard({ open, onClose, onSuccess, editingRecord }: AddCleaningRecordWizardProps) {
@@ -30,7 +41,7 @@ export function AddCleaningRecordWizard({ open, onClose, onSuccess, editingRecor
 
   // Step 2: Date, Staff & Notes
   const [dateCompleted, setDateCompleted] = useState(
-    new Date().toISOString().split('T')[0]
+    formatDateToDDMMYYYY(new Date().toISOString().split('T')[0])
   )
   const [completedBy, setCompletedBy] = useState('')
   const [notes, setNotes] = useState('')
@@ -48,7 +59,7 @@ export function AddCleaningRecordWizard({ open, onClose, onSuccess, editingRecor
     if (editingRecord && open) {
       setCleaningTask(editingRecord.cleaningTask)
       setCleaningMethod(editingRecord.cleaningMethod)
-      setDateCompleted(editingRecord.dateCompleted)
+      setDateCompleted(formatDateToDDMMYYYY(editingRecord.dateCompleted))
       setCompletedBy(editingRecord.completedBy)
       setNotes(editingRecord.notes || '')
     }
@@ -59,7 +70,7 @@ export function AddCleaningRecordWizard({ open, onClose, onSuccess, editingRecor
     setStep(1)
     setCleaningTask('')
     setCleaningMethod('')
-    setDateCompleted(new Date().toISOString().split('T')[0])
+    setDateCompleted(formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]))
     setCompletedBy('')
     setNotes('')
     setHasPassedStep1(false)
@@ -122,7 +133,7 @@ export function AddCleaningRecordWizard({ open, onClose, onSuccess, editingRecor
         const updatedRecord: CleaningRecord = {
           ...editingRecord,
           cleaningTask,
-          dateCompleted,
+          dateCompleted: formatDateToISO(dateCompleted),
           cleaningMethod,
           completedBy,
           notes: notes.trim().length > 0 ? notes : undefined,
@@ -132,7 +143,7 @@ export function AddCleaningRecordWizard({ open, onClose, onSuccess, editingRecor
         // Update local state
         updateRecord(editingRecord.id, {
           cleaningTask,
-          dateCompleted,
+          dateCompleted: formatDateToISO(dateCompleted),
           cleaningMethod,
           completedBy,
           notes: notes.trim().length > 0 ? notes : undefined,
@@ -148,7 +159,7 @@ export function AddCleaningRecordWizard({ open, onClose, onSuccess, editingRecor
         const newRecord: CleaningRecord = {
           id: recordId,
           cleaningTask,
-          dateCompleted,
+          dateCompleted: formatDateToISO(dateCompleted),
           cleaningMethod,
           completedBy,
           notes: notes.trim().length > 0 ? notes : undefined,
@@ -246,12 +257,10 @@ export function AddCleaningRecordWizard({ open, onClose, onSuccess, editingRecor
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="dateCompleted">Date</Label>
-              <Input
-                id="dateCompleted"
-                type="date"
+              <DatePicker
                 value={dateCompleted}
-                onChange={(e) => setDateCompleted(e.target.value)}
-                className="cursor-pointer"
+                onChange={setDateCompleted}
+                placeholder="DD/MM/YYYY"
               />
             </div>
 

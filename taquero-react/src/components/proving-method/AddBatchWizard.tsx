@@ -5,9 +5,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
+import { DatePicker } from '@/components/ui/date-picker'
 import { useProvingMethodStore, saveBatchToGoogleSheets } from '@/store/provingMethodStore'
 import { useAuthStore } from '@/store/authStore'
 import { ProvingMethod, ValidationBatch } from '@/types'
+
+const formatDateToDDMMYYYY = (isoDate: string) => {
+  const [year, month, day] = isoDate.split('-')
+  return `${day}/${month}/${year}`
+}
+
+const formatDateToISO = (ddmmyyyy: string) => {
+  const [day, month, year] = ddmmyyyy.split('/')
+  return `${year}-${month}-${day}`
+}
 
 interface AddBatchWizardProps {
   open: boolean
@@ -22,7 +33,7 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
   const [step, setStep] = useState(1)
 
   // Form state
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState(formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]))
   const [temperature, setTemperature] = useState('')
   const [timeValue, setTimeValue] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -32,7 +43,7 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
 
   const handleClose = () => {
     setStep(1)
-    setDate(new Date().toISOString().split('T')[0])
+    setDate(formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]))
     setTemperature('')
     setTimeValue('')
     onClose()
@@ -61,7 +72,7 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
     try {
       const batch: ValidationBatch = {
         batchNumber: nextBatchNumber,
-        date: date,
+        date: formatDateToISO(date),
         temperature: parseFloat(temperature),
         timeAtTemp: `${timeValue} ${timeValue === '1' ? 'minute' : 'minutes'}`,
         completedBy: currentUser.name,
@@ -143,13 +154,10 @@ export function AddBatchWizard({ open, onClose, onSuccess, method }: AddBatchWiz
                 <Label htmlFor="date" className="text-base">
                   What date was this batch cooked?
                 </Label>
-                <Input
-                  id="date"
-                  type="date"
+                <DatePicker
                   value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  max={new Date().toISOString().split('T')[0]}
-                  className="h-16 text-xl"
+                  onChange={setDate}
+                  placeholder="DD/MM/YYYY"
                 />
                 <p className="text-sm text-muted-foreground">
                   Select the date when this batch was prepared

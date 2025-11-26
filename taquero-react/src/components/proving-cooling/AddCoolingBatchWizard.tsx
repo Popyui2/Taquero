@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Progress } from '@/components/ui/progress'
 import { useAuthStore } from '@/store/authStore'
 import { useCoolingMethodStore, saveCoolingBatchToGoogleSheets } from '@/store/provingCoolingStore'
@@ -14,6 +15,16 @@ interface AddCoolingBatchWizardProps {
   onClose: () => void
   onSuccess?: (isProven: boolean) => void
   method: CoolingMethod
+}
+
+const formatDateToDDMMYYYY = (isoDate: string) => {
+  const [year, month, day] = isoDate.split('-')
+  return `${day}/${month}/${year}`
+}
+
+const formatDateToISO = (ddmmyyyy: string) => {
+  const [day, month, year] = ddmmyyyy.split('/')
+  return `${year}-${month}-${day}`
 }
 
 export function AddCoolingBatchWizard({ open, onClose, onSuccess, method }: AddCoolingBatchWizardProps) {
@@ -34,7 +45,7 @@ export function AddCoolingBatchWizard({ open, onClose, onSuccess, method }: AddC
   const [thirdTempCheck, setThirdTempCheck] = useState('')
 
   // Auto-filled date
-  const [date] = useState(new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState(formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]))
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState('')
@@ -75,7 +86,7 @@ export function AddCoolingBatchWizard({ open, onClose, onSuccess, method }: AddC
     // Create new batch
     const newBatch: CoolingBatch = {
       batchNumber: nextBatchNumber,
-      date,
+      date: formatDateToISO(date),
       startTime,
       startTemp: parseFloat(startTemp),
       secondTimeCheck,
@@ -149,14 +160,11 @@ export function AddCoolingBatchWizard({ open, onClose, onSuccess, method }: AddC
           {step === 1 && (
             <div className="space-y-4">
               <Label className="text-base">Date of Batch {nextBatchNumber}</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-                <Input
-                  type="date"
-                  value={date}
-                  className="h-16 text-xl pl-12"
-                />
-              </div>
+              <DatePicker
+                value={date}
+                onChange={setDate}
+                placeholder="DD/MM/YYYY"
+              />
             </div>
           )}
 

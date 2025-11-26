@@ -25,9 +25,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { DatePicker } from '@/components/ui/date-picker'
 import { useStaffTrainingStore } from '@/store/staffTrainingStore'
 import { Trash2, Plus } from 'lucide-react'
 import { format } from 'date-fns'
+
+const formatDateToDDMMYYYY = (isoDate: string) => {
+  const [year, month, day] = isoDate.split('-')
+  return `${day}/${month}/${year}`
+}
+
+const formatDateToISO = (ddmmyyyy: string) => {
+  const [day, month, year] = ddmmyyyy.split('/')
+  return `${year}-${month}-${day}`
+}
 
 interface StaffTrainingEditProps {
   staffId: string | null
@@ -61,7 +72,7 @@ export function StaffTrainingEdit({ staffId, onBack: _onBack, onSelectStaff }: S
   // Training record form
   const [topic, setTopic] = useState('')
   const [trainerInitials, setTrainerInitials] = useState('')
-  const [trainingDate, setTrainingDate] = useState<Date | undefined>(new Date())
+  const [trainingDate, setTrainingDate] = useState(formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]))
 
   // Delete confirmation
   const [deleteRecordId, setDeleteRecordId] = useState<string | null>(null)
@@ -119,13 +130,13 @@ export function StaffTrainingEdit({ staffId, onBack: _onBack, onSelectStaff }: S
     addTrainingRecord(staffId, {
       topic,
       trainerInitials: initialsUpper,
-      date: trainingDate.toISOString(),
+      date: new Date(formatDateToISO(trainingDate)).toISOString(),
     })
 
     // Clear form
     setTopic('')
     setTrainerInitials('')
-    setTrainingDate(new Date())
+    setTrainingDate(formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]))
   }
 
   const handleDeleteRecord = () => {
@@ -263,11 +274,10 @@ export function StaffTrainingEdit({ staffId, onBack: _onBack, onSelectStaff }: S
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Date *</label>
-                  <Input
-                    type="date"
-                    value={trainingDate ? format(trainingDate, 'yyyy-MM-dd') : ''}
-                    onChange={(e) => setTrainingDate(e.target.value ? new Date(e.target.value) : undefined)}
-                    className="h-12"
+                  <DatePicker
+                    value={trainingDate}
+                    onChange={setTrainingDate}
+                    placeholder="DD/MM/YYYY"
                   />
                 </div>
               </div>

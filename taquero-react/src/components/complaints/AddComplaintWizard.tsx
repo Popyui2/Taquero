@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ComplaintRecord, ComplaintType } from '@/types'
@@ -12,6 +13,16 @@ import {
 } from '@/store/complaintsStore'
 import { useAuthStore } from '@/store/authStore'
 import { ChevronLeft, ChevronRight, Save, Loader2 } from 'lucide-react'
+
+const formatDateToDDMMYYYY = (isoDate: string) => {
+  const [year, month, day] = isoDate.split('-')
+  return `${day}/${month}/${year}`
+}
+
+const formatDateToISO = (ddmmyyyy: string) => {
+  const [day, month, year] = ddmmyyyy.split('/')
+  return `${year}-${month}-${day}`
+}
 
 interface AddComplaintWizardProps {
   onComplete: () => void
@@ -29,7 +40,7 @@ export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardP
   const [customerContact, setCustomerContact] = useState('')
 
   // Step 2: Purchase Details
-  const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0])
+  const [purchaseDate, setPurchaseDate] = useState(formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]))
   const [purchaseTime, setPurchaseTime] = useState('')
   const [foodItem, setFoodItem] = useState('')
   const [batchLotNumber, setBatchLotNumber] = useState('')
@@ -124,7 +135,7 @@ export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardP
         id: recordId,
         customerName,
         customerContact,
-        purchaseDate,
+        purchaseDate: formatDateToISO(purchaseDate),
         purchaseTime,
         foodItem,
         batchLotNumber: batchLotNumber.trim().length > 0 ? batchLotNumber : undefined,
@@ -210,12 +221,10 @@ export function AddComplaintWizard({ onComplete, onCancel }: AddComplaintWizardP
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="purchaseDate">Date of Purchase *</Label>
-              <Input
-                id="purchaseDate"
-                type="date"
+              <DatePicker
                 value={purchaseDate}
-                onChange={(e) => setPurchaseDate(e.target.value)}
-                required
+                onChange={setPurchaseDate}
+                placeholder="DD/MM/YYYY"
               />
             </div>
 

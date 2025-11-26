@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { AlertTriangle } from 'lucide-react'
@@ -24,12 +25,22 @@ const INCIDENT_CATEGORIES: { value: IncidentCategory; label: string }[] = [
   { value: 'other', label: 'Other' },
 ]
 
+const formatDateToDDMMYYYY = (isoDate: string) => {
+  const [year, month, day] = isoDate.split('-')
+  return `${day}/${month}/${year}`
+}
+
+const formatDateToISO = (ddmmyyyy: string) => {
+  const [day, month, year] = ddmmyyyy.split('/')
+  return `${year}-${month}-${day}`
+}
+
 export function AddIncidentWizard({ onComplete, onCancel }: AddIncidentWizardProps) {
   const [step, setStep] = useState(1)
   const addRecord = useIncidentsStore((state) => state.addRecord)
 
   // Step 1: Incident Details
-  const [incidentDate, setIncidentDate] = useState(new Date().toISOString().split('T')[0])
+  const [incidentDate, setIncidentDate] = useState(formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]))
   const [personResponsible, setPersonResponsible] = useState('')
   const [staffInvolved, setStaffInvolved] = useState('')
 
@@ -121,7 +132,7 @@ export function AddIncidentWizard({ onComplete, onCancel }: AddIncidentWizardPro
 
     const newRecord: IncidentRecord = {
       id: recordId,
-      incidentDate,
+      incidentDate: formatDateToISO(incidentDate),
       personResponsible,
       staffInvolved: staffInvolved.trim().length > 0 ? staffInvolved : personResponsible,
       category,
@@ -130,7 +141,7 @@ export function AddIncidentWizard({ onComplete, onCancel }: AddIncidentWizardPro
       preventiveAction,
       severity,
       incidentStatus: 'open',
-      followUpDate: followUpDate.trim().length > 0 ? followUpDate : undefined,
+      followUpDate: followUpDate.trim().length > 0 ? formatDateToISO(followUpDate) : undefined,
       notes: notes.trim().length > 0 ? notes : undefined,
       createdAt: new Date().toISOString(),
       status: 'active',
@@ -171,11 +182,10 @@ export function AddIncidentWizard({ onComplete, onCancel }: AddIncidentWizardPro
               <Label htmlFor="incidentDate">
                 Incident Date <span className="text-red-500">*</span>
               </Label>
-              <Input
-                id="incidentDate"
-                type="date"
+              <DatePicker
                 value={incidentDate}
-                onChange={(e) => setIncidentDate(e.target.value)}
+                onChange={setIncidentDate}
+                placeholder="DD/MM/YYYY"
               />
             </div>
 
@@ -369,11 +379,10 @@ export function AddIncidentWizard({ onComplete, onCancel }: AddIncidentWizardPro
 
             <div className="space-y-2">
               <Label htmlFor="followUpDate">Follow-up Date (Optional)</Label>
-              <Input
-                id="followUpDate"
-                type="date"
+              <DatePicker
                 value={followUpDate}
-                onChange={(e) => setFollowUpDate(e.target.value)}
+                onChange={setFollowUpDate}
+                placeholder="DD/MM/YYYY"
               />
               <p className="text-xs text-muted-foreground">
                 Date to verify corrective action (e.g., check in 1 week)

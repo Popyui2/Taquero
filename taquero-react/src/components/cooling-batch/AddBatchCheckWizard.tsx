@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Progress } from '@/components/ui/progress'
 import { useAuthStore } from '@/store/authStore'
 import { useCoolingBatchCheckStore, saveBatchCheckToGoogleSheets } from '@/store/coolingBatchCheckStore'
@@ -16,6 +17,16 @@ interface AddBatchCheckWizardProps {
   onSuccess?: () => void
 }
 
+const formatDateToDDMMYYYY = (isoDate: string) => {
+  const [year, month, day] = isoDate.split('-')
+  return `${day}/${month}/${year}`
+}
+
+const formatDateToISO = (ddmmyyyy: string) => {
+  const [day, month, year] = ddmmyyyy.split('/')
+  return `${year}-${month}-${day}`
+}
+
 export function AddBatchCheckWizard({ open, onClose, onSuccess }: AddBatchCheckWizardProps) {
   const { currentUser } = useAuthStore()
   const { addRecord } = useCoolingBatchCheckStore()
@@ -25,7 +36,7 @@ export function AddBatchCheckWizard({ open, onClose, onSuccess }: AddBatchCheckW
 
   // Form data
   const [foodType, setFoodType] = useState('')
-  const [dateCooked, setDateCooked] = useState(new Date().toISOString().split('T')[0])
+  const [dateCooked, setDateCooked] = useState(formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]))
   const [startTime, setStartTime] = useState(new Date().toTimeString().slice(0, 5))
   const [startTemp, setStartTemp] = useState('60')
   const [secondTimeCheck, setSecondTimeCheck] = useState('')
@@ -45,7 +56,7 @@ export function AddBatchCheckWizard({ open, onClose, onSuccess }: AddBatchCheckW
   const resetForm = () => {
     setStep(1)
     setFoodType('')
-    setDateCooked(new Date().toISOString().split('T')[0])
+    setDateCooked(formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]))
     setStartTime(new Date().toTimeString().slice(0, 5))
     setStartTemp('60')
     setSecondTimeCheck('')
@@ -92,7 +103,7 @@ export function AddBatchCheckWizard({ open, onClose, onSuccess }: AddBatchCheckW
     const newRecord: CoolingBatchCheckRecord = {
       id: recordId,
       foodType,
-      dateCooked,
+      dateCooked: formatDateToISO(dateCooked),
       startTime,
       startTemp: parseFloat(startTemp),
       secondTimeCheck,
@@ -173,15 +184,11 @@ export function AddBatchCheckWizard({ open, onClose, onSuccess }: AddBatchCheckW
           {step === 2 && (
             <div className="space-y-4">
               <Label className="text-base">Date Cooked</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-                <Input
-                  type="date"
-                  value={dateCooked}
-                  onChange={(e) => setDateCooked(e.target.value)}
-                  className="h-16 text-xl pl-12"
-                />
-              </div>
+              <DatePicker
+                value={dateCooked}
+                onChange={setDateCooked}
+                placeholder="DD/MM/YYYY"
+              />
             </div>
           )}
 

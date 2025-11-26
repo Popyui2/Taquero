@@ -6,12 +6,23 @@ import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import { DatePicker } from '@/components/ui/date-picker'
 import { TraceabilityRecord } from '@/types'
 import {
   useTraceabilityStore,
   saveTraceabilityRecordToGoogleSheets,
 } from '@/store/traceabilityStore'
 import { ChevronLeft, ChevronRight, Save } from 'lucide-react'
+
+const formatDateToDDMMYYYY = (isoDate: string) => {
+  const [year, month, day] = isoDate.split('-')
+  return `${day}/${month}/${year}`
+}
+
+const formatDateToISO = (ddmmyyyy: string) => {
+  const [day, month, year] = ddmmyyyy.split('/')
+  return `${year}-${month}-${day}`
+}
 
 interface AddTraceabilityRecordWizardProps {
   onComplete: () => void
@@ -23,7 +34,7 @@ export function AddTraceabilityRecordWizard({ onComplete, onCancel }: AddTraceab
   const addRecord = useTraceabilityStore((state) => state.addRecord)
 
   // Step 1: Product Information
-  const [traceDate, setTraceDate] = useState(new Date().toISOString().split('T')[0])
+  const [traceDate, setTraceDate] = useState(formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]))
   const [productType, setProductType] = useState('')
   const [brand, setBrand] = useState('')
   const [batchLotInfo, setBatchLotInfo] = useState('')
@@ -93,7 +104,7 @@ export function AddTraceabilityRecordWizard({ onComplete, onCancel }: AddTraceab
 
     const newRecord: TraceabilityRecord = {
       id: recordId,
-      traceDate,
+      traceDate: formatDateToISO(traceDate),
       productType,
       brand,
       batchLotInfo,
@@ -101,7 +112,7 @@ export function AddTraceabilityRecordWizard({ onComplete, onCancel }: AddTraceab
       supplierContact,
       manufacturerName: manufacturerSameAsSupplier ? supplierName : manufacturerName,
       manufacturerContact: manufacturerSameAsSupplier ? supplierContact : manufacturerContact,
-      dateReceived: dateReceived.trim().length > 0 ? dateReceived : undefined,
+      dateReceived: dateReceived.trim().length > 0 ? formatDateToISO(dateReceived) : undefined,
       performedBy,
       otherInfo: otherInfo.trim().length > 0 ? otherInfo : undefined,
       createdAt: new Date().toISOString(),
@@ -138,12 +149,10 @@ export function AddTraceabilityRecordWizard({ onComplete, onCancel }: AddTraceab
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="traceDate">Date of Trace Exercise *</Label>
-              <Input
-                id="traceDate"
-                type="date"
+              <DatePicker
                 value={traceDate}
-                onChange={(e) => setTraceDate(e.target.value)}
-                required
+                onChange={setTraceDate}
+                placeholder="DD/MM/YYYY"
               />
             </div>
 
@@ -265,11 +274,10 @@ export function AddTraceabilityRecordWizard({ onComplete, onCancel }: AddTraceab
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="dateReceived">Date Product Received</Label>
-              <Input
-                id="dateReceived"
-                type="date"
+              <DatePicker
                 value={dateReceived}
-                onChange={(e) => setDateReceived(e.target.value)}
+                onChange={setDateReceived}
+                placeholder="DD/MM/YYYY"
               />
               <p className="text-xs text-muted-foreground">Optional: When was this product received?</p>
             </div>

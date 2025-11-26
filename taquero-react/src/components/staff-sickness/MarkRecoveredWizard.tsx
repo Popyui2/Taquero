@@ -3,9 +3,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { DatePicker } from '@/components/ui/date-picker'
 import { useStaffSicknessStore, saveSicknessToGoogleSheets } from '@/store/staffSicknessStore'
 import { SicknessRecord } from '@/types'
 import { CalendarCheck, Pencil } from 'lucide-react'
+
+const formatDateToDDMMYYYY = (isoDate: string) => {
+  const [year, month, day] = isoDate.split('-')
+  return `${day}/${month}/${year}`
+}
+
+const formatDateToISO = (ddmmyyyy: string) => {
+  const [day, month, year] = ddmmyyyy.split('/')
+  return `${year}-${month}-${day}`
+}
 
 interface MarkRecoveredWizardProps {
   open: boolean
@@ -22,7 +33,7 @@ export function MarkRecoveredWizard({ open, onClose, onSuccess, record }: MarkRe
   // Initialize date when record changes
   useEffect(() => {
     if (record) {
-      setDateReturned(record.dateReturned || new Date().toISOString().split('T')[0])
+      setDateReturned(record.dateReturned ? formatDateToDDMMYYYY(record.dateReturned) : formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]))
     }
   }, [record])
 
@@ -40,7 +51,7 @@ export function MarkRecoveredWizard({ open, onClose, onSuccess, record }: MarkRe
       // Create updated record
       const updatedRecord: SicknessRecord = {
         ...record,
-        dateReturned,
+        dateReturned: formatDateToISO(dateReturned),
         status: 'returned',
       }
 
@@ -53,7 +64,7 @@ export function MarkRecoveredWizard({ open, onClose, onSuccess, record }: MarkRe
       }
 
       // Update local store
-      updateRecordStatus(record.id, dateReturned)
+      updateRecordStatus(record.id, formatDateToISO(dateReturned))
 
       // Success - close wizard
       handleClose()
@@ -105,18 +116,11 @@ export function MarkRecoveredWizard({ open, onClose, onSuccess, record }: MarkRe
             <Label htmlFor="returnDate" className="text-base">
               When did they return to work?
             </Label>
-            <div className="relative">
-              <CalendarCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10 pointer-events-none" />
-              <Input
-                id="returnDate"
-                type="date"
-                value={dateReturned}
-                onChange={(e) => setDateReturned(e.target.value)}
-                min={record.dateSick}
-                max={new Date().toISOString().split('T')[0]}
-                className="h-14 text-lg pl-12"
-              />
-            </div>
+            <DatePicker
+              value={dateReturned}
+              onChange={setDateReturned}
+              placeholder="DD/MM/YYYY"
+            />
           </div>
         </div>
 

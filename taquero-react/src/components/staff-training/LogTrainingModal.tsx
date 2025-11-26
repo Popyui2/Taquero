@@ -11,6 +11,17 @@ import {
 import { useStaffTrainingStore } from '@/store/staffTrainingStore'
 import { getTodayNZ } from '@/lib/dateUtils'
 import { useToast } from '@/components/ui/use-toast'
+import { DatePicker } from '@/components/ui/date-picker'
+
+const formatDateToDDMMYYYY = (isoDate: string) => {
+  const [year, month, day] = isoDate.split('-')
+  return `${day}/${month}/${year}`
+}
+
+const formatDateToISO = (ddmmyyyy: string) => {
+  const [day, month, year] = ddmmyyyy.split('/')
+  return `${year}-${month}-${day}`
+}
 
 interface LogTrainingModalProps {
   staffId: string
@@ -25,7 +36,7 @@ export function LogTrainingModal({ staffId, staffName, open, onClose }: LogTrain
 
   const [topic, setTopic] = useState('')
   const [trainerInitials, setTrainerInitials] = useState('')
-  const [date, setDate] = useState(getTodayNZ())
+  const [date, setDate] = useState(formatDateToDDMMYYYY(getTodayNZ()))
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSave = async () => {
@@ -63,7 +74,7 @@ export function LogTrainingModal({ staffId, staffName, open, onClose }: LogTrain
       await addTrainingRecord(staffId, {
         topic,
         trainerInitials: trainerInitials.toUpperCase(),
-        date: new Date(date).toISOString(),
+        date: new Date(formatDateToISO(date)).toISOString(),
       })
 
       toast({
@@ -74,7 +85,7 @@ export function LogTrainingModal({ staffId, staffName, open, onClose }: LogTrain
       // Reset form
       setTopic('')
       setTrainerInitials('')
-      setDate(getTodayNZ())
+      setDate(formatDateToDDMMYYYY(getTodayNZ()))
 
       onClose()
     } catch (error) {
@@ -93,7 +104,7 @@ export function LogTrainingModal({ staffId, staffName, open, onClose }: LogTrain
     // Reset form
     setTopic('')
     setTrainerInitials('')
-    setDate(getTodayNZ())
+    setDate(formatDateToDDMMYYYY(getTodayNZ()))
     onClose()
   }
 
@@ -144,11 +155,10 @@ export function LogTrainingModal({ staffId, staffName, open, onClose }: LogTrain
             <label className="text-sm font-medium">
               Date <span className="text-destructive">*</span>
             </label>
-            <Input
-              type="date"
+            <DatePicker
               value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="h-12 text-base"
+              onChange={setDate}
+              placeholder="DD/MM/YYYY"
             />
           </div>
         </div>

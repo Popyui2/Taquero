@@ -5,10 +5,21 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/ui/card'
+import { DatePicker } from '@/components/ui/date-picker'
 import { useAuthStore } from '@/store/authStore'
 import { useSuppliersDeliveriesStore, saveDeliveryToGoogleSheets } from '@/store/suppliersDeliveriesStore'
 import { SupplierDeliveryRecord, DeliveryUnit } from '@/types'
 import { Loader2, ThermometerSnowflake, Thermometer, AlertTriangle } from 'lucide-react'
+
+const formatDateToDDMMYYYY = (isoDate: string) => {
+  const [year, month, day] = isoDate.split('-')
+  return `${day}/${month}/${year}`
+}
+
+const formatDateToISO = (ddmmyyyy: string) => {
+  const [day, month, year] = ddmmyyyy.split('/')
+  return `${year}-${month}-${day}`
+}
 
 interface AddSupplierDeliveryWizardProps {
   open: boolean
@@ -61,7 +72,7 @@ export function AddSupplierDeliveryWizard({
     if (editingRecord && open) {
       setSupplierName(editingRecord.supplierName)
       setSupplierContact(editingRecord.supplierContact)
-      setDeliveryDate(editingRecord.deliveryDate)
+      setDeliveryDate(formatDateToDDMMYYYY(editingRecord.deliveryDate))
       setBatchLotId(editingRecord.batchLotId || '')
       setTypeOfFood(editingRecord.typeOfFood)
       setQuantity(editingRecord.quantity.toString())
@@ -75,7 +86,7 @@ export function AddSupplierDeliveryWizard({
   // Set default date to today when dialog opens (only for new records)
   useEffect(() => {
     if (open && !editingRecord) {
-      const today = new Date().toISOString().split('T')[0]
+      const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0])
       setDeliveryDate(today)
     }
   }, [open, editingRecord])
@@ -158,7 +169,7 @@ export function AddSupplierDeliveryWizard({
         // Update existing record
         const updatedRecord: SupplierDeliveryRecord = {
           ...editingRecord,
-          deliveryDate,
+          deliveryDate: formatDateToISO(deliveryDate),
           supplierName: supplierName.trim(),
           supplierContact: supplierContact.trim(),
           batchLotId: batchLotId.trim() || undefined,
@@ -173,7 +184,7 @@ export function AddSupplierDeliveryWizard({
 
         await saveDeliveryToGoogleSheets(updatedRecord)
         updateRecord(editingRecord.id, {
-          deliveryDate,
+          deliveryDate: formatDateToISO(deliveryDate),
           supplierName: supplierName.trim(),
           supplierContact: supplierContact.trim(),
           batchLotId: batchLotId.trim() || undefined,
@@ -190,7 +201,7 @@ export function AddSupplierDeliveryWizard({
 
         const newRecord: SupplierDeliveryRecord = {
           id: recordId,
-          deliveryDate,
+          deliveryDate: formatDateToISO(deliveryDate),
           supplierName: supplierName.trim(),
           supplierContact: supplierContact.trim(),
           batchLotId: batchLotId.trim() || undefined,
@@ -308,12 +319,10 @@ export function AddSupplierDeliveryWizard({
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="deliveryDate">Delivery Date</Label>
-                  <Input
-                    id="deliveryDate"
-                    type="date"
+                  <DatePicker
                     value={deliveryDate}
-                    onChange={(e) => setDeliveryDate(e.target.value)}
-                    className="h-16 text-xl"
+                    onChange={setDeliveryDate}
+                    placeholder="DD/MM/YYYY"
                   />
                 </div>
 

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { DatePicker } from '@/components/ui/date-picker'
 import { useAuthStore } from '@/store/authStore'
 import { useTransportTempChecksStore, saveTransportTempCheckToGoogleSheets } from '@/store/transportTempChecksStore'
 import { TransportTempCheckRecord } from '@/types'
@@ -46,10 +47,22 @@ export function AddTransportTempCheckWizard({
   const totalSteps = 3
   const progress = (step / totalSteps) * 100
 
+  // Helper function to convert ISO date to DD/MM/YYYY
+  const formatDateToDDMMYYYY = (isoDate: string) => {
+    const [year, month, day] = isoDate.split('-')
+    return `${day}/${month}/${year}`
+  }
+
+  // Helper function to convert DD/MM/YYYY to ISO date
+  const formatDateToISO = (ddmmyyyy: string) => {
+    const [day, month, year] = ddmmyyyy.split('/')
+    return `${year}-${month}-${day}`
+  }
+
   // Load editing data
   useEffect(() => {
     if (editingRecord && open) {
-      setCheckDate(editingRecord.checkDate)
+      setCheckDate(formatDateToDDMMYYYY(editingRecord.checkDate))
       setTypeOfFood(editingRecord.typeOfFood)
       setTemperature(editingRecord.temperature.toString())
       setNotes(editingRecord.notes || '')
@@ -60,7 +73,7 @@ export function AddTransportTempCheckWizard({
   useEffect(() => {
     if (open && !editingRecord) {
       const today = new Date().toISOString().split('T')[0]
-      setCheckDate(today)
+      setCheckDate(formatDateToDDMMYYYY(today))
     }
   }, [open, editingRecord])
 
@@ -136,7 +149,7 @@ export function AddTransportTempCheckWizard({
         // Update existing record
         const updatedRecord: TransportTempCheckRecord = {
           ...editingRecord,
-          checkDate,
+          checkDate: formatDateToISO(checkDate),
           typeOfFood: typeOfFood.trim(),
           temperature: parseFloat(temperature),
           notes: notes.trim() || undefined,
@@ -145,7 +158,7 @@ export function AddTransportTempCheckWizard({
 
         await saveTransportTempCheckToGoogleSheets(updatedRecord)
         updateRecord(editingRecord.id, {
-          checkDate,
+          checkDate: formatDateToISO(checkDate),
           typeOfFood: typeOfFood.trim(),
           temperature: parseFloat(temperature),
           notes: notes.trim() || undefined,
@@ -156,7 +169,7 @@ export function AddTransportTempCheckWizard({
 
         const newRecord: TransportTempCheckRecord = {
           id: recordId,
-          checkDate,
+          checkDate: formatDateToISO(checkDate),
           typeOfFood: typeOfFood.trim(),
           temperature: parseFloat(temperature),
           taskDoneBy: currentUser.name,
@@ -237,12 +250,10 @@ export function AddTransportTempCheckWizard({
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="checkDate">Date</Label>
-                  <Input
-                    id="checkDate"
-                    type="date"
+                  <DatePicker
                     value={checkDate}
-                    onChange={(e) => setCheckDate(e.target.value)}
-                    className="h-16 text-xl"
+                    onChange={setCheckDate}
+                    placeholder="DD/MM/YYYY"
                   />
                 </div>
 

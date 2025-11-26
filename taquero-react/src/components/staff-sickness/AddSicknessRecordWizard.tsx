@@ -5,10 +5,21 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
+import { DatePicker } from '@/components/ui/date-picker'
 import { useAuthStore } from '@/store/authStore'
 import { useStaffSicknessStore, saveSicknessToGoogleSheets } from '@/store/staffSicknessStore'
 import { SicknessRecord } from '@/types'
 import { Calendar, User, Stethoscope, Edit2, FileText } from 'lucide-react'
+
+const formatDateToDDMMYYYY = (isoDate: string) => {
+  const [year, month, day] = isoDate.split('-')
+  return `${day}/${month}/${year}`
+}
+
+const formatDateToISO = (ddmmyyyy: string) => {
+  const [day, month, year] = ddmmyyyy.split('/')
+  return `${year}-${month}-${day}`
+}
 
 interface AddSicknessRecordWizardProps {
   open: boolean
@@ -26,7 +37,7 @@ export function AddSicknessRecordWizard({ open, onClose, onSuccess }: AddSicknes
   // Form data
   const [staffName, setStaffName] = useState('')
   const [symptoms, setSymptoms] = useState('')
-  const [dateSick, setDateSick] = useState(new Date().toISOString().split('T')[0])
+  const [dateSick, setDateSick] = useState(formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]))
   const [dateReturned, setDateReturned] = useState('')
   const [actionTaken, setActionTaken] = useState('')
 
@@ -41,7 +52,7 @@ export function AddSicknessRecordWizard({ open, onClose, onSuccess }: AddSicknes
     setStep(1)
     setStaffName('')
     setSymptoms('')
-    setDateSick(new Date().toISOString().split('T')[0])
+    setDateSick(formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]))
     setDateReturned('')
     setActionTaken('')
     setHasPassedStep1(false)
@@ -87,8 +98,8 @@ export function AddSicknessRecordWizard({ open, onClose, onSuccess }: AddSicknes
       id: recordId,
       staffName,
       symptoms: symptoms.trim() || undefined,
-      dateSick,
-      dateReturned: hasReturnDate ? dateReturned : undefined,
+      dateSick: formatDateToISO(dateSick),
+      dateReturned: hasReturnDate ? formatDateToISO(dateReturned) : undefined,
       actionTaken: actionTaken.trim() || undefined,
       checkedBy: currentUser.name,
       timestamp: new Date().toISOString(),
@@ -196,16 +207,11 @@ export function AddSicknessRecordWizard({ open, onClose, onSuccess }: AddSicknes
               <p className="text-sm text-muted-foreground">
                 Select the date they were unable to work
               </p>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10 pointer-events-none" />
-                <Input
-                  type="date"
-                  value={dateSick}
-                  onChange={(e) => setDateSick(e.target.value)}
-                  max={new Date().toISOString().split('T')[0]}
-                  className="h-16 text-xl pl-12"
-                />
-              </div>
+              <DatePicker
+                value={dateSick}
+                onChange={setDateSick}
+                placeholder="DD/MM/YYYY"
+              />
             </div>
           )}
 
@@ -217,13 +223,10 @@ export function AddSicknessRecordWizard({ open, onClose, onSuccess }: AddSicknes
                 <p className="text-sm text-muted-foreground">
                   Leave blank if still sick
                 </p>
-                <Input
-                  id="dateReturned"
-                  type="date"
+                <DatePicker
                   value={dateReturned}
-                  onChange={(e) => setDateReturned(e.target.value)}
-                  min={dateSick}
-                  className="h-16 text-xl"
+                  onChange={setDateReturned}
+                  placeholder="DD/MM/YYYY"
                 />
               </div>
 

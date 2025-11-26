@@ -106,25 +106,41 @@ export function FridgeTemps() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {recentRecords.map((record, idx) => (
-                    <div
-                      key={record.id || idx}
-                      className="border rounded-lg p-4 space-y-3 transition-all duration-300 hover:shadow-md hover:border-primary/30 hover:scale-[1.01] animate-in fade-in slide-in-from-left-4"
-                      style={{ animationDelay: `${idx * 100}ms` }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-semibold">
-                            {format(new Date(record.date), 'EEEE, MMMM d, yyyy')}
+                  {recentRecords.map((record, idx) => {
+                    // Helper to safely parse dates
+                    const safeParseDate = (dateStr: string) => {
+                      if (!dateStr) return new Date()
+                      // Handle DD/MM/YYYY format
+                      if (dateStr.includes('/')) {
+                        const [day, month, year] = dateStr.split('/')
+                        return new Date(`${year}-${month}-${day}`)
+                      }
+                      // Handle ISO format
+                      return new Date(dateStr)
+                    }
+
+                    const recordDate = safeParseDate(record.date)
+                    const recordTimestamp = safeParseDate(record.timestamp || record.date)
+
+                    return (
+                      <div
+                        key={record.id || idx}
+                        className="border rounded-lg p-4 space-y-3 transition-all duration-300 hover:shadow-md hover:border-primary/30 hover:scale-[1.01] animate-in fade-in slide-in-from-left-4"
+                        style={{ animationDelay: `${idx * 100}ms` }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-semibold">
+                              {isNaN(recordDate.getTime()) ? record.date : format(recordDate, 'EEEE, MMMM d, yyyy')}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              Recorded by {record.user}
+                            </div>
                           </div>
-                          <div className="text-sm text-muted-foreground">
-                            Recorded by {record.user}
+                          <div className="text-xs text-muted-foreground">
+                            {isNaN(recordTimestamp.getTime()) ? '' : format(recordTimestamp, 'h:mm a')}
                           </div>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {format(new Date(record.timestamp), 'h:mm a')}
-                        </div>
-                      </div>
 
                       {/* Temperature Grid */}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
@@ -146,7 +162,8 @@ export function FridgeTemps() {
                         )}
                       </div>
                     </div>
-                  ))}
+                  )
+                  })}
                 </div>
               )}
             </CardContent>

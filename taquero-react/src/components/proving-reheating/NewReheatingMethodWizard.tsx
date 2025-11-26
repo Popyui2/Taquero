@@ -5,10 +5,21 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
+import { DatePicker } from '@/components/ui/date-picker'
 import { useAuthStore } from '@/store/authStore'
 import { useProvingReheatingStore, saveReheatingBatchToGoogleSheets } from '@/store/provingReheatingStore'
 import { ReheatingMethod, ReheatingBatch } from '@/types'
 import { Calendar, Thermometer, Flame } from 'lucide-react'
+
+const formatDateToDDMMYYYY = (isoDate: string) => {
+  const [year, month, day] = isoDate.split('-')
+  return `${day}/${month}/${year}`
+}
+
+const formatDateToISO = (ddmmyyyy: string) => {
+  const [day, month, year] = ddmmyyyy.split('/')
+  return `${year}-${month}-${day}`
+}
 
 interface NewReheatingMethodWizardProps {
   open: boolean
@@ -26,7 +37,7 @@ export function NewReheatingMethodWizard({ open, onClose, onSuccess }: NewReheat
   // Form data
   const [itemDescription, setItemDescription] = useState('')
   const [reheatingMethod, setReheatingMethod] = useState('')
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState(formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]))
   const [internalTemp, setInternalTemp] = useState('75')
 
   const [hasPassedStep1, setHasPassedStep1] = useState(false)
@@ -41,7 +52,7 @@ export function NewReheatingMethodWizard({ open, onClose, onSuccess }: NewReheat
     setStep(1)
     setItemDescription('')
     setReheatingMethod('')
-    setDate(new Date().toISOString().split('T')[0])
+    setDate(formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]))
     setInternalTemp('75')
     setHasPassedStep1(false)
   }
@@ -81,7 +92,7 @@ export function NewReheatingMethodWizard({ open, onClose, onSuccess }: NewReheat
     // Create first batch
     const firstBatch: ReheatingBatch = {
       batchNumber: 1,
-      date,
+      date: formatDateToISO(date),
       internalTemp: parseFloat(internalTemp),
       completedBy: currentUser.name,
       timestamp: new Date().toISOString(),
@@ -183,15 +194,11 @@ export function NewReheatingMethodWizard({ open, onClose, onSuccess }: NewReheat
           {step === 3 && (
             <div className="space-y-4">
               <Label className="text-base">Batch 1: Date</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-                <Input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="h-16 text-xl pl-12"
-                />
-              </div>
+              <DatePicker
+                value={date}
+                onChange={setDate}
+                placeholder="DD/MM/YYYY"
+              />
             </div>
           )}
 

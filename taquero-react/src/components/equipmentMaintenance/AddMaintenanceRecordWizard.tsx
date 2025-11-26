@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Wrench } from 'lucide-react'
@@ -24,13 +25,25 @@ export function AddMaintenanceRecordWizard({ open, onClose, onSuccess, editingRe
     updateRecord: state.updateRecord
   }))
 
+  // Helper function to convert ISO date to DD/MM/YYYY
+  const formatDateToDDMMYYYY = (isoDate: string) => {
+    const [year, month, day] = isoDate.split('-')
+    return `${day}/${month}/${year}`
+  }
+
+  // Helper function to convert DD/MM/YYYY to ISO date
+  const formatDateToISO = (ddmmyyyy: string) => {
+    const [day, month, year] = ddmmyyyy.split('/')
+    return `${year}-${month}-${day}`
+  }
+
   // Step 1: Equipment & Maintenance Details
   const [equipmentName, setEquipmentName] = useState('')
   const [maintenanceDescription, setMaintenanceDescription] = useState('')
 
   // Step 2: Date, Who, Frequency & Notes
   const [dateCompleted, setDateCompleted] = useState(
-    new Date().toISOString().split('T')[0]
+    formatDateToDDMMYYYY(new Date().toISOString().split('T')[0])
   )
   const [performedBy, setPerformedBy] = useState('')
   const [checkingFrequency, setCheckingFrequency] = useState('')
@@ -49,7 +62,7 @@ export function AddMaintenanceRecordWizard({ open, onClose, onSuccess, editingRe
     if (editingRecord && open) {
       setEquipmentName(editingRecord.equipmentName)
       setMaintenanceDescription(editingRecord.maintenanceDescription)
-      setDateCompleted(editingRecord.dateCompleted)
+      setDateCompleted(formatDateToDDMMYYYY(editingRecord.dateCompleted))
       setPerformedBy(editingRecord.performedBy)
       setCheckingFrequency(editingRecord.checkingFrequency || '')
       setNotes(editingRecord.notes || '')
@@ -61,7 +74,7 @@ export function AddMaintenanceRecordWizard({ open, onClose, onSuccess, editingRe
     setStep(1)
     setEquipmentName('')
     setMaintenanceDescription('')
-    setDateCompleted(new Date().toISOString().split('T')[0])
+    setDateCompleted(formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]))
     setPerformedBy('')
     setCheckingFrequency('')
     setNotes('')
@@ -130,7 +143,7 @@ export function AddMaintenanceRecordWizard({ open, onClose, onSuccess, editingRe
         const updatedRecord: MaintenanceRecord = {
           ...editingRecord,
           equipmentName,
-          dateCompleted,
+          dateCompleted: formatDateToISO(dateCompleted),
           performedBy,
           maintenanceDescription,
           checkingFrequency: checkingFrequency.trim().length > 0 ? checkingFrequency : undefined,
@@ -141,7 +154,7 @@ export function AddMaintenanceRecordWizard({ open, onClose, onSuccess, editingRe
         // Update local state
         updateRecord(editingRecord.id, {
           equipmentName,
-          dateCompleted,
+          dateCompleted: formatDateToISO(dateCompleted),
           performedBy,
           maintenanceDescription,
           checkingFrequency: checkingFrequency.trim().length > 0 ? checkingFrequency : undefined,
@@ -158,7 +171,7 @@ export function AddMaintenanceRecordWizard({ open, onClose, onSuccess, editingRe
         const newRecord: MaintenanceRecord = {
           id: recordId,
           equipmentName,
-          dateCompleted,
+          dateCompleted: formatDateToISO(dateCompleted),
           performedBy,
           maintenanceDescription,
           checkingFrequency: checkingFrequency.trim().length > 0 ? checkingFrequency : undefined,
@@ -259,11 +272,9 @@ export function AddMaintenanceRecordWizard({ open, onClose, onSuccess, editingRe
               <Label htmlFor="dateCompleted">
                 Date Completed <span className="text-red-500">*</span>
               </Label>
-              <Input
-                id="dateCompleted"
-                type="date"
+              <DatePicker
                 value={dateCompleted}
-                onChange={(e) => setDateCompleted(e.target.value)}
+                onChange={setDateCompleted}
               />
             </div>
 
