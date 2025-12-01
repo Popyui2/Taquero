@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { B2BSaleRecord } from '@/types'
 
 const GOOGLE_SHEETS_URL =
-  'https://script.google.com/macros/s/AKfycbwFXF0DwiXO2zziIBv3EQQoOC8Drhjht4N-1EVHizPORaIZL26JFsx6JfVehnrnRrpC/exec'
+  import.meta.env.VITE_B2B_SALES_SHEET_URL || 'https://script.google.com/macros/s/AKfycbwFXF0DwiXO2zziIBv3EQQoOC8Drhjht4N-1EVHizPORaIZL26JFsx6JfVehnrnRrpC/exec'
 
 /**
  * Save a B2B sale record to Google Sheets

@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { TransportTempCheckRecord } from '@/types'
 
-const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzijEByks2fbcUU-JsyJmPfmv7AoPz4XtqjZ-IpD92AYHI1iRkFqnFc9WMJitb5TSZT8Q/exec'
+const GOOGLE_SHEETS_URL = import.meta.env.VITE_TRANSPORT_TEMP_SHEET_URL || 'https://script.google.com/macros/s/AKfycbzijEByks2fbcUU-JsyJmPfmv7AoPz4XtqjZ-IpD92AYHI1iRkFqnFc9WMJitb5TSZT8Q/exec'
 
 /**
  * Save a transport temperature check record to Google Sheets

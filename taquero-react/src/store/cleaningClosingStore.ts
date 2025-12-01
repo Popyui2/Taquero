@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { CleaningRecord } from '@/types'
 
 const GOOGLE_SHEETS_URL =
-  'https://script.google.com/macros/s/AKfycbwO0Sj8BLlHAORdv-_3HIZ3yc5LKUpMZ9ZmO3HdPygJFGYHRfa03-Giz7OGU4SrwSYJ/exec'
+  import.meta.env.VITE_CLEANING_SHEET_URL || 'https://script.google.com/macros/s/AKfycbwO0Sj8BLlHAORdv-_3HIZ3yc5LKUpMZ9ZmO3HdPygJFGYHRfa03-Giz7OGU4SrwSYJ/exec'
 
 /**
  * Save a cleaning record to Google Sheets

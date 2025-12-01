@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { SicknessRecord } from '@/types'
 
 // Google Sheets webhook URL - update this with your deployed Apps Script URL
-const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwKeROQFAY1e7uKNa1iQ5kP9m5r7FpURvC7Wy7CkhWGgyW8f_3wktIMKvivRE3YyolR/exec'
+const GOOGLE_SHEETS_URL = import.meta.env.VITE_STAFF_SICKNESS_SHEET_URL || 'https://script.google.com/macros/s/AKfycbwKeROQFAY1e7uKNa1iQ5kP9m5r7FpURvC7Wy7CkhWGgyW8f_3wktIMKvivRE3YyolR/exec'
 
 // Helper function to save sickness record to Google Sheets
 export async function saveSicknessToGoogleSheets(

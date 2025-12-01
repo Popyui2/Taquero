@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { TemperatureRecord } from '@/types'
 
 // Google Sheets webhook URL - same as used for writing
-const GOOGLE_SHEETS_WEBHOOK = 'https://script.google.com/macros/s/AKfycbz27gmlc2swJgIXdayBHnP-b3KMIR-TiuY6Ib35piYo8m0TYDD1SzFbEDp2Q1EeywQg/exec'
+const GOOGLE_SHEETS_WEBHOOK = import.meta.env.VITE_TEMPERATURE_SHEET_URL || 'https://script.google.com/macros/s/AKfycbz27gmlc2swJgIXdayBHnP-b3KMIR-TiuY6Ib35piYo8m0TYDD1SzFbEDp2Q1EeywQg/exec'
 
 interface TemperatureState {
   // State

@@ -25,7 +25,7 @@ interface TemperatureWizardProps {
 }
 
 const GOOGLE_SHEETS_URL =
-  'https://script.google.com/macros/s/AKfycbz27gmlc2swJgIXdayBHnP-b3KMIR-TiuY6Ib35piYo8m0TYDD1SzFbEDp2Q1EeywQg/exec'
+  import.meta.env.VITE_TEMPERATURE_SHEET_URL || 'https://script.google.com/macros/s/AKfycbz27gmlc2swJgIXdayBHnP-b3KMIR-TiuY6Ib35piYo8m0TYDD1SzFbEDp2Q1EeywQg/exec'
 
 export function TemperatureWizard({ onComplete, onShowToast, onWizardStart }: TemperatureWizardProps) {
   const [currentStep, setCurrentStep] = useState<'date' | number>('date')

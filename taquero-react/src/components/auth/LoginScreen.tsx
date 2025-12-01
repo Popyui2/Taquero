@@ -15,14 +15,42 @@ interface LoginScreenProps {
 export function LoginScreen({ onPasswordCorrect, onError }: LoginScreenProps) {
   const [password, setPassword] = useState('')
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [attempts, setAttempts] = useState(0)
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null)
+
+  // Rate limiting constants
+  const MAX_ATTEMPTS = 5
+  const LOCKOUT_TIME = 15 * 60 * 1000 // 15 minutes
+
+  // Check if still locked out
+  const isLocked = !!(lockedUntil && Date.now() < lockedUntil)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Check if locked out
+    if (isLocked) {
+      const remainingTime = Math.ceil((lockedUntil! - Date.now()) / 1000 / 60)
+      onError(`Too many failed attempts. Try again in ${remainingTime} minutes.`)
+      return
+    }
+
     if (password === APP_PASSWORD) {
+      // Reset attempts on successful login
+      setAttempts(0)
+      setLockedUntil(null)
       onPasswordCorrect()
     } else {
-      onError('Incorrect password')
+      const newAttempts = attempts + 1
+      setAttempts(newAttempts)
+
+      if (newAttempts >= MAX_ATTEMPTS) {
+        const lockoutEnd = Date.now() + LOCKOUT_TIME
+        setLockedUntil(lockoutEnd)
+        onError(`Too many failed attempts. Locked for 15 minutes.`)
+      } else {
+        onError(`Incorrect password (${newAttempts}/${MAX_ATTEMPTS} attempts)`)
+      }
       setPassword('')
     }
   }
@@ -64,15 +92,16 @@ export function LoginScreen({ onPasswordCorrect, onError }: LoginScreenProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             type="password"
-            placeholder="Enter password"
+            placeholder={isLocked ? "Locked - Too many attempts" : "Enter password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="h-14 text-lg"
             autoComplete="off"
             autoFocus
+            disabled={isLocked}
           />
-          <Button type="submit" className="w-full" size="lg">
-            Login
+          <Button type="submit" className="w-full" size="lg" disabled={isLocked}>
+            {isLocked ? "Locked" : "Login"}
           </Button>
         </form>
       </div>

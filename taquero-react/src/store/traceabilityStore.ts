@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { TraceabilityRecord } from '@/types'
 
 const GOOGLE_SHEETS_URL =
-  'https://script.google.com/macros/s/AKfycbxp2QQhGeF1dgQgqBsOkC5b01iLP6YPrfhaSX7yvJ6CGC2aevDL9Aa_7mnD4Nf0wOrfBg/exec'
+  import.meta.env.VITE_TRACEABILITY_SHEET_URL || 'https://script.google.com/macros/s/AKfycbxp2QQhGeF1dgQgqBsOkC5b01iLP6YPrfhaSX7yvJ6CGC2aevDL9Aa_7mnD4Nf0wOrfBg/exec'
 
 /**
  * Save a traceability record to Google Sheets

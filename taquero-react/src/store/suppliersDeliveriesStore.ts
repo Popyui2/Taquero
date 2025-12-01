@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { SupplierDeliveryRecord } from '@/types'
 
-const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbySJO0jwPwx04IFLE9ZfNQRGKPzNW0X9h64fOZfjnag3SZ9sH2Bh49SDntXrK8ycOaq9Q/exec'
+const GOOGLE_SHEETS_URL = import.meta.env.VITE_DELIVERIES_SHEET_URL || 'https://script.google.com/macros/s/AKfycbySJO0jwPwx04IFLE9ZfNQRGKPzNW0X9h64fOZfjnag3SZ9sH2Bh49SDntXrK8ycOaq9Q/exec'
 
 /**
  * Save a supplier delivery record to Google Sheets

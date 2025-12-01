@@ -9,7 +9,8 @@ interface AuthState {
   logout: () => void
 }
 
-const APP_PASSWORD = '123456'
+// Use environment variable for password, fallback to hardcoded for development
+const APP_PASSWORD = import.meta.env.VITE_APP_PASSWORD || '123456'
 const AVAILABLE_USERS = ['Martin', 'Andres', 'Hugo', 'Marcela', 'Temp Employee']
 
 export const useAuthStore = create<AuthState>()(

@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { ComplaintRecord } from '@/types'
 
-const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzzGSSfovn3OofuDeeVNVdmJnvjT6vcMkBSiG1Lg1rLJBpZxhRP2CQawD-xzIsup7qc/exec'
+const GOOGLE_SHEETS_URL = import.meta.env.VITE_COMPLAINTS_SHEET_URL || 'https://script.google.com/macros/s/AKfycbzzGSSfovn3OofuDeeVNVdmJnvjT6vcMkBSiG1Lg1rLJBpZxhRP2CQawD-xzIsup7qc/exec'
 
 /**
  * Save a complaint record to Google Sheets
