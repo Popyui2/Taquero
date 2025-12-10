@@ -30,6 +30,7 @@ import { StaffList } from '@/components/staff-training/StaffList'
 import { StaffDetail } from '@/components/staff-training/StaffDetail'
 import { AddStaffForm } from '@/components/staff-training/AddStaffForm'
 import { StaffTrainingRecordMPI } from '@/components/staff-training/StaffTrainingRecordMPI'
+import { Finance } from '@/pages/Finance'
 import { Toast, ToastContainer } from '@/components/ui/toast'
 
 interface ToastMessage {
@@ -85,15 +86,7 @@ function App() {
               />
             }
           />
-          <Route
-            path="/restaurant/financial"
-            element={
-              <ModulePlaceholder
-                title="Financial Data"
-                description="CSV intake & data visualization"
-              />
-            }
-          />
+          <Route path="/restaurant/financial" element={<Finance />} />
           <Route
             path="/restaurant/events"
             element={

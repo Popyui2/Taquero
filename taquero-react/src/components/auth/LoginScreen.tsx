@@ -91,8 +91,31 @@ export function LoginScreen({ onPasswordCorrect, onError }: LoginScreenProps) {
     }
   }
 
+  // Development bypass - logs in as first user without password
+  const handleDevBypass = () => {
+    useAuthStore.setState({
+      currentUser: {
+        name: AVAILABLE_USERS[0], // Martin
+        loginTime: new Date().toISOString(),
+      },
+      isAuthenticated: true,
+    })
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 relative">
+      {/* Development bypass button - Only visible in dev mode */}
+      {import.meta.env.DEV && (
+        <button
+          onClick={handleDevBypass}
+          className="absolute top-4 left-4 px-3 py-1.5 text-xs rounded-md bg-yellow-500/20 text-yellow-600 hover:bg-yellow-500/30 transition-colors border border-yellow-500/50"
+          aria-label="Dev bypass"
+          title="Development mode: Skip login as Martin"
+        >
+          🔓 DEV LOGIN
+        </button>
+      )}
+
       {/* Fullscreen button */}
       <button
         onClick={toggleFullscreen}
