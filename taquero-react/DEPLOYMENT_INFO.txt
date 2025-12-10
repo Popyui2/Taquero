@@ -1,0 +1,52 @@
+Taquero Deployment Information
+Generated: 2025-12-01T09:47:06.719Z
+
+═══════════════════════════════════════════════════════════
+
+🔐 SECURITY CREDENTIALS
+═══════════════════════════════════════════════════════════
+
+Login Password: #Grmjv53124
+
+Password Hash (in .env.local):
+05f1ef2197e2e7eaac594655a52cc65d336259ad9c4c7843f028e9e17f8c708d
+
+Google Sheets Token (in .env.local):
+97c081b048c7dd32312b23e4fc59ba5407b410022db9666499263f6a55ffb674
+
+Google Sheets Token (add to Apps Script Properties):
+Key: GOOGLE_SHEETS_SECRET_TOKEN
+Value: 97c081b048c7dd32312b23e4fc59ba5407b410022db9666499263f6a55ffb674
+
+
+═══════════════════════════════════════════════════════════
+
+📦 DEPLOYMENT INSTRUCTIONS
+═══════════════════════════════════════════════════════════
+
+1. Upload from dist/ folder to public_html/:
+   - index.html
+   - assets/* (entire folder)
+   - manifest.webmanifest
+   - sw.js
+   - registerSW.js
+   - vite.svg
+
+2. Rename and upload:
+   - .htaccess-for-hosting → .htaccess (to public_html/)
+
+3. Test your site:
+   - Visit: https://taquero.hotlikeamexican.com/
+   - Login with username + password above
+
+═══════════════════════════════════════════════════════════
+
+⚠️  SECURITY REMINDERS
+═══════════════════════════════════════════════════════════
+
+✅ .env.local is in .gitignore (will NOT be committed)
+✅ Never share your password publicly
+✅ Change password every 3-6 months
+✅ Keep this file secure (delete after deployment)
+
+═══════════════════════════════════════════════════════════

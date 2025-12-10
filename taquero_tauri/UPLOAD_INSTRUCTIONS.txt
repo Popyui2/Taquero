@@ -1,0 +1,125 @@
+═══════════════════════════════════════════════════════════
+  📦 TAQUERO - FILES READY TO UPLOAD
+═══════════════════════════════════════════════════════════
+
+Build completed: 2025-12-01 23:04
+
+Your app is now SECURE with:
+✅ Password hashing (SHA-256)
+✅ Username + Password login on one screen
+✅ Rate limiting (5 attempts = 15 min lockout)
+✅ Google Sheets token protection ready
+
+═══════════════════════════════════════════════════════════
+  📁 UPLOAD THESE FILES TO public_html/
+═══════════════════════════════════════════════════════════
+
+From the dist/ folder, upload ALL of these:
+
+1. MAIN FILES (upload to root of public_html/):
+   ✓ index.html
+   ✓ manifest.webmanifest
+   ✓ sw.js
+   ✓ registerSW.js
+   ✓ workbox-5ffe50d4.js
+   ✓ robots.txt
+
+2. ASSETS FOLDER (upload entire folder):
+   ✓ assets/index-BsIiyNYa.css
+   ✓ assets/index-DtvlSz2O.js
+
+3. FONTS FOLDER (upload entire folder):
+   ✓ fonts/* (all files inside)
+
+4. SECURITY HEADERS (rename and upload):
+   ✓ .htaccess-for-hosting → rename to .htaccess
+     (upload to public_html/.htaccess)
+
+═══════════════════════════════════════════════════════════
+  🔐 LOGIN CREDENTIALS
+═══════════════════════════════════════════════════════════
+
+URL: https://taquero.hotlikeamexican.com/
+
+Login with:
+  Username: Martin (or select any user from dropdown)
+  Password: #Grmjv53124
+
+═══════════════════════════════════════════════════════════
+  ⚡ AFTER UPLOADING
+═══════════════════════════════════════════════════════════
+
+1. Go to: https://taquero.hotlikeamexican.com/
+
+2. Press F12 (open DevTools)
+
+3. Go to Application tab → Local Storage
+
+4. Delete the "taquero-auth" entry (clears lockout)
+
+5. Close DevTools
+
+6. Press Ctrl+Shift+R (hard refresh)
+
+7. You should now see:
+   - Username dropdown (select your name)
+   - Password field (enter password)
+   - BOTH on the same screen!
+
+8. Login and test!
+
+═══════════════════════════════════════════════════════════
+  📋 UPLOAD CHECKLIST
+═══════════════════════════════════════════════════════════
+
+[ ] Uploaded index.html to public_html/
+[ ] Uploaded manifest.webmanifest to public_html/
+[ ] Uploaded sw.js to public_html/
+[ ] Uploaded registerSW.js to public_html/
+[ ] Uploaded workbox-5ffe50d4.js to public_html/
+[ ] Uploaded robots.txt to public_html/
+[ ] Uploaded assets/ folder to public_html/assets/
+[ ] Uploaded fonts/ folder to public_html/fonts/
+[ ] Renamed .htaccess-for-hosting to .htaccess
+[ ] Uploaded .htaccess to public_html/.htaccess
+[ ] Cleared browser cache (Ctrl+Shift+R)
+[ ] Deleted taquero-auth from Local Storage
+[ ] Tested login successfully
+
+═══════════════════════════════════════════════════════════
+  🎯 WHAT'S NEW
+═══════════════════════════════════════════════════════════
+
+OLD (insecure):
+  ❌ Password only
+  ❌ Then separate user selection screen
+  ❌ Hardcoded password visible in code
+
+NEW (secure):
+  ✅ Username + Password on ONE screen
+  ✅ Password hashed with SHA-256
+  ✅ No hardcoded passwords
+  ✅ Rate limiting protection
+  ✅ Environment variables for security
+
+═══════════════════════════════════════════════════════════
+  🔧 TROUBLESHOOTING
+═══════════════════════════════════════════════════════════
+
+If login doesn't work:
+1. Clear browser cache (Ctrl+Shift+R)
+2. Delete Local Storage (F12 → Application → Local Storage)
+3. Check you uploaded ALL files including assets/
+4. Verify .htaccess was uploaded
+5. Try incognito window
+
+If you see old password screen:
+- You didn't clear browser cache properly
+- Press Ctrl+Shift+R multiple times
+- Or clear all browsing data for the site
+
+═══════════════════════════════════════════════════════════
+
+✅ Your secure app is ready to deploy!
+
+═══════════════════════════════════════════════════════════

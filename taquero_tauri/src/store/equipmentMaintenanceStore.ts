@@ -1,0 +1,207 @@
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+import { MaintenanceRecord } from '@/types'
+
+const GOOGLE_SHEETS_URL =
+  import.meta.env.VITE_EQUIPMENT_SHEET_URL || 'https://script.google.com/macros/s/AKfycbxRjOXZMvklsqZSv5N0uBP1pt4i5N12YX0k4IpphABdzEMNSIDoNEpP-pffj0FGb_Jy/exec'
+
+/**
+ * Save a maintenance record to Google Sheets
+ */
+export async function saveMaintenanceRecordToGoogleSheets(
+  record: MaintenanceRecord
+): Promise<{ success: boolean; error?: string }> {
+  if (!GOOGLE_SHEETS_URL) {
+    console.warn('⚠️ Google Sheets URL not configured')
+    return { success: false, error: 'Google Sheets URL not configured' }
+  }
+
+  try {
+    // Send as array to preserve column order
+    const rowData = [
+      Math.floor(new Date(record.createdAt).getTime() / 1000), // Unix Timestamp
+      record.id,                           // ID
+      record.equipmentName,                // Equipment Name
+      record.dateCompleted,                // Date Completed
+      record.performedBy,                  // Performed By
+      record.maintenanceDescription,       // Maintenance Description
+      record.checkingFrequency || '',      // Checking Frequency
+      record.notes || '',                  // Notes
+      record.createdAt,                    // Created At
+      record.updatedAt || '',              // Updated At
+      record.status,                       // Status
+    ]
+
+    const payload = {
+      action: 'addRecord',
+      data: rowData
+    }
+
+    await fetch(GOOGLE_SHEETS_URL, {
+      method: 'POST',
+      mode: 'no-cors' as RequestMode,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error('Error saving maintenance record to Google Sheets:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
+/**
+ * Delete a maintenance record from Google Sheets (soft delete)
+ */
+export async function deleteMaintenanceRecordFromGoogleSheets(
+  record: MaintenanceRecord
+): Promise<{ success: boolean; error?: string }> {
+  if (!GOOGLE_SHEETS_URL) {
+    console.warn('⚠️ Google Sheets URL not configured')
+    return { success: false, error: 'Google Sheets URL not configured' }
+  }
+
+  try {
+    // Mark as deleted by updating the status field
+    // Send as array to preserve column order
+    const rowData = [
+      Math.floor(new Date(record.createdAt).getTime() / 1000), // Unix Timestamp
+      record.id,                           // ID
+      record.equipmentName,                // Equipment Name
+      record.dateCompleted,                // Date Completed
+      record.performedBy,                  // Performed By
+      record.maintenanceDescription,       // Maintenance Description
+      record.checkingFrequency || '',      // Checking Frequency
+      record.notes || '',                  // Notes
+      record.createdAt,                    // Created At
+      new Date().toISOString(),            // Updated At
+      'deleted',                           // Status
+    ]
+
+    const payload = {
+      action: 'updateRecord',
+      data: rowData
+    }
+
+    await fetch(GOOGLE_SHEETS_URL, {
+      method: 'POST',
+      mode: 'no-cors' as RequestMode,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error('Error deleting maintenance record from Google Sheets:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
+interface EquipmentMaintenanceState {
+  records: MaintenanceRecord[]
+  isLoading: boolean
+  lastFetchTime: string | null
+  fetchError: string | null
+
+  fetchFromGoogleSheets: () => Promise<void>
+  addRecord: (record: MaintenanceRecord) => void
+  updateRecord: (recordId: string, updates: Partial<MaintenanceRecord>) => void
+  deleteRecord: (recordId: string) => void
+  getRecords: () => MaintenanceRecord[]
+  getRecordById: (recordId: string) => MaintenanceRecord | undefined
+}
+
+export const useEquipmentMaintenanceStore = create<EquipmentMaintenanceState>()(
+  persist(
+    (set, get) => ({
+      records: [],
+      isLoading: false,
+      lastFetchTime: null,
+      fetchError: null,
+
+      fetchFromGoogleSheets: async () => {
+        if (!GOOGLE_SHEETS_URL) {
+          console.warn('⚠️ Google Sheets URL not configured')
+          set({ fetchError: 'Google Sheets URL not configured' })
+          return
+        }
+
+        set({ isLoading: true, fetchError: null })
+
+        try {
+          const response = await fetch(GOOGLE_SHEETS_URL, {
+            method: 'GET',
+          })
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+          }
+
+          const result = await response.json()
+
+          if (result.success && result.data) {
+            set({
+              records: result.data,
+              lastFetchTime: new Date().toISOString(),
+              fetchError: null,
+            })
+          } else {
+            throw new Error(result.error || 'Failed to fetch maintenance records')
+          }
+        } catch (error) {
+          console.error('Error fetching maintenance records from Google Sheets:', error)
+          set({
+            fetchError: error instanceof Error ? error.message : 'Unknown error',
+          })
+        } finally {
+          set({ isLoading: false })
+        }
+      },
+
+      addRecord: (record) =>
+        set((state) => ({
+          records: [record, ...state.records],
+        })),
+
+      updateRecord: (recordId, updates) =>
+        set((state) => ({
+          records: state.records.map((record) =>
+            record.id === recordId
+              ? { ...record, ...updates, updatedAt: new Date().toISOString() }
+              : record
+          ),
+        })),
+
+      deleteRecord: (recordId) =>
+        set((state) => ({
+          records: state.records.map((record) =>
+            record.id === recordId
+              ? { ...record, status: 'deleted' as const, updatedAt: new Date().toISOString() }
+              : record
+          ),
+        })),
+
+      getRecords: () => {
+        const records = get().records.filter((record) => record.status !== 'deleted')
+        // Sort by date completed (newest first)
+        return records.sort((a, b) => new Date(b.dateCompleted).getTime() - new Date(a.dateCompleted).getTime())
+      },
+
+      getRecordById: (recordId) => get().records.find((record) => record.id === recordId),
+    }),
+    {
+      name: 'taquero-equipment-maintenance',
+    }
+  )
+)
