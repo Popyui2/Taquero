@@ -3,6 +3,7 @@ import type {
   ImportedData,
   DashboardMetrics,
   FinanceStore,
+  MonthlyFinanceData,
   SalesByDay,
   SalesByHour,
   ProductPerformance,
@@ -36,16 +37,70 @@ function openDatabase(): Promise<IDBDatabase> {
 }
 
 /**
- * Save imported financial data to IndexedDB
+ * Detect month from sales data
+ */
+function detectMonthFromData(data: ImportedData): string {
+  // Try to parse from salesByDay first date
+  if (data.salesByDay.length > 0) {
+    const dateStr = data.salesByDay[0].date // e.g., "Thu, 04 Dec"
+    const parts = dateStr.split(',')[1]?.trim().split(' ') // ["04", "Dec"]
+
+    if (parts && parts.length >= 2) {
+      const monthMap: { [key: string]: string } = {
+        Jan: '01', Feb: '02', Mar: '03', Apr: '04',
+        May: '05', Jun: '06', Jul: '07', Aug: '08',
+        Sep: '09', Oct: '10', Nov: '11', Dec: '12',
+      }
+      const month = monthMap[parts[1]]
+      const year = new Date().getFullYear()
+
+      if (month) {
+        return `${year}-${month}`
+      }
+    }
+  }
+
+  // Fallback to current month
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
+/**
+ * Save imported financial data to IndexedDB (appends monthly data)
  */
 export async function saveFinanceData(data: ImportedData): Promise<void> {
   const db = await openDatabase()
-  const metrics = calculateMetrics(data)
+
+  // Get existing store or create new
+  const existing = await getFinanceData()
+  const monthlyData = existing?.monthlyData || []
+
+  // Detect which month this data belongs to
+  const detectedMonth = detectMonthFromData(data)
+
+  // Check if we already have data for this month - if so, replace it
+  const existingMonthIndex = monthlyData.findIndex(m => m.month === detectedMonth)
+
+  const newMonthlyData: MonthlyFinanceData = {
+    month: detectedMonth,
+    data,
+    uploadedAt: new Date().toISOString(),
+  }
+
+  if (existingMonthIndex >= 0) {
+    // Replace existing month data
+    monthlyData[existingMonthIndex] = newMonthlyData
+  } else {
+    // Add new month
+    monthlyData.push(newMonthlyData)
+  }
+
+  // Sort by month descending (newest first)
+  monthlyData.sort((a, b) => b.month.localeCompare(a.month))
 
   const financeStore: FinanceStore = {
     id: 'current',
-    data,
-    metrics,
+    monthlyData,
     lastCalculated: new Date().toISOString(),
   }
 
@@ -121,26 +176,35 @@ export async function hasFinanceData(): Promise<boolean> {
  * Calculate dashboard metrics from imported data
  */
 export function calculateMetrics(data: ImportedData): DashboardMetrics {
-  // Calculate total revenue from sales by day
-  const totalRevenue = data.salesByDay.reduce((sum, day) => sum + day.total, 0)
+  // 1. Gross Sales from POS
+  const grossSales = data.salesByDay.reduce((sum, day) => sum + day.total, 0)
 
-  // Calculate total COGS from supplier purchases
-  const totalCOGS = data.supplierPurchases.reduce(
-    (sum, purchase) => sum + purchase.amount,
-    0
-  )
+  // 2. Calculate Uber Revenue from bank transactions
+  const uberRevenue = data.bankTransactions
+    .filter((tx) => tx.type === 'income' && tx.payee.toUpperCase().includes('UBER'))
+    .reduce((sum, tx) => sum + tx.amount, 0)
 
-  // Calculate gross profit and margin
-  const grossProfit = totalRevenue - totalCOGS
-  const grossMargin = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0
+  // 3. POS Revenue (from Tabin data)
+  const posRevenue = grossSales
 
-  // Calculate total orders
+  // 4. Total Expenses from bank
+  const totalExpenses = data.bankTransactions
+    .filter((tx) => tx.type === 'expense')
+    .reduce((sum, tx) => sum + tx.amount, 0)
+
+  // 5. Net Cash Flow (Income - Expenses)
+  const totalIncome = data.bankTransactions
+    .filter((tx) => tx.type === 'income')
+    .reduce((sum, tx) => sum + tx.amount, 0)
+  const netCashFlow = totalIncome - totalExpenses
+
+  // 6. Total Orders
   const totalOrders = data.salesByDay.reduce((sum, day) => sum + day.orders, 0)
 
-  // Calculate average order value
-  const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
+  // 7. Average Order Value
+  const averageOrderValue = totalOrders > 0 ? grossSales / totalOrders : 0
 
-  // Get top products (top 10 by revenue)
+  // 8. Top Products (top 20 by revenue)
   const topProducts: ProductPerformance[] = data.salesByProduct
     .map((product) => ({
       product: product.product,
@@ -149,9 +213,9 @@ export function calculateMetrics(data: ImportedData): DashboardMetrics {
       percentOfSales: product.percentOfSale,
     }))
     .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 10)
+    .slice(0, 20)
 
-  // Get top categories (top 5 by revenue)
+  // 9. Top Categories
   const topCategories: CategoryPerformance[] = data.salesByCategory
     .map((category) => ({
       category: category.category,
@@ -160,9 +224,8 @@ export function calculateMetrics(data: ImportedData): DashboardMetrics {
       percentOfSales: category.percentOfSale,
     }))
     .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 5)
 
-  // Get peak hours (hours with orders, sorted by revenue)
+  // 10. Peak Hours (top 10)
   const peakHours: PeakHours[] = data.salesByHour
     .filter((hour) => hour.orders > 0)
     .map((hour) => ({
@@ -171,24 +234,43 @@ export function calculateMetrics(data: ImportedData): DashboardMetrics {
       revenue: hour.total,
     }))
     .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 10)
 
-  // Revenue by day for chart
-  const revenueByDay = data.salesByDay.map((day) => ({
-    date: day.date,
-    revenue: day.total,
-  }))
+  // 11. Orders Per Day with 7-day moving average
+  const ordersPerDay = data.salesByDay.map((day, index, arr) => {
+    // Calculate 7-day moving average
+    const start = Math.max(0, index - 6)
+    const window = arr.slice(start, index + 1)
+    const movingAverage = window.reduce((sum, d) => sum + d.orders, 0) / window.length
+
+    return {
+      date: day.date,
+      orders: day.orders,
+      movingAverage: parseFloat(movingAverage.toFixed(1)),
+    }
+  })
+
+  // 12. Weekly Averages
+  const daysInPeriod = data.salesByDay.length || 1
+  const weeklyAverages = {
+    dailyRevenue: grossSales / daysInPeriod,
+    dailyOrders: totalOrders / daysInPeriod,
+    avgOrderValue: averageOrderValue,
+  }
 
   return {
-    totalRevenue,
-    totalCOGS,
-    grossProfit,
-    grossMargin,
+    grossSales,
+    netCashFlow,
     totalOrders,
     averageOrderValue,
+    posRevenue,
+    uberRevenue,
+    totalExpenses,
     topProducts,
     topCategories,
     peakHours,
-    revenueByDay,
+    ordersPerDay,
+    weeklyAverages,
   }
 }
 
@@ -310,6 +392,139 @@ export function getDateRangeSummary(
     totalOrders,
     averageDailyOrders: totalDays > 0 ? totalOrders / totalDays : 0,
   }
+}
+
+/**
+ * Get combined data for selected months
+ */
+export function getCombinedDataForMonths(
+  monthlyData: MonthlyFinanceData[],
+  selectedMonths: string[]
+): ImportedData {
+  const combined: ImportedData = {
+    salesByDay: [],
+    salesByHour: [],
+    salesByCategory: [],
+    salesByProduct: [],
+    bankTransactions: [],
+    supplierPurchases: [],
+    lastUpdated: new Date().toISOString(),
+    dateRange: { start: '', end: '' },
+  }
+
+  // Filter and combine data from selected months
+  const relevantMonths = monthlyData.filter(m => selectedMonths.includes(m.month))
+
+  relevantMonths.forEach(monthData => {
+    combined.salesByDay.push(...monthData.data.salesByDay)
+    combined.salesByHour.push(...monthData.data.salesByHour)
+    combined.salesByCategory.push(...monthData.data.salesByCategory)
+    combined.salesByProduct.push(...monthData.data.salesByProduct)
+    combined.bankTransactions.push(...monthData.data.bankTransactions)
+    combined.supplierPurchases.push(...monthData.data.supplierPurchases)
+  })
+
+  // Sort sales by day
+  combined.salesByDay.sort((a, b) => {
+    const dateA = parseDateForSort(a.date)
+    const dateB = parseDateForSort(b.date)
+    return dateA.getTime() - dateB.getTime()
+  })
+
+  // Set date range
+  if (combined.salesByDay.length > 0) {
+    combined.dateRange = {
+      start: combined.salesByDay[0].date,
+      end: combined.salesByDay[combined.salesByDay.length - 1].date,
+    }
+  }
+
+  // Aggregate products and categories by summing
+  combined.salesByProduct = aggregateProducts(combined.salesByProduct)
+  combined.salesByCategory = aggregateCategories(combined.salesByCategory)
+
+  return combined
+}
+
+/**
+ * Parse date string for sorting
+ */
+function parseDateForSort(dateStr: string): Date {
+  // Handle "Thu, 04 Dec" format
+  const parts = dateStr.split(',')[1]?.trim().split(' ')
+  if (parts && parts.length >= 2) {
+    const day = parseInt(parts[0])
+    const monthStr = parts[1]
+    const year = new Date().getFullYear()
+    const monthMap: { [key: string]: number } = {
+      Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+      Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
+    }
+    const month = monthMap[monthStr]
+    if (month !== undefined) {
+      return new Date(year, month, day)
+    }
+  }
+  return new Date()
+}
+
+/**
+ * Aggregate products from multiple months
+ */
+function aggregateProducts(products: any[]): any[] {
+  const aggregated: { [key: string]: any } = {}
+
+  products.forEach(product => {
+    if (aggregated[product.product]) {
+      aggregated[product.product].quantity += product.quantity
+      aggregated[product.product].tax += product.tax
+      aggregated[product.product].total += product.total
+    } else {
+      aggregated[product.product] = { ...product }
+    }
+  })
+
+  // Recalculate percentages based on total
+  const totalRevenue = Object.values(aggregated).reduce((sum: number, p: any) => sum + p.total, 0)
+  Object.values(aggregated).forEach((p: any) => {
+    p.percentOfSale = totalRevenue > 0 ? (p.total / totalRevenue) * 100 : 0
+  })
+
+  return Object.values(aggregated)
+}
+
+/**
+ * Aggregate categories from multiple months
+ */
+function aggregateCategories(categories: any[]): any[] {
+  const aggregated: { [key: string]: any } = {}
+
+  categories.forEach(category => {
+    if (aggregated[category.category]) {
+      aggregated[category.category].quantity += category.quantity
+      aggregated[category.category].tax += category.tax
+      aggregated[category.category].total += category.total
+    } else {
+      aggregated[category.category] = { ...category }
+    }
+  })
+
+  // Recalculate percentages based on total
+  const totalRevenue = Object.values(aggregated).reduce((sum: number, c: any) => sum + c.total, 0)
+  Object.values(aggregated).forEach((c: any) => {
+    c.percentOfSale = totalRevenue > 0 ? (c.total / totalRevenue) * 100 : 0
+  })
+
+  return Object.values(aggregated)
+}
+
+/**
+ * Get all available months from stored data
+ */
+export async function getAvailableMonths(): Promise<string[]> {
+  const data = await getFinanceData()
+  if (!data || !data.monthlyData) return []
+  return data.monthlyData.map(m => m.month).sort((a, b) => b.localeCompare(a))
 }
 
 /**

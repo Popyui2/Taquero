@@ -30,7 +30,7 @@ import { StaffList } from '@/components/staff-training/StaffList'
 import { StaffDetail } from '@/components/staff-training/StaffDetail'
 import { AddStaffForm } from '@/components/staff-training/AddStaffForm'
 import { StaffTrainingRecordMPI } from '@/components/staff-training/StaffTrainingRecordMPI'
-import { Finance } from '@/pages/Finance'
+import { FinanceRedesign } from '@/pages/FinanceRedesign'
 import { Toast, ToastContainer } from '@/components/ui/toast'
 
 interface ToastMessage {
@@ -86,7 +86,7 @@ function App() {
               />
             }
           />
-          <Route path="/restaurant/financial" element={<Finance />} />
+          <Route path="/restaurant/financial" element={<FinanceRedesign />} />
           <Route
             path="/restaurant/events"
             element={

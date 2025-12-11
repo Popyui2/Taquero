@@ -127,16 +127,28 @@ export interface ImportedData {
 // Dashboard Metrics
 
 export interface DashboardMetrics {
-  totalRevenue: number
-  totalCOGS: number
-  grossProfit: number
-  grossMargin: number
+  grossSales: number
+  netCashFlow: number
   totalOrders: number
   averageOrderValue: number
+  posRevenue: number
+  uberRevenue: number
+  totalExpenses: number
   topProducts: ProductPerformance[]
   topCategories: CategoryPerformance[]
   peakHours: PeakHours[]
-  revenueByDay: { date: string; revenue: number }[]
+  ordersPerDay: { date: string; orders: number; movingAverage?: number }[]
+  weeklyAverages: {
+    dailyRevenue: number
+    dailyOrders: number
+    avgOrderValue: number
+  }
+  comparisonMetrics?: {
+    grossSalesChange: number
+    netCashFlowChange: number
+    ordersChange: number
+    avgOrderValueChange: number
+  }
 }
 
 // Date Range Filter
@@ -150,7 +162,12 @@ export interface DateRangeFilter {
 
 export interface FinanceStore {
   id: string // 'current' - single record
-  data: ImportedData
-  metrics: DashboardMetrics
+  monthlyData: MonthlyFinanceData[]
   lastCalculated: string
+}
+
+export interface MonthlyFinanceData {
+  month: string // Format: 'YYYY-MM' (e.g., '2024-12')
+  data: ImportedData
+  uploadedAt: string
 }
