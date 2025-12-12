@@ -9,9 +9,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Calendar as CalendarIcon, ChevronDown } from 'lucide-react'
+import { Calendar as CalendarIcon, ChevronDown, Download } from 'lucide-react'
 import { format } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
+import type { ImportedData } from '@/types/finance'
 
 interface MonthSelectorProps {
   availableMonths: string[]
@@ -19,11 +20,47 @@ interface MonthSelectorProps {
   onSelectionChange: (months: string[]) => void
   selectedPeriod?: string
   onPeriodChange?: (period: string) => void
+  currentData?: ImportedData | null
 }
 
-export function MonthSelector({ availableMonths, selectedMonths, onSelectionChange, selectedPeriod, onPeriodChange }: MonthSelectorProps) {
+export function MonthSelector({ availableMonths, selectedMonths, onSelectionChange, selectedPeriod, onPeriodChange, currentData }: MonthSelectorProps) {
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
   const [calendarOpen, setCalendarOpen] = useState(false)
+
+  const handleDownloadCSV = () => {
+    if (!currentData) return
+
+    // Create CSV content for bank transactions
+    const csvRows: string[] = []
+
+    // Header
+    csvRows.push('Date,Type,Description,Amount,Balance')
+
+    // Data rows
+    currentData.bankTransactions?.forEach(transaction => {
+      const row = [
+        transaction.date || '',
+        transaction.type || '',
+        `"${(transaction.description || '').replace(/"/g, '""')}"`, // Escape quotes
+        transaction.amount?.toFixed(2) || '0.00',
+        transaction.balance?.toFixed(2) || ''
+      ]
+      csvRows.push(row.join(','))
+    })
+
+    // Create blob and download
+    const csvContent = csvRows.join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+
+    link.setAttribute('href', url)
+    link.setAttribute('download', `bank-statement-${getCurrentSelection().replace(/\s+/g, '-').toLowerCase()}-${format(new Date(), 'yyyy-MM-dd')}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
 
   const formatMonth = (month: string) => {
     const [year, monthNum] = month.split('-')
@@ -191,6 +228,21 @@ export function MonthSelector({ availableMonths, selectedMonths, onSelectionChan
               onClick={selectNone}
             >
               Clear
+            </Button>
+          )}
+
+          {/* Spacer to push download to the right */}
+          <div className="flex-1" />
+
+          {/* Download CSV Button */}
+          {currentData && currentData.bankTransactions && currentData.bankTransactions.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadCSV}
+              title="Download CSV"
+            >
+              <Download className="h-4 w-4" />
             </Button>
           )}
         </div>

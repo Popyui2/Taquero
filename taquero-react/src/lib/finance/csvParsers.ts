@@ -33,31 +33,46 @@ function parsePercentage(value: string): number {
 
 /**
  * Parse CSV text into array of rows
+ * Handles both comma-separated and tab-separated formats
  */
 function parseCSV(csvText: string): string[][] {
   const lines = csvText.trim().split('\n')
   const rows: string[][] = []
 
+  // Detect delimiter (tab or comma) from first line
+  const firstLine = lines[0] || ''
+  const hasTab = firstLine.includes('\t')
+  const hasComma = firstLine.includes(',')
+
+  // Prefer tab if present, otherwise use comma
+  const delimiter = hasTab ? '\t' : ','
+
   for (const line of lines) {
-    // Handle quoted fields that may contain commas
-    const row: string[] = []
-    let current = ''
-    let inQuotes = false
+    // For tab-separated, just split by tabs (simpler, no quotes needed)
+    if (delimiter === '\t') {
+      const row = line.split('\t').map(field => field.trim())
+      rows.push(row)
+    } else {
+      // Handle quoted fields that may contain commas
+      const row: string[] = []
+      let current = ''
+      let inQuotes = false
 
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i]
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i]
 
-      if (char === '"') {
-        inQuotes = !inQuotes
-      } else if (char === ',' && !inQuotes) {
-        row.push(current.trim())
-        current = ''
-      } else {
-        current += char
+        if (char === '"') {
+          inQuotes = !inQuotes
+        } else if (char === ',' && !inQuotes) {
+          row.push(current.trim())
+          current = ''
+        } else {
+          current += char
+        }
       }
+      row.push(current.trim())
+      rows.push(row)
     }
-    row.push(current.trim())
-    rows.push(row)
   }
 
   return rows

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Upload, TrendingUp, TrendingDown, DollarSign, ShoppingCart, Loader2 } from 'lucide-react'
+import { Upload, TrendingUp, TrendingDown, DollarSign, Utensils, ShoppingBag, ShoppingCart, Loader2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -8,7 +8,6 @@ import { getFinanceData, calculateMetrics, getCombinedDataForMonths, getAvailabl
 import { UploadFinanceWizard } from '@/components/finance/UploadFinanceWizard'
 import { TopProductsGallery } from '@/components/finance/TopProductsGallery'
 import { FinanceChartsRedesign } from '@/components/finance/FinanceChartsRedesign'
-import { FinanceDataTables } from '@/components/finance/FinanceDataTables'
 import { MonthSelector } from '@/components/finance/MonthSelector'
 
 export function FinanceRedesign() {
@@ -79,7 +78,7 @@ export function FinanceRedesign() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight">Financial Data</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Financial and Product Data</h2>
           <p className="text-muted-foreground text-lg">
             {importedData?.dateRange.start && importedData?.dateRange.end
               ? `${importedData.dateRange.start} - ${importedData.dateRange.end}`
@@ -96,19 +95,178 @@ export function FinanceRedesign() {
         </Button>
       </div>
 
-      {/* Month Selector */}
-      {availableMonths.length > 0 && (
-        <MonthSelector
-          availableMonths={availableMonths}
-          selectedMonths={selectedMonths}
-          onSelectionChange={setSelectedMonths}
-          selectedPeriod={selectedPeriod}
-          onPeriodChange={setSelectedPeriod}
-        />
-      )}
-
       {metrics ? (
         <>
+          {/* Revenue Sources */}
+          <Card className="overflow-hidden">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-2xl">Revenue Sources</CardTitle>
+              <CardDescription>Total: {formatCurrency(metrics.grossSales)}</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* POS Sales */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Utensils className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">POS Sales</p>
+                        <p className="text-2xl font-bold">{formatCurrency(metrics.posRevenue)}</p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="text-base px-3 py-1">
+                      {((metrics.posRevenue / metrics.grossSales) * 100).toFixed(1)}%
+                    </Badge>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all duration-500"
+                      style={{ width: `${(metrics.posRevenue / metrics.grossSales) * 100}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Uber Eats Revenue */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-lg bg-green-500/10 flex items-center justify-center">
+                        <ShoppingBag className="h-6 w-6 text-green-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Uber Eats</p>
+                        <p className="text-2xl font-bold">{formatCurrency(metrics.uberRevenue)}</p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="text-base px-3 py-1">
+                      {((metrics.uberRevenue / metrics.grossSales) * 100).toFixed(1)}%
+                    </Badge>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-green-500 transition-all duration-500"
+                      style={{ width: `${(metrics.uberRevenue / metrics.grossSales) * 100}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Delivereasy Revenue */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f2f542' }}>
+                        <ShoppingBag className="h-6 w-6 text-gray-900" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Delivereasy</p>
+                        <p className="text-2xl font-bold">{formatCurrency(0)}</p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="text-base px-3 py-1">
+                      0.0%
+                    </Badge>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full transition-all duration-500"
+                      style={{ width: '0%', backgroundColor: '#f2f542' }}
+                    />
+                  </div>
+                </div>
+
+                {/* eCommerce and Catering Revenue */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                        <Sparkles className="h-6 w-6 text-purple-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">eCommerce and Catering</p>
+                        <p className="text-2xl font-bold">{formatCurrency(0)}</p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="text-base px-3 py-1">
+                      0.0%
+                    </Badge>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-purple-500 transition-all duration-500"
+                      style={{ width: '0%' }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Period Averages */}
+          <Card className="overflow-hidden">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-2xl">Period Averages</CardTitle>
+              <CardDescription>Average daily performance metrics</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Avg Daily Revenue */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                      <TrendingUp className="h-6 w-6 text-blue-500" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-muted-foreground">Avg Daily Revenue</p>
+                      <p className="text-2xl font-bold">
+                        ${metrics.weeklyAverages.dailyRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground ml-15">per day average</p>
+                </div>
+
+                {/* Avg Daily Orders */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                      <ShoppingCart className="h-6 w-6 text-orange-500" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-muted-foreground">Avg Daily Orders</p>
+                      <p className="text-2xl font-bold">
+                        {metrics.weeklyAverages.dailyOrders.toFixed(0)}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground ml-15">orders per day</p>
+                </div>
+
+                {/* Avg Order Value */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                      <DollarSign className="h-6 w-6 text-emerald-500" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-muted-foreground">Avg Order Value</p>
+                      <p className="text-2xl font-bold">
+                        ${metrics.weeklyAverages.avgOrderValue.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground ml-15">per order average</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* NET CASH FLOW - HERO CHART (PC Optimized) */}
           <div className="w-full">
             <FinanceChartsRedesign
@@ -118,6 +276,18 @@ export function FinanceRedesign() {
               heroOnly={true}
             />
           </div>
+
+          {/* Month Selector */}
+          {availableMonths.length > 0 && (
+            <MonthSelector
+              availableMonths={availableMonths}
+              selectedMonths={selectedMonths}
+              onSelectionChange={setSelectedMonths}
+              selectedPeriod={selectedPeriod}
+              onPeriodChange={setSelectedPeriod}
+              currentData={importedData}
+            />
+          )}
 
           {/* Top Metric Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -248,48 +418,16 @@ export function FinanceRedesign() {
             </Card>
           </div>
 
-          {/* Revenue Sources */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Revenue Sources</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-                <div className="flex-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-sm text-muted-foreground">POS Revenue:</span>
-                    <span className="text-2xl font-bold">{formatCurrency(metrics.posRevenue)}</span>
-                    <Badge variant="outline">
-                      {((metrics.posRevenue / metrics.grossSales) * 100).toFixed(1)}%
-                    </Badge>
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-sm text-muted-foreground">Uber Eats:</span>
-                    <span className="text-2xl font-bold">{formatCurrency(metrics.uberRevenue)}</span>
-                    <Badge variant="outline">
-                      {((metrics.uberRevenue / metrics.grossSales) * 100).toFixed(1)}%
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* TOP PRODUCTS - HERO SECTION */}
           <TopProductsGallery products={metrics.topProducts} />
 
-          {/* Other Charts (Peak Hours, Category Performance, Period Averages) */}
+          {/* Other Charts (Peak Hours, Category Performance) */}
           <FinanceChartsRedesign
             metrics={metrics}
             data={importedData}
             selectedPeriod={selectedPeriod}
             heroOnly={false}
           />
-
-          {/* Detailed Data Tables */}
-          <FinanceDataTables data={importedData} metrics={metrics} />
         </>
       ) : (
         <Card>
