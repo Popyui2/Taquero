@@ -73,7 +73,7 @@ export function TopProductsGallery({ products }: TopProductsGalleryProps) {
                       <div className="flex items-baseline justify-between">
                         <span className="text-xs text-muted-foreground">Revenue</span>
                         <span className="text-xl font-bold">
-                          ${product.revenue.toFixed(0)}
+                          ${product.revenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">

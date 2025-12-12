@@ -1,15 +1,30 @@
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Calendar } from 'lucide-react'
+import { Calendar } from '@/components/ui/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Calendar as CalendarIcon, ChevronDown } from 'lucide-react'
+import { format } from 'date-fns'
+import type { DateRange } from 'react-day-picker'
 
 interface MonthSelectorProps {
   availableMonths: string[]
   selectedMonths: string[]
   onSelectionChange: (months: string[]) => void
+  selectedPeriod?: string
+  onPeriodChange?: (period: string) => void
 }
 
-export function MonthSelector({ availableMonths, selectedMonths, onSelectionChange }: MonthSelectorProps) {
+export function MonthSelector({ availableMonths, selectedMonths, onSelectionChange, selectedPeriod, onPeriodChange }: MonthSelectorProps) {
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  const [calendarOpen, setCalendarOpen] = useState(false)
+
   const formatMonth = (month: string) => {
     const [year, monthNum] = month.split('-')
     const date = new Date(parseInt(year), parseInt(monthNum) - 1)
@@ -18,34 +33,79 @@ export function MonthSelector({ availableMonths, selectedMonths, onSelectionChan
 
   const toggleMonth = (month: string) => {
     if (selectedMonths.includes(month)) {
-      // Remove if already selected
       onSelectionChange(selectedMonths.filter(m => m !== month))
     } else {
-      // Add to selection
       onSelectionChange([...selectedMonths, month])
     }
   }
 
   const selectAll = () => {
     onSelectionChange(availableMonths)
+    onPeriodChange?.('all-time')
   }
 
   const selectNone = () => {
     onSelectionChange([])
+    onPeriodChange?.('none')
+  }
+
+  const selectLastWeek = () => {
+    const oneWeekAgo = new Date()
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+    const monthsInRange = availableMonths.filter(month => {
+      const [year, monthNum] = month.split('-')
+      const monthDate = new Date(parseInt(year), parseInt(monthNum) - 1)
+      return monthDate >= oneWeekAgo
+    })
+    onSelectionChange(monthsInRange.length > 0 ? monthsInRange : availableMonths.slice(0, 1))
+    onPeriodChange?.('last-week')
   }
 
   const selectLastMonth = () => {
     if (availableMonths.length > 0) {
       onSelectionChange([availableMonths[0]])
     }
+    onPeriodChange?.('last-month')
   }
 
   const selectLast3Months = () => {
     onSelectionChange(availableMonths.slice(0, 3))
+    onPeriodChange?.('last-3-months')
   }
 
   const selectLast6Months = () => {
     onSelectionChange(availableMonths.slice(0, 6))
+    onPeriodChange?.('last-6-months')
+  }
+
+  const selectLastYear = () => {
+    onSelectionChange(availableMonths.slice(0, 12))
+    onPeriodChange?.('last-year')
+  }
+
+  const handleDateRangeSelect = (range: DateRange | undefined) => {
+    setDateRange(range)
+    if (range?.from && range?.to) {
+      // Filter months that fall within the selected date range
+      const monthsInRange = availableMonths.filter(month => {
+        const [year, monthNum] = month.split('-')
+        const monthDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1)
+        return monthDate >= range.from! && monthDate <= range.to!
+      })
+      onSelectionChange(monthsInRange)
+      onPeriodChange?.('custom')
+      setCalendarOpen(false)
+    }
+  }
+
+  const getCurrentSelection = () => {
+    if (selectedMonths.length === 1) return 'Last Month'
+    if (selectedMonths.length === 3) return 'Last 3 Months'
+    if (selectedMonths.length === 6) return 'Last 6 Months'
+    if (selectedMonths.length === 12) return 'Last Year'
+    if (selectedMonths.length === availableMonths.length) return 'All Time'
+    if (selectedMonths.length === 0) return 'Select Period'
+    return `${selectedMonths.length} months`
   }
 
   if (availableMonths.length === 0) {
@@ -55,71 +115,73 @@ export function MonthSelector({ availableMonths, selectedMonths, onSelectionChan
   return (
     <Card>
       <CardContent className="p-4">
-        <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">Period:</span>
           </div>
 
-          {/* Quick Select Buttons */}
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={selectLastMonth}
-              className={selectedMonths.length === 1 && selectedMonths[0] === availableMonths[0] ? 'bg-foreground/10' : ''}
-            >
-              Last Month
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={selectLast3Months}
-              className={selectedMonths.length === 3 && availableMonths.slice(0, 3).every(m => selectedMonths.includes(m)) ? 'bg-foreground/10' : ''}
-            >
-              Last 3 Months
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={selectLast6Months}
-            >
-              Last 6 Months
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={selectAll}
-              className={selectedMonths.length === availableMonths.length ? 'bg-foreground/10' : ''}
-            >
-              All Time
-            </Button>
-            {selectedMonths.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={selectNone}
-              >
-                Clear
+          {/* Period Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="min-w-[140px] justify-between">
+                {getCurrentSelection()}
+                <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
-            )}
-          </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem onClick={selectLastWeek}>
+                Last Week
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={selectLastMonth}>
+                Last Month
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={selectLast3Months}>
+                Last 3 Months
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={selectLast6Months}>
+                Last 6 Months
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={selectLastYear}>
+                Last Year
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={selectAll}>
+                All Time
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-          {/* Selected Months Display */}
+          {/* Custom Date Range Picker */}
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                Custom Range
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start" sideOffset={8}>
+              <Calendar
+                mode="range"
+                selectedRange={dateRange}
+                onRangeSelect={(range) => {
+                  setDateRange(range)
+                  if (range?.from && range?.to) {
+                    handleDateRangeSelect(range)
+                  }
+                }}
+              />
+            </PopoverContent>
+          </Popover>
+
+          {/* Clear Button */}
           {selectedMonths.length > 0 && (
-            <div className="flex items-center gap-2 flex-wrap ml-auto">
-              <span className="text-xs text-muted-foreground">Viewing:</span>
-              {selectedMonths.sort((a, b) => b.localeCompare(a)).slice(0, 3).map(month => (
-                <Badge key={month} variant="outline" className="cursor-pointer" onClick={() => toggleMonth(month)}>
-                  {formatMonth(month)} ×
-                </Badge>
-              ))}
-              {selectedMonths.length > 3 && (
-                <Badge variant="outline">
-                  +{selectedMonths.length - 3} more
-                </Badge>
-              )}
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={selectNone}
+            >
+              Clear
+            </Button>
           )}
         </div>
 

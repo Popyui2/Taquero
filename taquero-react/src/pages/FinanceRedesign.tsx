@@ -16,6 +16,7 @@ export function FinanceRedesign() {
   const [monthlyData, setMonthlyData] = useState<MonthlyFinanceData[]>([])
   const [availableMonths, setAvailableMonths] = useState<string[]>([])
   const [selectedMonths, setSelectedMonths] = useState<string[]>([])
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('last-month')
   const [showUploadWizard, setShowUploadWizard] = useState(false)
 
   useEffect(() => {
@@ -101,6 +102,8 @@ export function FinanceRedesign() {
           availableMonths={availableMonths}
           selectedMonths={selectedMonths}
           onSelectionChange={setSelectedMonths}
+          selectedPeriod={selectedPeriod}
+          onPeriodChange={setSelectedPeriod}
         />
       )}
 
@@ -268,7 +271,7 @@ export function FinanceRedesign() {
           <TopProductsGallery products={metrics.topProducts} />
 
           {/* Charts */}
-          <FinanceChartsRedesign metrics={metrics} />
+          <FinanceChartsRedesign metrics={metrics} data={importedData} selectedPeriod={selectedPeriod} />
 
           {/* Detailed Data Tables */}
           <FinanceDataTables data={importedData} metrics={metrics} />
