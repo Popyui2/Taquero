@@ -19,6 +19,21 @@ import {
 } from 'recharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { FileText } from 'lucide-react'
 import type { DashboardMetrics, ImportedData } from '@/types/finance'
 import { format, startOfWeek, endOfWeek, startOfMonth, differenceInDays } from 'date-fns'
 
@@ -26,60 +41,26 @@ interface FinanceChartsRedesignProps {
   metrics: DashboardMetrics
   data: ImportedData
   selectedPeriod?: string
+  heroOnly?: boolean
 }
 
 const CATEGORY_COLORS = ['#ffffff', '#cccccc', '#999999', '#666666', '#444444']
 
-type AggregationType = 'daily' | 'weekly' | 'monthly' | 'quarterly'
+type AggregationType = 'weekly' | 'monthly'
 
-export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-month' }: FinanceChartsRedesignProps) {
+export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-month', heroOnly = false }: FinanceChartsRedesignProps) {
   // Toggle states for Makings/Losses/Net
   const [showMakings, setShowMakings] = useState(true)
   const [showLosses, setShowLosses] = useState(true)
   const [showNet, setShowNet] = useState(true)
 
-  // Determine aggregation type based on selected period
-  const getAggregationType = (): AggregationType => {
-    if (!data.bankTransactions || data.bankTransactions.length === 0) return 'daily'
+  // Toggle between weekly and monthly view
+  const [aggregationType, setAggregationType] = useState<AggregationType>('weekly')
 
-    // Calculate data span for custom/all-time periods
-    if (selectedPeriod === 'custom' || selectedPeriod === 'all-time') {
-      const dates = data.bankTransactions.map(t => {
-        const [day, month, year] = t.date.split('/').map(Number)
-        return new Date(2000 + year, month - 1, day)
-      })
-      const oldest = new Date(Math.min(...dates.map(d => d.getTime())))
-      const newest = new Date(Math.max(...dates.map(d => d.getTime())))
-      const totalDays = differenceInDays(newest, oldest)
-
-      // Smart aggregation based on total data span
-      if (selectedPeriod === 'all-time') {
-        if (totalDays <= 90) return 'weekly'      // Up to 3 months
-        if (totalDays <= 365) return 'monthly'    // Up to 1 year
-        if (totalDays <= 1095) return 'monthly'   // Up to 3 years
-        return 'quarterly'                        // More than 3 years
-      }
-
-      // Custom range
-      if (totalDays <= 7) return 'daily'
-      if (totalDays <= 60) return 'weekly'
-      if (totalDays <= 365) return 'monthly'
-      return 'quarterly'
-    }
-
-    // Preset mappings
-    const aggregationMap: { [key: string]: AggregationType } = {
-      'last-week': 'daily',
-      'last-month': 'weekly',
-      'last-3-months': 'weekly',
-      'last-6-months': 'weekly',
-      'last-year': 'monthly',
-    }
-
-    return aggregationMap[selectedPeriod] || 'daily'
-  }
-
-  const aggregationType = getAggregationType()
+  // Table dialog state
+  const [showTableDialog, setShowTableDialog] = useState(false)
+  const [sortColumn, setSortColumn] = useState<'date' | 'net' | 'makings' | 'losses'>('date')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc') // Default newest first
 
   // Process and aggregate bank transactions
   const processNetCashFlow = () => {
@@ -109,17 +90,7 @@ export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-mo
     // Aggregate based on type
     let aggregatedData: { date: string; net: number; income: number; expenses: number }[] = []
 
-    if (aggregationType === 'daily') {
-      aggregatedData = Object.entries(dailyTotals)
-        .map(([dateKey, values]) => ({
-          date: format(values.date, 'MMM d'),
-          fullDate: values.date,
-          net: values.income - values.expenses,
-          income: values.income,
-          expenses: values.expenses,
-        }))
-        .sort((a, b) => a.fullDate.getTime() - b.fullDate.getTime())
-    } else if (aggregationType === 'weekly') {
+    if (aggregationType === 'weekly') {
       const weeklyTotals: { [key: string]: { income: number; expenses: number; date: Date } } = {}
 
       Object.values(dailyTotals).forEach(({ income, expenses, date }) => {
@@ -174,14 +145,29 @@ export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-mo
 
   const { aggregatedData } = processNetCashFlow()
 
-  // Transform data for chart (expenses as negative)
+  // Transform data for chart (expenses as negative) with period-over-period comparison
   const chartData = useMemo(() => {
-    return aggregatedData.map(item => ({
-      date: item.date,
-      income: item.income,
-      lossesNegative: -item.expenses,  // Negative for proper display
-      net: item.net
-    }))
+    return aggregatedData.map((item, index) => {
+      // Calculate % change from previous period
+      let netChangePercent: number | null = null
+      if (index > 0) {
+        const previousNet = aggregatedData[index - 1].net
+        if (previousNet !== 0) {
+          netChangePercent = ((item.net - previousNet) / Math.abs(previousNet)) * 100
+        } else if (item.net !== 0) {
+          // Previous was 0, current is not
+          netChangePercent = item.net > 0 ? 100 : -100
+        }
+      }
+
+      return {
+        date: item.date,
+        income: item.income,
+        lossesNegative: -item.expenses,  // Negative for proper display
+        net: item.net,
+        netChangePercent
+      }
+    })
   }, [aggregatedData])
 
   // Calculate average net
@@ -217,12 +203,78 @@ export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-mo
     return [minValue - padding, maxValue + padding]
   }, [chartData, showMakings, showLosses, showNet])
 
+  // Sort table data
+  const sortedTableData = useMemo(() => {
+    const dataWithFormattedDates = aggregatedData.map(row => {
+      // Format the fullDate as DD/MM/YYYY
+      const dateObj = row.fullDate
+      const formattedDate = format(dateObj, 'dd/MM/yyyy')
+
+      return {
+        date: row.date, // Keep original for display fallback
+        displayDate: formattedDate,
+        sortableDate: dateObj,
+        net: row.net,
+        income: row.income,
+        lossesNegative: -row.expenses,
+        expenses: row.expenses
+      }
+    })
+
+    const sorted = [...dataWithFormattedDates].sort((a, b) => {
+      let compareValue = 0
+
+      switch (sortColumn) {
+        case 'date':
+          compareValue = a.sortableDate.getTime() - b.sortableDate.getTime()
+          break
+        case 'net':
+          compareValue = a.net - b.net
+          break
+        case 'makings':
+          compareValue = a.income - b.income
+          break
+        case 'losses':
+          compareValue = a.expenses - b.expenses
+          break
+      }
+
+      return sortDirection === 'asc' ? compareValue : -compareValue
+    })
+
+    return sorted
+  }, [aggregatedData, sortColumn, sortDirection])
+
+  const handleSort = (column: 'date' | 'net' | 'makings' | 'losses') => {
+    if (sortColumn === column) {
+      // Toggle direction if same column
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      // New column - default to desc (biggest/newest first)
+      setSortColumn(column)
+      setSortDirection('desc')
+    }
+  }
+
+  const SortIcon = ({ column }: { column: 'date' | 'net' | 'makings' | 'losses' }) => {
+    if (sortColumn !== column) {
+      return <span className="ml-1 text-muted-foreground">↕</span>
+    }
+    return <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+  }
+
   // Custom tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload || payload.length === 0) return null
 
     const data = payload[0]?.payload
     if (!data) return null
+
+    const formatChange = (percent: number | null) => {
+      if (percent === null) return null
+      const sign = percent >= 0 ? '+' : ''
+      return `${sign}${percent.toFixed(1)}%`
+    }
 
     return (
       <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
@@ -239,41 +291,56 @@ export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-mo
             </p>
           )}
           {showNet && (
-            <p className={data.net >= 0 ? "text-green-500" : "text-red-500"}>
-              Net: ${data.net.toLocaleString()}
-            </p>
+            <div>
+              <p className={data.net >= 0 ? "text-green-500" : "text-red-500"}>
+                Net: ${data.net.toLocaleString()}
+              </p>
+              {data.netChangePercent !== null && (
+                <p className={`text-xs mt-0.5 ${data.netChangePercent >= 0 ? "text-green-400" : "text-red-400"}`}>
+                  {formatChange(data.netChangePercent)} vs prev {aggregationType === 'weekly' ? 'week' : 'month'}
+                </p>
+              )}
+            </div>
           )}
         </div>
       </div>
     )
   }
 
-  const getAggregationLabel = () => {
-    const labels = {
-      'daily': 'Daily',
-      'weekly': 'Weekly',
-      'monthly': 'Monthly',
-      'quarterly': 'Quarterly'
-    }
-    return labels[aggregationType]
-  }
 
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Net Cash Flow - Takes 2 columns */}
-      <Card className="lg:col-span-2">
+  // Hero mode - only show Net Cash Flow chart full-width
+  if (heroOnly) {
+    return (
+      <Card className="w-full">
         <CardHeader>
-          <div>
-            <CardTitle>Net Cash Flow</CardTitle>
-            <CardDescription>
-              {aggregationType === 'daily' && 'Daily profit/loss from bank statement'}
-              {aggregationType === 'weekly' && 'Weekly profit/loss from bank statement'}
-              {aggregationType === 'monthly' && 'Monthly profit/loss from bank statement'}
-              {aggregationType === 'quarterly' && 'Quarterly profit/loss from bank statement'}
-            </CardDescription>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle>Net Cash Flow</CardTitle>
+              <CardDescription>
+                {aggregationType === 'weekly' ? 'Weekly' : 'Monthly'} profit/loss from bank statement
+              </CardDescription>
+            </div>
+
+            {/* Aggregation Type Toggle */}
+            <div className="flex gap-2">
+              <Button
+                variant={aggregationType === 'weekly' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setAggregationType('weekly')}
+              >
+                Weekly
+              </Button>
+              <Button
+                variant={aggregationType === 'monthly' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setAggregationType('monthly')}
+              >
+                Monthly
+              </Button>
+            </div>
           </div>
 
-          {/* Toggle Buttons */}
+          {/* Data Toggle Buttons */}
           <div className="flex gap-2 mt-4">
             <Button
               variant={showMakings ? 'default' : 'outline'}
@@ -297,10 +364,17 @@ export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-mo
             >
               Net
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowTableDialog(true)}
+            >
+              <FileText className="h-4 w-4" />
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={400}>
+          <ResponsiveContainer width="100%" height={heroOnly ? 600 : 400}>
             <AreaChart
               data={chartData}
               margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
@@ -390,8 +464,70 @@ export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-mo
             </AreaChart>
           </ResponsiveContainer>
         </CardContent>
-      </Card>
 
+        {/* Data Table Dialog */}
+        <Dialog open={showTableDialog} onOpenChange={setShowTableDialog}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {aggregationType === 'weekly' ? 'Weekly' : 'Monthly'} Net Cash Flow Data
+              </DialogTitle>
+            </DialogHeader>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('date')}
+                  >
+                    Date <SortIcon column="date" />
+                  </TableHead>
+                  <TableHead
+                    className="text-right cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('net')}
+                  >
+                    Net <SortIcon column="net" />
+                  </TableHead>
+                  <TableHead
+                    className="text-right cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('makings')}
+                  >
+                    Makings <SortIcon column="makings" />
+                  </TableHead>
+                  <TableHead
+                    className="text-right cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('losses')}
+                  >
+                    Losses <SortIcon column="losses" />
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedTableData.map((row, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">{row.displayDate}</TableCell>
+                    <TableCell className={`text-right font-semibold ${row.net >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      ${row.net.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      ${row.income.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-right text-red-500">
+                      ${Math.abs(row.lossesNegative).toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </DialogContent>
+        </Dialog>
+      </Card>
+    )
+  }
+
+  // Regular mode - show all charts in grid
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Peak Hours - Takes 1 column */}
       <Card>
         <CardHeader>

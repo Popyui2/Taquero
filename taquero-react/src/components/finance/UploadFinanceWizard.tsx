@@ -24,7 +24,9 @@ type CSVType =
   | 'salesByHour'
   | 'salesByCategory'
   | 'salesByProduct'
-  | 'bankStatement'
+  | 'bankStatementRestaurant'
+  | 'bankStatementCaravan'
+  | 'bankStatementEcommerce'
 
 interface UploadFinanceWizardProps {
   isOpen: boolean
@@ -46,17 +48,20 @@ export function UploadFinanceWizard({
     salesByHour: false,
     salesByCategory: false,
     salesByProduct: false,
-    bankStatement: false,
+    bankStatementRestaurant: false,
+    bankStatementCaravan: false,
+    bankStatementEcommerce: false,
   })
   const [errors, setErrors] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Auto-detect CSV type based on headers
-  const detectCSVType = (csvText: string): CSVType | null => {
+  // Auto-detect CSV type based on headers and filename
+  const detectCSVType = (csvText: string, filename: string): CSVType | null => {
     const lines = csvText.trim().split('\n')
     if (lines.length === 0) return null
 
     const headers = lines[0].toLowerCase()
+    const filenameLower = filename.toLowerCase()
 
     if (headers.includes('date') && headers.includes('orders') && headers.includes('discounts')) {
       return 'salesByDay'
@@ -70,8 +75,19 @@ export function UploadFinanceWizard({
     if (headers.includes('product') && headers.includes('quantity') && headers.includes('% of sale')) {
       return 'salesByProduct'
     }
+    // Detect bank statement type based on filename
     if (headers.includes('date') && headers.includes('amount') && headers.includes('payee')) {
-      return 'bankStatement'
+      if (filenameLower.includes('hot-mexican') || filenameLower.includes('hot mexican')) {
+        return 'bankStatementRestaurant'
+      }
+      if (filenameLower.includes('mexi-can') || filenameLower.includes('mexi can')) {
+        return 'bankStatementCaravan'
+      }
+      if (filenameLower.includes('ecommerce') || filenameLower.includes('e-commerce')) {
+        return 'bankStatementEcommerce'
+      }
+      // Default to restaurant if filename doesn't match
+      return 'bankStatementRestaurant'
     }
 
     return null
@@ -110,7 +126,7 @@ export function UploadFinanceWizard({
         }
 
         const csvText = await file.text()
-        const detectedType = detectCSVType(csvText)
+        const detectedType = detectCSVType(csvText, file.name)
 
         if (!detectedType) {
           errorMessages.push(`${file.name}: Could not detect file type`)
@@ -139,12 +155,29 @@ export function UploadFinanceWizard({
               processedTypes.push('salesByProduct')
               newUploadStatus.salesByProduct = true
               break
-            case 'bankStatement':
-              const transactions = parseBankStatement(csvText)
-              newData.bankTransactions = transactions
-              newData.supplierPurchases = extractSupplierPurchases(transactions)
-              processedTypes.push('bankStatement')
-              newUploadStatus.bankStatement = true
+            case 'bankStatementRestaurant':
+              const restaurantTransactions = parseBankStatement(csvText)
+              // Append to existing bank transactions
+              newData.bankTransactions = [...newData.bankTransactions, ...restaurantTransactions]
+              newData.supplierPurchases = extractSupplierPurchases(newData.bankTransactions)
+              processedTypes.push('bankStatementRestaurant')
+              newUploadStatus.bankStatementRestaurant = true
+              break
+            case 'bankStatementCaravan':
+              const caravanTransactions = parseBankStatement(csvText)
+              // Append to existing bank transactions
+              newData.bankTransactions = [...newData.bankTransactions, ...caravanTransactions]
+              newData.supplierPurchases = extractSupplierPurchases(newData.bankTransactions)
+              processedTypes.push('bankStatementCaravan')
+              newUploadStatus.bankStatementCaravan = true
+              break
+            case 'bankStatementEcommerce':
+              const ecommerceTransactions = parseBankStatement(csvText)
+              // Append to existing bank transactions
+              newData.bankTransactions = [...newData.bankTransactions, ...ecommerceTransactions]
+              newData.supplierPurchases = extractSupplierPurchases(newData.bankTransactions)
+              processedTypes.push('bankStatementEcommerce')
+              newUploadStatus.bankStatementEcommerce = true
               break
           }
         } catch (err) {
@@ -226,19 +259,23 @@ export function UploadFinanceWizard({
       salesByHour: false,
       salesByCategory: false,
       salesByProduct: false,
-      bankStatement: false,
+      bankStatementRestaurant: false,
+      bankStatementCaravan: false,
+      bankStatementEcommerce: false,
     })
     setErrors([])
     onClose()
   }
 
   const csvTypes = [
-    { key: 'salesByDay', label: 'Sales by Day' },
-    { key: 'salesByHour', label: 'Sales by Hour' },
-    { key: 'salesByCategory', label: 'Sales by Category' },
-    { key: 'salesByProduct', label: 'Sales by Product' },
-    { key: 'bankStatement', label: 'Bank Statement' },
-  ] as const
+    { key: 'salesByDay' as keyof CSVImportStatus, label: 'Sales by Day' },
+    { key: 'salesByHour' as keyof CSVImportStatus, label: 'Sales by Hour' },
+    { key: 'salesByCategory' as keyof CSVImportStatus, label: 'Sales by Category' },
+    { key: 'salesByProduct' as keyof CSVImportStatus, label: 'Sales by Product' },
+    { key: 'bankStatementRestaurant' as keyof CSVImportStatus, label: 'Bank - Restaurant' },
+    { key: 'bankStatementCaravan' as keyof CSVImportStatus, label: 'Bank - Caravan' },
+    { key: 'bankStatementEcommerce' as keyof CSVImportStatus, label: 'Bank - E-commerce' },
+  ]
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -246,7 +283,7 @@ export function UploadFinanceWizard({
         <DialogHeader>
           <DialogTitle>Upload Financial Data</DialogTitle>
           <DialogDescription>
-            Upload CSV files from Tabin POS and your bank statement. All files will be automatically detected and processed.
+            Upload CSV files from Tabin POS and your bank statements (Restaurant, Caravan, E-commerce). All files will be automatically detected and processed.
           </DialogDescription>
         </DialogHeader>
 
@@ -269,7 +306,7 @@ export function UploadFinanceWizard({
                 {isDragging ? 'Drop files here' : 'Drag & Drop CSV Files'}
               </h3>
               <p className="text-sm text-muted-foreground">
-                Drop all 5 CSV files or browse to select them
+                Drop all 7 CSV files or browse to select them
               </p>
               <input
                 ref={fileInputRef}

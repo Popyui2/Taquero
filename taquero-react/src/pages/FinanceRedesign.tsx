@@ -109,6 +109,16 @@ export function FinanceRedesign() {
 
       {metrics ? (
         <>
+          {/* NET CASH FLOW - HERO CHART (PC Optimized) */}
+          <div className="w-full">
+            <FinanceChartsRedesign
+              metrics={metrics}
+              data={importedData}
+              selectedPeriod={selectedPeriod}
+              heroOnly={true}
+            />
+          </div>
+
           {/* Top Metric Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Gross Sales */}
@@ -270,8 +280,13 @@ export function FinanceRedesign() {
           {/* TOP PRODUCTS - HERO SECTION */}
           <TopProductsGallery products={metrics.topProducts} />
 
-          {/* Charts */}
-          <FinanceChartsRedesign metrics={metrics} data={importedData} selectedPeriod={selectedPeriod} />
+          {/* Other Charts (Peak Hours, Category Performance, Period Averages) */}
+          <FinanceChartsRedesign
+            metrics={metrics}
+            data={importedData}
+            selectedPeriod={selectedPeriod}
+            heroOnly={false}
+          />
 
           {/* Detailed Data Tables */}
           <FinanceDataTables data={importedData} metrics={metrics} />

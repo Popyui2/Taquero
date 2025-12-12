@@ -99,6 +99,16 @@ export function MonthSelector({ availableMonths, selectedMonths, onSelectionChan
   }
 
   const getCurrentSelection = () => {
+    // Use selectedPeriod if available
+    if (selectedPeriod === 'last-week') return 'Last Week'
+    if (selectedPeriod === 'last-month') return 'Last Month'
+    if (selectedPeriod === 'last-3-months') return 'Last 3 Months'
+    if (selectedPeriod === 'last-6-months') return 'Last 6 Months'
+    if (selectedPeriod === 'last-year') return 'Last Year'
+    if (selectedPeriod === 'all-time') return 'All Time'
+    if (selectedPeriod === 'custom') return 'Custom Range'
+
+    // Fallback to count-based selection if no period is set
     if (selectedMonths.length === 1) return 'Last Month'
     if (selectedMonths.length === 3) return 'Last 3 Months'
     if (selectedMonths.length === 6) return 'Last 6 Months'

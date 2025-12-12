@@ -107,7 +107,9 @@ export interface CSVImportStatus {
   salesByHour: boolean
   salesByCategory: boolean
   salesByProduct: boolean
-  bankStatement: boolean
+  bankStatementRestaurant: boolean
+  bankStatementCaravan: boolean
+  bankStatementEcommerce: boolean
 }
 
 export interface ImportedData {
