@@ -9,6 +9,8 @@ import type {
   ProductPerformance,
   CategoryPerformance,
   PeakHours,
+  CompanyDataset,
+  UploadedFileInfo,
 } from '@/types/finance'
 
 const DB_NAME = 'taquero-finance'
@@ -553,4 +555,102 @@ export function exportToJSON(data: ImportedData): string {
  */
 export function importFromJSON(jsonString: string): ImportedData {
   return JSON.parse(jsonString) as ImportedData
+}
+
+/**
+ * Save company dataset (replaces existing dataset)
+ */
+export async function saveCompanyDataset(
+  data: ImportedData,
+  files: UploadedFileInfo[]
+): Promise<void> {
+  const db = await openDatabase()
+  const existing = await getFinanceData()
+
+  // Calculate stats
+  const totalTransactions = data.salesByDay.length + data.bankTransactions.length
+  const totalRevenue = data.salesByDay.reduce((sum, day) => sum + day.total, 0)
+  const datesCovered = data.salesByDay.length
+
+  const newDataset: CompanyDataset = {
+    id: crypto.randomUUID(),
+    data,
+    uploadedAt: new Date().toISOString(),
+    files,
+    stats: {
+      totalTransactions,
+      totalRevenue,
+      datesCovered,
+    },
+  }
+
+  const financeStore: FinanceStore = {
+    id: 'current',
+    monthlyData: existing?.monthlyData || [],
+    currentDataset: newDataset,
+    lastCalculated: new Date().toISOString(),
+  }
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_NAME], 'readwrite')
+    const store = transaction.objectStore(STORE_NAME)
+    const request = store.put(financeStore)
+
+    request.onsuccess = () => {
+      db.close()
+      resolve()
+    }
+    request.onerror = () => {
+      db.close()
+      reject(request.error)
+    }
+  })
+}
+
+/**
+ * Get current company dataset
+ */
+export async function getCompanyDataset(): Promise<CompanyDataset | null> {
+  const data = await getFinanceData()
+  return data?.currentDataset || null
+}
+
+/**
+ * Delete company dataset
+ */
+export async function deleteCompanyDataset(): Promise<void> {
+  const db = await openDatabase()
+  const existing = await getFinanceData()
+
+  if (!existing) return
+
+  const financeStore: FinanceStore = {
+    id: 'current',
+    monthlyData: existing.monthlyData || [],
+    currentDataset: undefined,
+    lastCalculated: new Date().toISOString(),
+  }
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_NAME], 'readwrite')
+    const store = transaction.objectStore(STORE_NAME)
+    const request = store.put(financeStore)
+
+    request.onsuccess = () => {
+      db.close()
+      resolve()
+    }
+    request.onerror = () => {
+      db.close()
+      reject(request.error)
+    }
+  })
+}
+
+/**
+ * Get company data (alias for compatibility)
+ */
+export async function getCombinedBusinessData(): Promise<ImportedData | null> {
+  const dataset = await getCompanyDataset()
+  return dataset?.data || null
 }

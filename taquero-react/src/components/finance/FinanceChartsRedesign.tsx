@@ -813,35 +813,6 @@ export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-mo
           </ResponsiveContainer>
         </CardContent>
       </Card>
-
-      {/* Category Performance Pie Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Sales by Category</CardTitle>
-          <CardDescription>Revenue distribution</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={metrics.topCategories}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ category, percentOfSales }) => `${category}: ${percentOfSales.toFixed(1)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="revenue"
-              >
-                {metrics.topCategories.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
     </div>
   )
 }

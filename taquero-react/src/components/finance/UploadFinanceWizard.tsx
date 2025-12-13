@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Upload, FileText, Loader2, X, CheckCircle2 } from 'lucide-react'
 import {
   Dialog,
@@ -8,7 +8,8 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import type { ImportedData, CSVImportStatus } from '@/types/finance'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import type { ImportedData, CSVImportStatus, UploadedFileInfo } from '@/types/finance'
 import {
   parseSalesByProduct,
   parseSalesByCategory,
@@ -17,7 +18,8 @@ import {
   parseBankStatement,
   extractSupplierPurchases,
 } from '@/lib/finance/csvParsers'
-import { saveFinanceData } from '@/lib/finance/storage'
+import { saveCompanyDataset, getCompanyDataset } from '@/lib/finance/storage'
+import { DatasetCards } from './DatasetCards'
 
 type CSVType =
   | 'salesByDay'
@@ -53,7 +55,19 @@ export function UploadFinanceWizard({
     bankStatementEcommerce: false,
   })
   const [errors, setErrors] = useState<string[]>([])
+  const [dataset, setDataset] = useState<any>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (isOpen) {
+      loadDataset()
+    }
+  }, [isOpen])
+
+  const loadDataset = async () => {
+    const data = await getCompanyDataset()
+    setDataset(data)
+  }
 
   // Auto-detect CSV type based on headers and filename
   const detectCSVType = (csvText: string, filename: string): CSVType | null => {
@@ -111,10 +125,11 @@ export function UploadFinanceWizard({
     setProcessingFiles(true)
     setErrors([])
 
-    let newData: ImportedData = existingData || createEmptyImportedData()
+    let newData: ImportedData = createEmptyImportedData()
     const processedTypes: CSVType[] = []
     const errorMessages: string[] = []
     const newUploadStatus = { ...uploadStatus }
+    const uploadedFiles: UploadedFileInfo[] = []
 
     try {
       for (let i = 0; i < files.length; i++) {
@@ -133,55 +148,50 @@ export function UploadFinanceWizard({
           continue
         }
 
+        const lines = csvText.trim().split('\n')
+        const rowCount = lines.length - 1 // Exclude header
+
         try {
           switch (detectedType) {
             case 'salesByDay':
               newData.salesByDay = parseSalesByDay(csvText)
               processedTypes.push('salesByDay')
               newUploadStatus.salesByDay = true
+              uploadedFiles.push({ name: file.name, type: 'POS', rows: rowCount })
               break
             case 'salesByHour':
               newData.salesByHour = parseSalesByHour(csvText)
               processedTypes.push('salesByHour')
               newUploadStatus.salesByHour = true
+              uploadedFiles.push({ name: file.name, type: 'POS', rows: rowCount })
               break
             case 'salesByCategory':
               newData.salesByCategory = parseSalesByCategory(csvText)
               processedTypes.push('salesByCategory')
               newUploadStatus.salesByCategory = true
+              uploadedFiles.push({ name: file.name, type: 'POS', rows: rowCount })
               break
             case 'salesByProduct':
               newData.salesByProduct = parseSalesByProduct(csvText)
               processedTypes.push('salesByProduct')
               newUploadStatus.salesByProduct = true
+              uploadedFiles.push({ name: file.name, type: 'POS', rows: rowCount })
               break
             case 'bankStatementRestaurant':
-              const restaurantTransactions = parseBankStatement(csvText)
-              // Append to existing bank transactions
-              newData.bankTransactions = [...newData.bankTransactions, ...restaurantTransactions]
-              newData.supplierPurchases = extractSupplierPurchases(newData.bankTransactions)
-              processedTypes.push('bankStatementRestaurant')
-              newUploadStatus.bankStatementRestaurant = true
-              break
             case 'bankStatementCaravan':
-              const caravanTransactions = parseBankStatement(csvText)
-              // Append to existing bank transactions
-              newData.bankTransactions = [...newData.bankTransactions, ...caravanTransactions]
-              newData.supplierPurchases = extractSupplierPurchases(newData.bankTransactions)
-              processedTypes.push('bankStatementCaravan')
-              newUploadStatus.bankStatementCaravan = true
-              break
             case 'bankStatementEcommerce':
-              const ecommerceTransactions = parseBankStatement(csvText)
-              // Append to existing bank transactions
-              newData.bankTransactions = [...newData.bankTransactions, ...ecommerceTransactions]
+              const transactions = parseBankStatement(csvText)
+              newData.bankTransactions = [...newData.bankTransactions, ...transactions]
               newData.supplierPurchases = extractSupplierPurchases(newData.bankTransactions)
-              processedTypes.push('bankStatementEcommerce')
-              newUploadStatus.bankStatementEcommerce = true
+              processedTypes.push(detectedType)
+              if (detectedType === 'bankStatementRestaurant') newUploadStatus.bankStatementRestaurant = true
+              if (detectedType === 'bankStatementCaravan') newUploadStatus.bankStatementCaravan = true
+              if (detectedType === 'bankStatementEcommerce') newUploadStatus.bankStatementEcommerce = true
+              uploadedFiles.push({ name: file.name, type: 'Bank', rows: rowCount })
               break
           }
         } catch (err) {
-          errorMessages.push(`${file.name}: Parse error`)
+          errorMessages.push(`${file.name}: Parse error - ${err}`)
         }
       }
 
@@ -194,11 +204,14 @@ export function UploadFinanceWizard({
 
       newData.lastUpdated = new Date().toISOString()
 
-      await saveFinanceData(newData)
+      // Save to company dataset
+      await saveCompanyDataset(newData, uploadedFiles)
+
       setUploadStatus(newUploadStatus)
       setErrors(errorMessages)
 
       if (processedTypes.length > 0) {
+        await loadDataset()
         setTimeout(() => {
           onSuccess()
           handleClose()
@@ -279,15 +292,16 @@ export function UploadFinanceWizard({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Upload Financial Data</DialogTitle>
+          <DialogTitle>Manage Financial Data</DialogTitle>
           <DialogDescription>
-            Upload CSV files from Tabin POS and your bank statements (Restaurant, Caravan, E-commerce). All files will be automatically detected and processed.
+            Upload all CSV files from Tabin POS (Sales_By_*.csv) and your bank statements (Hot-Mexican-*.csv, MEXI-CAN-*.csv). All files will be processed together as one company dataset.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
+
           {/* Drag and Drop Zone */}
           <div
             onDragEnter={handleDragEnter}
@@ -306,7 +320,7 @@ export function UploadFinanceWizard({
                 {isDragging ? 'Drop files here' : 'Drag & Drop CSV Files'}
               </h3>
               <p className="text-sm text-muted-foreground">
-                Drop all 7 CSV files or browse to select them
+                Upload all 6 files together (4 POS sales + 2 bank statements)
               </p>
               <input
                 ref={fileInputRef}
@@ -333,30 +347,32 @@ export function UploadFinanceWizard({
           </div>
 
           {/* Upload Status */}
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Files Status:</h4>
-            <div className="grid grid-cols-2 gap-2">
-              {csvTypes.map((type) => (
-                <div
-                  key={type.key}
-                  className={`flex items-center space-x-2 p-2 rounded-md border text-sm ${
-                    uploadStatus[type.key]
-                      ? 'bg-foreground/5 border-foreground/20'
-                      : 'bg-muted/50 border-muted'
-                  }`}
-                >
-                  {uploadStatus[type.key] ? (
-                    <CheckCircle2 className="h-4 w-4 text-foreground" />
-                  ) : (
-                    <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/30" />
-                  )}
-                  <span className={uploadStatus[type.key] ? 'font-medium' : 'text-muted-foreground'}>
-                    {type.label}
-                  </span>
-                </div>
-              ))}
+          {Object.values(uploadStatus).some(v => v) && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Files Status:</h4>
+              <div className="grid grid-cols-2 gap-2">
+                {csvTypes.map((type) => (
+                  <div
+                    key={type.key}
+                    className={`flex items-center space-x-2 p-2 rounded-md border text-sm ${
+                      uploadStatus[type.key]
+                        ? 'bg-foreground/5 border-foreground/20'
+                        : 'bg-muted/50 border-muted'
+                    }`}
+                  >
+                    {uploadStatus[type.key] ? (
+                      <CheckCircle2 className="h-4 w-4 text-foreground" />
+                    ) : (
+                      <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/30" />
+                    )}
+                    <span className={uploadStatus[type.key] ? 'font-medium' : 'text-muted-foreground'}>
+                      {type.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Errors */}
           {errors.length > 0 && (
@@ -372,6 +388,19 @@ export function UploadFinanceWizard({
               </ul>
             </div>
           )}
+
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Current Dataset</span>
+            </div>
+          </div>
+
+          {/* Dataset Cards */}
+          <DatasetCards dataset={dataset} onDatasetDeleted={loadDataset} />
         </div>
       </DialogContent>
     </Dialog>

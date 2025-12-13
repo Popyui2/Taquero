@@ -166,6 +166,7 @@ export interface DateRangeFilter {
 export interface FinanceStore {
   id: string // 'current' - single record
   monthlyData: MonthlyFinanceData[]
+  currentDataset?: CompanyDataset // New: Single company dataset
   lastCalculated: string
 }
 
@@ -173,4 +174,22 @@ export interface MonthlyFinanceData {
   month: string // Format: 'YYYY-MM' (e.g., '2024-12')
   data: ImportedData
   uploadedAt: string
+}
+
+export interface CompanyDataset {
+  id: string
+  data: ImportedData
+  uploadedAt: string
+  files: UploadedFileInfo[]
+  stats: {
+    totalTransactions: number
+    totalRevenue: number
+    datesCovered: number
+  }
+}
+
+export interface UploadedFileInfo {
+  name: string
+  type: 'POS' | 'Bank'
+  rows: number
 }
