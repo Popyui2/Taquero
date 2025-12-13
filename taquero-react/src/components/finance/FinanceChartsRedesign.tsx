@@ -33,9 +33,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { FileText, TrendingUp, TrendingDown, DollarSign } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { FileText, TrendingUp, TrendingDown, DollarSign, ChevronDown } from 'lucide-react'
 import type { DashboardMetrics, ImportedData } from '@/types/finance'
-import { format, startOfWeek, endOfWeek, startOfMonth, differenceInDays } from 'date-fns'
+import { format, startOfWeek, endOfWeek, startOfMonth, startOfQuarter, endOfQuarter, differenceInDays } from 'date-fns'
 
 interface FinanceChartsRedesignProps {
   metrics: DashboardMetrics
@@ -46,7 +52,7 @@ interface FinanceChartsRedesignProps {
 
 const CATEGORY_COLORS = ['#ffffff', '#cccccc', '#999999', '#666666', '#444444']
 
-type AggregationType = 'daily' | 'weekly' | 'monthly'
+type AggregationType = 'weekly' | 'monthly' | 'quarterly'
 
 export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-month', heroOnly = false }: FinanceChartsRedesignProps) {
   // Toggle states for Makings/Losses/Net
@@ -54,23 +60,8 @@ export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-mo
   const [showLosses, setShowLosses] = useState(true)
   const [showNet, setShowNet] = useState(true)
 
-  // Toggle between weekly and monthly view
+  // Toggle between aggregation views
   const [aggregationType, setAggregationType] = useState<AggregationType>('weekly')
-
-  // Ref for scrollable container
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-
-  // Scroll to the right (newest date) when switching to daily view
-  useEffect(() => {
-    if (aggregationType === 'daily' && scrollContainerRef.current) {
-      // Small delay to ensure the chart has rendered
-      setTimeout(() => {
-        if (scrollContainerRef.current) {
-          scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth
-        }
-      }, 100)
-    }
-  }, [aggregationType, data])
 
   // Table dialog state
   const [showTableDialog, setShowTableDialog] = useState(false)
@@ -106,17 +97,7 @@ export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-mo
     // Aggregate based on type
     let aggregatedData: { date: string; net: number; income: number; expenses: number; fullDate: Date; endDate?: Date }[] = []
 
-    if (aggregationType === 'daily') {
-      aggregatedData = Object.values(dailyTotals)
-        .map(values => ({
-          date: format(values.date, 'MMM d'),
-          fullDate: values.date,
-          net: values.income - values.expenses,
-          income: values.income,
-          expenses: values.expenses,
-        }))
-        .sort((a, b) => a.fullDate.getTime() - b.fullDate.getTime())
-    } else if (aggregationType === 'weekly') {
+    if (aggregationType === 'weekly') {
       const weeklyTotals: { [key: string]: { income: number; expenses: number; date: Date } } = {}
 
       Object.values(dailyTotals).forEach(({ income, expenses, date }) => {
@@ -166,6 +147,35 @@ export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-mo
       aggregatedData = Object.values(monthlyTotals)
         .map(values => ({
           date: format(values.date, 'MMM yyyy'),
+          fullDate: values.date,
+          endDate: values.lastDay,
+          net: values.income - values.expenses,
+          income: values.income,
+          expenses: values.expenses,
+        }))
+        .sort((a, b) => a.fullDate.getTime() - b.fullDate.getTime())
+    } else if (aggregationType === 'quarterly') {
+      const quarterlyTotals: { [key: string]: { income: number; expenses: number; date: Date; lastDay: Date } } = {}
+
+      Object.values(dailyTotals).forEach(({ income, expenses, date }) => {
+        const quarterStart = startOfQuarter(date)
+        const quarterKey = format(quarterStart, 'yyyy-QQQ')
+
+        if (!quarterlyTotals[quarterKey]) {
+          quarterlyTotals[quarterKey] = { income: 0, expenses: 0, date: quarterStart, lastDay: date }
+        }
+
+        quarterlyTotals[quarterKey].income += income
+        quarterlyTotals[quarterKey].expenses += expenses
+        // Track the last day with data in this quarter
+        if (date > quarterlyTotals[quarterKey].lastDay) {
+          quarterlyTotals[quarterKey].lastDay = date
+        }
+      })
+
+      aggregatedData = Object.values(quarterlyTotals)
+        .map(values => ({
+          date: `Q${Math.floor(values.date.getMonth() / 3) + 1} ${format(values.date, 'yyyy')}`,
           fullDate: values.date,
           endDate: values.lastDay,
           net: values.income - values.expenses,
@@ -394,7 +404,7 @@ export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-mo
       return `${sign}${percent.toFixed(1)}%`
     }
 
-    const periodLabel = aggregationType === 'daily' ? 'day' : aggregationType === 'weekly' ? 'week' : 'month'
+    const periodLabel = aggregationType === 'weekly' ? 'week' : aggregationType === 'monthly' ? 'month' : 'quarter'
 
     // Format date label based on aggregation type
     let dateLabel = label
@@ -403,6 +413,11 @@ export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-mo
       const startDate = format(data.fullDate, 'dd/MM/yy')
       const endDate = format(data.endDate, 'dd/MM/yy')
       dateLabel = `${startDate} - ${endDate}`
+    } else if (aggregationType === 'quarterly' && data.fullDate && data.endDate) {
+      // Format as dd/mm/yy - dd/mm/yy for quarterly view
+      const startDate = format(data.fullDate, 'dd/MM/yy')
+      const endDate = format(data.endDate, 'dd/MM/yy')
+      dateLabel = `${label} (${startDate} - ${endDate})`
     }
 
     return (
@@ -447,30 +462,26 @@ export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-mo
               <CardTitle className="text-4xl">Makings and Losses</CardTitle>
             </div>
 
-            {/* Aggregation Type Toggle */}
-            <div className="flex gap-2">
-              <Button
-                variant={aggregationType === 'daily' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setAggregationType('daily')}
-              >
-                Daily
-              </Button>
-              <Button
-                variant={aggregationType === 'weekly' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setAggregationType('weekly')}
-              >
-                Weekly
-              </Button>
-              <Button
-                variant={aggregationType === 'monthly' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setAggregationType('monthly')}
-              >
-                Monthly
-              </Button>
-            </div>
+            {/* Aggregation Type Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="min-w-[120px] justify-between">
+                  {aggregationType === 'weekly' ? 'Weekly' : aggregationType === 'monthly' ? 'Monthly' : 'Quarterly'}
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setAggregationType('weekly')}>
+                  Weekly
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setAggregationType('monthly')}>
+                  Monthly
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setAggregationType('quarterly')}>
+                  Quarterly
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Data Toggle Buttons */}
@@ -507,213 +518,99 @@ export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-mo
           </div>
         </CardHeader>
         <CardContent>
-          {/* Daily view with horizontal scroll */}
-          {aggregationType === 'daily' ? (
-            <div className="relative">
-              {/* Left gradient overlay to highlight Y-axis area */}
-              <div
-                className="absolute left-0 top-0 bottom-0 w-20 pointer-events-none z-10"
-                style={{
-                  background: 'linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, transparent 100%)'
-                }}
-              />
-              <div
-                ref={scrollContainerRef}
-                className="overflow-x-auto overflow-y-hidden cursor-pointer"
-                style={{
-                  scrollbarWidth: 'thin',
-                  scrollbarColor: 'rgba(255,255,255,0.3) transparent'
-                }}
+          {/* Weekly/Monthly/Quarterly view */}
+          <div className="cursor-pointer">
+            <ResponsiveContainer width="100%" height={heroOnly ? 600 : 400}>
+              <AreaChart
+                data={chartData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+                onClick={handleChartClick}
               >
-                <div style={{ width: `${Math.max(chartData.length * 100, 1200)}px`, minWidth: '100%' }}>
-                  <ResponsiveContainer width="100%" height={heroOnly ? 600 : 400}>
-                    <AreaChart
-                      data={chartData}
-                      margin={{ top: 20, right: 30, left: 80, bottom: 70 }}
-                      onClick={handleChartClick}
-                    >
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                    <XAxis
-                      dataKey="date"
-                      stroke="hsl(var(--muted-foreground))"
-                      fontSize={11}
-                      tickLine={false}
-                      angle={-45}
-                      textAnchor="end"
-                      height={70}
-                    />
-                    <YAxis
-                      domain={yAxisDomain}
-                      stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
-                      tickLine={false}
-                      tickFormatter={(value) => {
-                        if (Math.abs(value) >= 1000) {
-                          return `$${(value / 1000).toFixed(0)}k`
-                        }
-                        return `$${value.toLocaleString()}`
-                      }}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-
-                    {/* Zero reference line - only show if domain crosses zero */}
-                    {yAxisDomain[0] < 0 && yAxisDomain[1] > 0 && (
-                      <ReferenceLine y={0} stroke="#666" strokeDasharray="3 3" strokeWidth={1} />
-                    )}
-
-                    {/* Average line */}
-                    <ReferenceLine
-                      y={averageNet}
-                      stroke="#888"
-                      strokeDasharray="5 5"
-                      strokeWidth={2}
-                      label={{
-                        value: `Avg: $${averageNet.toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
-                        position: averageNet > 0 ? 'insideTopRight' : 'insideBottomRight',
-                        fill: '#888',
-                        fontSize: 11
-                      }}
-                    />
-
-                    {/* Makings (Income) - White area */}
-                    {showMakings && (
-                      <Area
-                        type="monotone"
-                        dataKey="income"
-                        stroke="#ffffff"
-                        fill="#ffffff"
-                        fillOpacity={0.3}
-                        strokeWidth={2}
-                        name="Makings"
-                      />
-                    )}
-
-                    {/* Losses (Expenses as negative) - Red area */}
-                    {showLosses && (
-                      <Area
-                        type="monotone"
-                        dataKey="lossesNegative"
-                        stroke="#ef4444"
-                        fill="#ef4444"
-                        fillOpacity={0.3}
-                        strokeWidth={2}
-                        name="Losses"
-                      />
-                    )}
-
-                    {/* Net Cash Flow - Green line */}
-                    {showNet && (
-                      <Line
-                        type="monotone"
-                        dataKey="net"
-                        stroke="#10b981"
-                        strokeWidth={2}
-                        dot={false}
-                        name="Net"
-                      />
-                    )}
-
-                      <Legend />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
-          ) : (
-            // Weekly/Monthly view - no scroll
-            <div className="cursor-pointer">
-              <ResponsiveContainer width="100%" height={heroOnly ? 600 : 400}>
-                <AreaChart
-                  data={chartData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
-                  onClick={handleChartClick}
-                >
-              <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-              <XAxis
-                dataKey="date"
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={11}
-                tickLine={false}
-                angle={-45}
-                textAnchor="end"
-                height={70}
-              />
-              <YAxis
-                domain={yAxisDomain}
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-                tickLine={false}
-                tickFormatter={(value) => {
-                  if (Math.abs(value) >= 1000) {
-                    return `$${(value / 1000).toFixed(0)}k`
-                  }
-                  return `$${value.toLocaleString()}`
-                }}
-              />
-              <Tooltip content={<CustomTooltip />} />
-
-              {/* Zero reference line - only show if domain crosses zero */}
-              {yAxisDomain[0] < 0 && yAxisDomain[1] > 0 && (
-                <ReferenceLine y={0} stroke="#666" strokeDasharray="3 3" strokeWidth={1} />
-              )}
-
-              {/* Average line */}
-              <ReferenceLine
-                y={averageNet}
-                stroke="#888"
-                strokeDasharray="5 5"
-                strokeWidth={2}
-                label={{
-                  value: `Avg: $${averageNet.toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
-                  position: averageNet > 0 ? 'insideTopRight' : 'insideBottomRight',
-                  fill: '#888',
-                  fontSize: 11
-                }}
-              />
-
-              {/* Makings (Income) - White area */}
-              {showMakings && (
-                <Area
-                  type="monotone"
-                  dataKey="income"
-                  stroke="#ffffff"
-                  fill="#ffffff"
-                  fillOpacity={0.3}
-                  strokeWidth={2}
-                  name="Makings"
+                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                <XAxis
+                  dataKey="date"
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={11}
+                  tickLine={false}
+                  angle={-45}
+                  textAnchor="end"
+                  height={70}
                 />
-              )}
-
-              {/* Losses (Expenses as negative) - Red area */}
-              {showLosses && (
-                <Area
-                  type="monotone"
-                  dataKey="lossesNegative"
-                  stroke="#ef4444"
-                  fill="#ef4444"
-                  fillOpacity={0.3}
-                  strokeWidth={2}
-                  name="Losses"
+                <YAxis
+                  domain={yAxisDomain}
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                  tickLine={false}
+                  tickFormatter={(value) => {
+                    if (Math.abs(value) >= 1000) {
+                      return `$${(value / 1000).toFixed(0)}k`
+                    }
+                    return `$${value.toLocaleString()}`
+                  }}
                 />
-              )}
+                <Tooltip content={<CustomTooltip />} />
 
-              {/* Net Cash Flow - Green line */}
-              {showNet && (
-                <Line
-                  type="monotone"
-                  dataKey="net"
-                  stroke="#10b981"
+                {/* Zero reference line - only show if domain crosses zero */}
+                {yAxisDomain[0] < 0 && yAxisDomain[1] > 0 && (
+                  <ReferenceLine y={0} stroke="#666" strokeDasharray="3 3" strokeWidth={1} />
+                )}
+
+                {/* Average line */}
+                <ReferenceLine
+                  y={averageNet}
+                  stroke="#888"
+                  strokeDasharray="5 5"
                   strokeWidth={2}
-                  dot={false}
-                  name="Net"
+                  label={{
+                    value: `Avg: $${averageNet.toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
+                    position: averageNet > 0 ? 'insideTopRight' : 'insideBottomRight',
+                    fill: '#888',
+                    fontSize: 11
+                  }}
                 />
-              )}
 
-              <Legend />
-            </AreaChart>
-          </ResponsiveContainer>
-            </div>
-          )}
+                {/* Makings (Income) - White area */}
+                {showMakings && (
+                  <Area
+                    type="monotone"
+                    dataKey="income"
+                    stroke="#ffffff"
+                    fill="#ffffff"
+                    fillOpacity={0.3}
+                    strokeWidth={2}
+                    name="Makings"
+                  />
+                )}
+
+                {/* Losses (Expenses as negative) - Red area */}
+                {showLosses && (
+                  <Area
+                    type="monotone"
+                    dataKey="lossesNegative"
+                    stroke="#ef4444"
+                    fill="#ef4444"
+                    fillOpacity={0.3}
+                    strokeWidth={2}
+                    name="Losses"
+                  />
+                )}
+
+                {/* Net Cash Flow - Green line */}
+                {showNet && (
+                  <Line
+                    type="monotone"
+                    dataKey="net"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    dot={false}
+                    name="Net"
+                  />
+                )}
+
+                <Legend />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </CardContent>
 
         {/* Data Table Dialog */}
@@ -735,7 +632,7 @@ export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-mo
                 </>
               ) : (
                 <DialogTitle>
-                  {aggregationType === 'daily' ? 'Daily' : aggregationType === 'weekly' ? 'Weekly' : 'Monthly'} Net Cash Flow Data
+                  {aggregationType === 'weekly' ? 'Weekly' : aggregationType === 'monthly' ? 'Monthly' : 'Quarterly'} Net Cash Flow Data
                 </DialogTitle>
               )}
             </DialogHeader>

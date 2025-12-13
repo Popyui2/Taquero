@@ -135,6 +135,7 @@ export interface DashboardMetrics {
   averageOrderValue: number
   posRevenue: number
   uberRevenue: number
+  delivereasyRevenue: number
   totalExpenses: number
   topProducts: ProductPerformance[]
   topCategories: CategoryPerformance[]

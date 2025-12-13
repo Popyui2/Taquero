@@ -164,18 +164,18 @@ export function FinanceRedesign() {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">Delivereasy</p>
-                        <p className="text-2xl font-bold">{formatCurrency(0)}</p>
+                        <p className="text-2xl font-bold">{formatCurrency(metrics.delivereasyRevenue)}</p>
                       </div>
                     </div>
                     <Badge variant="outline" className="text-base px-3 py-1">
-                      0.0%
+                      {((metrics.delivereasyRevenue / metrics.grossSales) * 100).toFixed(1)}%
                     </Badge>
                   </div>
                   {/* Progress bar */}
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <div
                       className="h-full transition-all duration-500"
-                      style={{ width: '0%', backgroundColor: '#f2f542' }}
+                      style={{ width: `${(metrics.delivereasyRevenue / metrics.grossSales) * 100}%`, backgroundColor: '#f2f542' }}
                     />
                   </div>
                 </div>

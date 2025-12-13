@@ -184,8 +184,21 @@ export function calculateMetrics(data: ImportedData): DashboardMetrics {
     .filter((tx) => tx.type === 'income' && tx.payee.toUpperCase().includes('UBER'))
     .reduce((sum, tx) => sum + tx.amount, 0)
 
-  // 3. POS Revenue (from Tabin data)
-  const posRevenue = grossSales
+  // 2b. Calculate Delivereasy Revenue from bank transactions
+  const delivereasyRevenue = data.bankTransactions
+    .filter((tx) => tx.type === 'income' && tx.payee.toUpperCase().includes('DELIVEREASY'))
+    .reduce((sum, tx) => sum + tx.amount, 0)
+
+  // 3. POS Revenue from bank transactions
+  // HOT-MEXICAN account: "HOT LIKE A MEXICAN" (EFTPOS processing)
+  // MEXI-CAN account: "MEXICAN QBT"
+  const posRevenue = data.bankTransactions
+    .filter((tx) =>
+      tx.type === 'income' &&
+      (tx.payee.toUpperCase().includes('HOT LIKE A MEXICAN') ||
+       tx.payee.toUpperCase().includes('MEXICAN QBT'))
+    )
+    .reduce((sum, tx) => sum + tx.amount, 0)
 
   // 4. Total Expenses from bank
   const totalExpenses = data.bankTransactions
@@ -265,6 +278,7 @@ export function calculateMetrics(data: ImportedData): DashboardMetrics {
     averageOrderValue,
     posRevenue,
     uberRevenue,
+    delivereasyRevenue,
     totalExpenses,
     topProducts,
     topCategories,
