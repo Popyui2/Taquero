@@ -146,6 +146,14 @@ export interface DashboardMetrics {
     dailyOrders: number
     avgOrderValue: number
   }
+  healthScore: {
+    score: number
+    status: string
+    emoji: string
+    color: string
+    insights: string[]
+    breakdown: { metric: string; score: number; weight: number; actualValue: string; emoji: string }[]
+  }
   comparisonMetrics?: {
     grossSalesChange: number
     netCashFlowChange: number

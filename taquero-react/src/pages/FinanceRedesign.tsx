@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Upload, TrendingUp, TrendingDown, DollarSign, Utensils, ShoppingBag, ShoppingCart, Loader2, Sparkles, Bot, Copy, Check, Calendar as CalendarIcon, ChevronDown } from 'lucide-react'
+import { Upload, TrendingUp, TrendingDown, DollarSign, Utensils, ShoppingBag, ShoppingCart, Loader2, Sparkles, Bot, Copy, Check, Calendar as CalendarIcon, ChevronDown, HelpCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -44,6 +44,9 @@ export function FinanceRedesign() {
   const [aiExportDateRange, setAiExportDateRange] = useState<DateRange | undefined>()
   const [generatedReport, setGeneratedReport] = useState<string>('')
   const [reportCopied, setReportCopied] = useState(false)
+
+  // Health Score Explanation Dialog
+  const [showHealthScoreDialog, setShowHealthScoreDialog] = useState(false)
 
   useEffect(() => {
     loadFinanceData()
@@ -478,64 +481,114 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
             </CardContent>
           </Card>
 
-          {/* Period Averages */}
-          <Card className="overflow-hidden">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-2xl">Period Averages</CardTitle>
-              <CardDescription>Average daily performance metrics</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Avg Daily Revenue */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                      <TrendingUp className="h-6 w-6 text-blue-500" />
+          {/* Period Averages + Business Health Score */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6">
+            {/* Period Averages */}
+            <Card className="overflow-hidden">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-2xl">Period Averages</CardTitle>
+                <CardDescription>Average daily performance metrics</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Avg Daily Revenue */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                        <TrendingUp className="h-6 w-6 text-blue-500" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-muted-foreground">Avg Daily Revenue</p>
+                        <p className="text-2xl font-bold">
+                          ${metrics.weeklyAverages.dailyRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-muted-foreground">Avg Daily Revenue</p>
-                      <p className="text-2xl font-bold">
-                        ${metrics.weeklyAverages.dailyRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-                      </p>
-                    </div>
+                    <p className="text-xs text-muted-foreground ml-15">per day average</p>
                   </div>
-                  <p className="text-xs text-muted-foreground ml-15">per day average</p>
-                </div>
 
-                {/* Avg Daily Orders */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                      <ShoppingCart className="h-6 w-6 text-orange-500" />
+                  {/* Avg Daily Orders */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                        <ShoppingCart className="h-6 w-6 text-orange-500" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-muted-foreground">Avg Daily Orders</p>
+                        <p className="text-2xl font-bold">
+                          {metrics.weeklyAverages.dailyOrders.toFixed(0)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-muted-foreground">Avg Daily Orders</p>
-                      <p className="text-2xl font-bold">
-                        {metrics.weeklyAverages.dailyOrders.toFixed(0)}
-                      </p>
-                    </div>
+                    <p className="text-xs text-muted-foreground ml-15">orders per day</p>
                   </div>
-                  <p className="text-xs text-muted-foreground ml-15">orders per day</p>
-                </div>
 
-                {/* Avg Order Value */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                      <DollarSign className="h-6 w-6 text-emerald-500" />
+                  {/* Avg Order Value */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                        <DollarSign className="h-6 w-6 text-emerald-500" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-muted-foreground">Avg Order Value</p>
+                        <p className="text-2xl font-bold">
+                          ${metrics.weeklyAverages.avgOrderValue.toFixed(2)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-muted-foreground">Avg Order Value</p>
-                      <p className="text-2xl font-bold">
-                        ${metrics.weeklyAverages.avgOrderValue.toFixed(2)}
-                      </p>
-                    </div>
+                    <p className="text-xs text-muted-foreground ml-15">per order average</p>
                   </div>
-                  <p className="text-xs text-muted-foreground ml-15">per order average</p>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            {/* Business Health Score */}
+            <Card className="overflow-hidden lg:w-[320px]">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xl">Period Health Score</CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setShowHealthScoreDialog(true)}
+                    title="How is this calculated?"
+                  >
+                    <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-center space-y-4">
+                  {/* Large emoji */}
+                  <div className="text-7xl leading-none">{metrics.healthScore.emoji}</div>
+
+                  {/* Score */}
+                  <div>
+                    <div className={`text-5xl font-bold ${metrics.healthScore.color}`}>
+                      {metrics.healthScore.score.toFixed(1)}
+                    </div>
+                    <div className="text-sm text-muted-foreground">/10</div>
+                  </div>
+
+                  {/* Status badge */}
+                  <Badge
+                    variant="outline"
+                    className={`text-base px-4 py-1 ${metrics.healthScore.color} border-current`}
+                  >
+                    {metrics.healthScore.status}
+                  </Badge>
+
+                  {/* Key insights */}
+                  <div className="pt-2 space-y-2 text-left text-sm border-t">
+                    {metrics.healthScore.insights.map((insight, idx) => (
+                      <p key={idx} className="leading-tight">{insight}</p>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* NET CASH FLOW - HERO CHART (PC Optimized) */}
           <div className="w-full">
@@ -799,6 +852,222 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
                 <p className="text-sm">Click "Generate Report" to create your AI analysis prompt</p>
               </div>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Health Score Explanation Dialog */}
+      <Dialog open={showHealthScoreDialog} onOpenChange={setShowHealthScoreDialog}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl">How is the Health Score Calculated?</DialogTitle>
+            <DialogDescription className="text-base pt-2">
+              Your business health score is calculated using a weighted formula based on 3 key metrics from your bank statements
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 pt-4">
+            {/* Data Sources */}
+            <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
+              <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                Data Sources
+              </h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                The health score is calculated from your uploaded financial data:
+              </p>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-start gap-2">
+                  <span className="font-medium min-w-[140px]">Bank Statements:</span>
+                  <span className="text-muted-foreground">
+                    All metrics calculated from bank transaction data including cash flow, profit margins, and revenue from all sources (POS deposits via EFTPOS, Uber Eats, Delivereasy)
+                  </span>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-blue-500/20">
+                💡 The score updates automatically based on the time period selected in the "Viewing" filter above
+              </p>
+            </div>
+
+            {/* Current Score Display */}
+            {metrics && (
+              <div className="p-4 bg-muted/30 rounded-lg border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Your Current Score</p>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-4xl">{metrics.healthScore.emoji}</span>
+                      <div>
+                        <p className={`text-3xl font-bold ${metrics.healthScore.color}`}>
+                          {metrics.healthScore.score.toFixed(1)}/10
+                        </p>
+                        <Badge variant="outline" className={`${metrics.healthScore.color} border-current`}>
+                          {metrics.healthScore.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Score Breakdown */}
+            {metrics && (
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm">Score Breakdown</h3>
+                {metrics.healthScore.breakdown.map((item, idx) => (
+                  <div key={idx} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{item.emoji}</span>
+                          <span className="font-medium">{item.metric}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground ml-8">Actual: {item.actualValue}</span>
+                      </div>
+                      <span className="text-muted-foreground text-right">
+                        {item.score.toFixed(1)}/10 × {item.weight}% = {((item.score * item.weight) / 100).toFixed(2)} pts
+                      </span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary transition-all"
+                        style={{ width: `${(item.score / 10) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Component Explanations */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-sm">Component Details</h3>
+
+              {/* Profit Margin */}
+              <div className="space-y-2 p-3 bg-muted/30 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-sm">1. Profit Margin</h4>
+                  <Badge variant="outline">40% weight</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Measures your net cash flow as a percentage of total revenue. Based on actual NZ restaurant industry benchmarks.
+                </p>
+                <div className="text-xs space-y-1 pt-2 border-t">
+                  <p>• 12%+ margin = 9-10 pts 😄 Excellent (well above industry)</p>
+                  <p>• 8-12% margin = 7-9 pts 🙂 Good (industry standard)</p>
+                  <p>• 5-8% margin = 5-7 pts 😐 Fair (below average but viable)</p>
+                  <p>• 3-5% margin = 3-5 pts 😟 Concerning (struggling)</p>
+                  <p>• 0-3% margin = 0-3 pts 😢 Critical (barely surviving)</p>
+                  <p>• Negative margin = 0 pts 😡 Failed</p>
+                </div>
+              </div>
+
+              {/* Revenue Strength */}
+              <div className="space-y-2 p-3 bg-muted/30 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-sm">2. Revenue Strength</h4>
+                  <Badge variant="outline">35% weight</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Evaluates daily revenue performance based on Hot Like A Mexican's actual business targets (NZD).
+                </p>
+                <div className="text-xs space-y-1 pt-2 border-t">
+                  <p>• $4,000+ = 10 pts 🤩 Excellent! ($5,000+ = Legendary but same grade)</p>
+                  <p>• $3,500-4,000 = 9-10 pts 😄 Amazing</p>
+                  <p>• $3,000-3,500 = 8-9 pts 😊 Very Good</p>
+                  <p>• $2,500-3,000 = 7-8 pts 🙂 Good</p>
+                  <p>• $2,000-2,500 = 6-7 pts 😐 Average</p>
+                  <p>• $1,500-2,000 = 5-6 pts 😑 Below Average</p>
+                  <p>• $1,000-1,500 = 4-5 pts 😒 Low</p>
+                  <p>• $600-1,000 = 3-4 pts 😠 Bad</p>
+                  <p>• Below $600 = 0-3 pts 😤 Failed</p>
+                </div>
+              </div>
+
+              {/* Cash Flow Health */}
+              <div className="space-y-2 p-3 bg-muted/30 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-sm">3. Cash Flow Health</h4>
+                  <Badge variant="outline">25% weight</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Measures cash flow strength as a percentage of revenue. Cash Flow = All Income - All Expenses.
+                </p>
+                <div className="text-xs space-y-1 pt-2 border-t">
+                  <p>• 15%+ ratio = 10 pts 😄 Excellent</p>
+                  <p>• 10-15% ratio = 9 pts 🙂 Great</p>
+                  <p>• 8-10% ratio = 8 pts 😊 Good</p>
+                  <p>• 5-8% ratio = 7 pts 🙂 Satisfactory</p>
+                  <p>• 2-5% ratio = 6 pts 😐 Pass</p>
+                  <p>• 0-2% positive = 5 pts 😔 Failed (barely positive)</p>
+                  <p>• Negative = 0 pts 😢 Critical</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Status Ranges */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm">Score Guide (Mexican Grading System)</h3>
+              <p className="text-xs text-muted-foreground">0-5 = Failed | 6-10 = Passing</p>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold text-green-600">10</span>
+                  <span className="text-2xl">🤩</span>
+                  <span className="text-muted-foreground">Excellent</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold text-green-500">9</span>
+                  <span className="text-2xl">😄</span>
+                  <span className="text-muted-foreground">Great</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold text-lime-500">8</span>
+                  <span className="text-2xl">😊</span>
+                  <span className="text-muted-foreground">Good</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold text-yellow-500">7</span>
+                  <span className="text-2xl">🙂</span>
+                  <span className="text-muted-foreground">Satisfactory</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold text-yellow-600">6</span>
+                  <span className="text-2xl">😐</span>
+                  <span className="text-muted-foreground">Pass</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold text-orange-500">5</span>
+                  <span className="text-2xl">😑</span>
+                  <span className="text-muted-foreground">Failed</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold text-orange-600">4</span>
+                  <span className="text-2xl">😒</span>
+                  <span className="text-muted-foreground">Failed</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold text-red-500">3</span>
+                  <span className="text-2xl">😠</span>
+                  <span className="text-muted-foreground">Failed</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold text-red-600">2</span>
+                  <span className="text-2xl">😤</span>
+                  <span className="text-muted-foreground">Failed</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold text-red-600">1</span>
+                  <span className="text-2xl">😡</span>
+                  <span className="text-muted-foreground">Failed</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold text-red-700">0</span>
+                  <span className="text-2xl">👿</span>
+                  <span className="text-muted-foreground">Failed</span>
+                </div>
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

@@ -175,6 +175,196 @@ export async function hasFinanceData(): Promise<boolean> {
 }
 
 /**
+ * Calculate business health score (0-10)
+ * Uses ONLY bank statement data to avoid issues with incomplete POS data
+ */
+function calculateHealthScore(params: {
+  netCashFlow: number
+  totalRevenue: number
+  dailyRevenue: number
+}): {
+  score: number
+  status: string
+  emoji: string
+  color: string
+  insights: string[]
+  breakdown: { metric: string; score: number; weight: number }[]
+} {
+  const { netCashFlow, totalRevenue, dailyRevenue } = params
+
+  // 1. Profit Margin Score (40% weight) - Most critical
+  // Based on actual NZ restaurant industry benchmarks
+  const profitMargin = totalRevenue > 0 ? (netCashFlow / totalRevenue) * 100 : 0
+  let profitScore = 0
+
+  if (profitMargin < 0) {
+    profitScore = 0 // Failed - negative margin
+  } else if (profitMargin >= 12) {
+    // 12%+: Excellent - well above industry (9-10 pts)
+    profitScore = 9 + Math.min(1, (profitMargin - 12) / 8) // Reaches 10 at 20%+
+  } else if (profitMargin >= 8) {
+    // 8-12%: Good - industry standard (7-9 pts)
+    profitScore = 7 + ((profitMargin - 8) / 4) * 2
+  } else if (profitMargin >= 5) {
+    // 5-8%: Fair - below average but viable (5-7 pts)
+    profitScore = 5 + ((profitMargin - 5) / 3) * 2
+  } else if (profitMargin >= 3) {
+    // 3-5%: Concerning - struggling (3-5 pts)
+    profitScore = 3 + ((profitMargin - 3) / 2) * 2
+  } else {
+    // 0-3%: Critical - barely surviving (0-3 pts)
+    profitScore = (profitMargin / 3) * 3
+  }
+
+  // 2. Revenue Strength Score (35% weight)
+  // Based on Hot Like A Mexican's actual performance targets (NZD)
+  // More lenient scoring with $4,000+ as the ceiling for excellent days
+  let revenueScore = 0
+  if (dailyRevenue >= 4000) {
+    revenueScore = 10 // Excellent/Legendary days! ($5,000+ are rare legendary days but same grade)
+  } else if (dailyRevenue >= 3500) {
+    // 3500-4000: Amazing (9-10 pts)
+    revenueScore = 9 + ((dailyRevenue - 3500) / 500)
+  } else if (dailyRevenue >= 3000) {
+    // 3000-3500: Very Good (8-9 pts)
+    revenueScore = 8 + ((dailyRevenue - 3000) / 500)
+  } else if (dailyRevenue >= 2500) {
+    // 2500-3000: Good (7-8 pts)
+    revenueScore = 7 + ((dailyRevenue - 2500) / 500)
+  } else if (dailyRevenue >= 2000) {
+    // 2000-2500: Average (6-7 pts)
+    revenueScore = 6 + ((dailyRevenue - 2000) / 500)
+  } else if (dailyRevenue >= 1500) {
+    // 1500-2000: Below Average (5-6 pts)
+    revenueScore = 5 + ((dailyRevenue - 1500) / 500)
+  } else if (dailyRevenue >= 1000) {
+    // 1000-1500: Low (4-5 pts)
+    revenueScore = 4 + ((dailyRevenue - 1000) / 500)
+  } else if (dailyRevenue >= 600) {
+    // 600-1000: Bad (3-4 pts)
+    revenueScore = 3 + ((dailyRevenue - 600) / 400)
+  } else {
+    // 0-600: Failed (0-3 pts, scaled)
+    revenueScore = (dailyRevenue / 600) * 3
+  }
+
+  // 3. Cash Flow Health Score (25% weight)
+  // More granular scoring based on cash flow strength
+  let cashFlowScore = 0
+  if (netCashFlow > 0) {
+    cashFlowScore = 6 // Base score for positive cash flow
+    const cashFlowRatio = totalRevenue > 0 ? (netCashFlow / totalRevenue) * 100 : 0
+
+    if (cashFlowRatio >= 15) {
+      cashFlowScore += 4 // 10 pts total - Excellent
+    } else if (cashFlowRatio >= 10) {
+      cashFlowScore += 3 // 9 pts total - Great
+    } else if (cashFlowRatio >= 8) {
+      cashFlowScore += 2 // 8 pts total - Good
+    } else if (cashFlowRatio >= 5) {
+      cashFlowScore += 1 // 7 pts total - Satisfactory
+    } else if (cashFlowRatio >= 2) {
+      cashFlowScore += 0 // 6 pts total - Pass
+    } else {
+      cashFlowScore -= 1 // 5 pts total - Failed (barely positive, 0-2%)
+    }
+  } else {
+    cashFlowScore = 0 // Negative cash flow is critical
+  }
+
+  // Calculate weighted final score (3 components only, using bank data)
+  const finalScore =
+    profitScore * 0.40 +
+    revenueScore * 0.35 +
+    cashFlowScore * 0.25
+
+  // Map score (0-10) to emoji, status, and color (Mexican grading system)
+  // 0-5 = Failed (demonic to neutral), 6-10 = Passing (gradually happier)
+  const scoreMapping = [
+    { emoji: '👿', status: 'Failed', color: 'text-red-700' },        // 0 - Demonic/Evil
+    { emoji: '😡', status: 'Failed', color: 'text-red-600' },        // 1 - Very angry
+    { emoji: '😤', status: 'Failed', color: 'text-red-600' },        // 2 - Angry
+    { emoji: '😠', status: 'Failed', color: 'text-red-500' },        // 3 - Angry
+    { emoji: '😒', status: 'Failed', color: 'text-orange-600' },     // 4 - Unamused
+    { emoji: '😑', status: 'Failed', color: 'text-orange-500' },     // 5 - Expressionless
+    { emoji: '😐', status: 'Pass', color: 'text-yellow-600' },       // 6 - Neutral (barely passing)
+    { emoji: '🙂', status: 'Satisfactory', color: 'text-yellow-500' }, // 7 - Slight smile
+    { emoji: '😊', status: 'Good', color: 'text-lime-500' },         // 8 - Smiling (good)
+    { emoji: '😄', status: 'Great', color: 'text-green-500' },       // 9 - Happy (great)
+    { emoji: '🤩', status: 'Excellent', color: 'text-green-600' },   // 10 - Star-struck (excellent)
+  ]
+
+  // Round score and clamp to 0-10
+  const roundedScore = Math.round(finalScore)
+  const clampedScore = Math.max(0, Math.min(10, roundedScore))
+
+  const { emoji, status, color } = scoreMapping[clampedScore]
+
+  // Generate insights based on scores
+  const insights: string[] = []
+
+  if (profitScore >= 7) {
+    insights.push(`✅ Strong profit margin (${profitMargin.toFixed(1)}%)`)
+  } else if (profitScore >= 4) {
+    insights.push(`⚠️ Profit margin needs improvement (${profitMargin.toFixed(1)}%)`)
+  } else {
+    insights.push(`🚨 Critical profit margin (${profitMargin.toFixed(1)}%)`)
+  }
+
+  if (netCashFlow > 0) {
+    insights.push('✅ Positive cash flow')
+  } else {
+    insights.push('🚨 Negative cash flow')
+  }
+
+  if (revenueScore >= 7) {
+    insights.push(`✅ Strong daily revenue ($${dailyRevenue.toFixed(0)}/day)`)
+  } else if (revenueScore >= 4) {
+    insights.push(`⚠️ Revenue below target ($${dailyRevenue.toFixed(0)}/day)`)
+  } else {
+    insights.push(`🚨 Low daily revenue ($${dailyRevenue.toFixed(0)}/day)`)
+  }
+
+  // Helper function to get emoji for a score
+  const getEmojiForScore = (score: number): string => {
+    const roundedScore = Math.round(score)
+    const clampedScore = Math.max(0, Math.min(10, roundedScore))
+    return scoreMapping[clampedScore].emoji
+  }
+
+  return {
+    score: finalScore,
+    status,
+    emoji,
+    color,
+    insights: insights.slice(0, 3), // Max 3 insights
+    breakdown: [
+      {
+        metric: 'Profit Margin',
+        score: profitScore,
+        weight: 40,
+        actualValue: `${profitMargin >= 0 ? '' : '-'}${Math.abs(profitMargin).toFixed(1)}%`,
+        emoji: getEmojiForScore(profitScore)
+      },
+      {
+        metric: 'Revenue Strength',
+        score: revenueScore,
+        weight: 35,
+        actualValue: `$${dailyRevenue.toFixed(0)}/day`,
+        emoji: getEmojiForScore(revenueScore)
+      },
+      {
+        metric: 'Cash Flow Health',
+        score: cashFlowScore,
+        weight: 25,
+        actualValue: `${netCashFlow >= 0 ? '+' : '-'}$${Math.abs(netCashFlow).toFixed(0)}`,
+        emoji: getEmojiForScore(cashFlowScore)
+      },
+    ],
+  }
+}
+
+/**
  * Calculate dashboard metrics from imported data
  */
 export function calculateMetrics(data: ImportedData): DashboardMetrics {
@@ -266,12 +456,36 @@ export function calculateMetrics(data: ImportedData): DashboardMetrics {
   })
 
   // 12. Weekly Averages
-  const daysInPeriod = data.salesByDay.length || 1
+  const posDaysInPeriod = data.salesByDay.length || 1
   const weeklyAverages = {
-    dailyRevenue: grossSales / daysInPeriod,
-    dailyOrders: totalOrders / daysInPeriod,
+    dailyRevenue: grossSales / posDaysInPeriod,
+    dailyOrders: totalOrders / posDaysInPeriod,
     avgOrderValue: averageOrderValue,
   }
+
+  // 13. Business Health Score (using only bank statement data)
+  const totalRevenue = posRevenue + uberRevenue + delivereasyRevenue
+
+  // Calculate actual days in period from bank transaction dates
+  let bankDaysInPeriod = 1
+  if (data.bankTransactions.length > 0) {
+    const dates = data.bankTransactions.map((tx) => {
+      // Parse date format "DD/MM/YY" (e.g., "01/11/25")
+      const [day, month, year] = tx.date.split('/')
+      const fullYear = parseInt(year) >= 50 ? 1900 + parseInt(year) : 2000 + parseInt(year)
+      return new Date(fullYear, parseInt(month) - 1, parseInt(day))
+    })
+    const minDate = new Date(Math.min(...dates.map(d => d.getTime())))
+    const maxDate = new Date(Math.max(...dates.map(d => d.getTime())))
+    bankDaysInPeriod = Math.max(1, Math.ceil((maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24)) + 1)
+  }
+
+  const bankDailyRevenue = totalRevenue / bankDaysInPeriod
+  const healthScore = calculateHealthScore({
+    netCashFlow,
+    totalRevenue,
+    dailyRevenue: bankDailyRevenue,
+  })
 
   return {
     grossSales,
@@ -287,6 +501,7 @@ export function calculateMetrics(data: ImportedData): DashboardMetrics {
     peakHours,
     ordersPerDay,
     weeklyAverages,
+    healthScore,
   }
 }
 
