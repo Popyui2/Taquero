@@ -59,6 +59,7 @@ export interface BankTransaction {
   amount: number
   payee: string
   type: 'income' | 'expense'
+  category?: string // Expense/income category
 }
 
 export interface SupplierPurchase {
@@ -137,6 +138,8 @@ export interface DashboardMetrics {
   uberRevenue: number
   delivereasyRevenue: number
   totalExpenses: number
+  expensesByCategory?: { category: string; amount: number; percentage: number; emoji: string }[]
+  topExpenses?: { payee: string; category: string; amount: number }[]
   topProducts: ProductPerformance[]
   topCategories: CategoryPerformance[]
   peakHours: PeakHours[]

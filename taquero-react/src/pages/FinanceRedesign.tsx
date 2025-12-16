@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Upload, TrendingUp, TrendingDown, DollarSign, Utensils, ShoppingBag, ShoppingCart, Loader2, Sparkles, Bot, Copy, Check, Calendar as CalendarIcon, ChevronDown, HelpCircle } from 'lucide-react'
+import { Upload, TrendingUp, TrendingDown, DollarSign, Utensils, ShoppingBag, ShoppingCart, Loader2, Sparkles, Bot, Copy, Check, Calendar as CalendarIcon, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -18,9 +18,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
-import type { ImportedData, MonthlyFinanceData } from '@/types/finance'
+import type { ImportedData, MonthlyFinanceData, CompanyDataset } from '@/types/finance'
 import type { DateRange } from 'react-day-picker'
-import { getFinanceData, calculateMetrics, getCombinedDataForMonths, getAvailableMonths, getCombinedBusinessData, filterByDateRange } from '@/lib/finance/storage'
+import { getFinanceData, calculateMetrics, getCombinedDataForMonths, getAvailableMonths, getCombinedBusinessData, getCompanyDataset, filterByDateRange } from '@/lib/finance/storage'
 import { format, subDays, subWeeks, subMonths, startOfQuarter, endOfQuarter } from 'date-fns'
 import { UploadFinanceWizard } from '@/components/finance/UploadFinanceWizard'
 import { TopProductsGallery } from '@/components/finance/TopProductsGallery'
@@ -36,9 +36,10 @@ export function FinanceRedesign() {
   const [showAIExportDialog, setShowAIExportDialog] = useState(false)
 
   // Global date filter
-  const [globalFilter, setGlobalFilter] = useState<'all-time' | 'last-day' | 'last-week' | 'last-month' | 'last-quarter' | 'custom'>('all-time')
+  const [globalFilter, setGlobalFilter] = useState<'all-time' | 'last-day' | 'last-week' | 'last-month' | 'last-quarter' | 'quarter' | 'custom'>('all-time')
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>()
   const [calendarOpen, setCalendarOpen] = useState(false)
+  const [selectedQuarter, setSelectedQuarter] = useState<string>('') // Format: "Q1-2024"
 
   // AI Export state
   const [aiExportDateRange, setAiExportDateRange] = useState<DateRange | undefined>()
@@ -47,6 +48,9 @@ export function FinanceRedesign() {
 
   // Health Score Explanation Dialog
   const [showHealthScoreDialog, setShowHealthScoreDialog] = useState(false)
+  const [dataSourcesExpanded, setDataSourcesExpanded] = useState(false)
+  const [componentDetailsExpanded, setComponentDetailsExpanded] = useState(false)
+  const [gradingIconsExpanded, setGradingIconsExpanded] = useState(false)
 
   useEffect(() => {
     loadFinanceData()
@@ -67,6 +71,10 @@ export function FinanceRedesign() {
       // Load combined business data
       const data = await getCombinedBusinessData()
       setCombinedData(data)
+
+      // Load company dataset (includes file info)
+      const dataset = await getCompanyDataset()
+      setCompanyDataset(dataset)
 
       // Still load monthly data for backward compatibility (can be removed later)
       const stored = await getFinanceData()
@@ -89,6 +97,7 @@ export function FinanceRedesign() {
 
   // Get combined data from all business datasets (Hot-Mexican + MEXI-CAN)
   const [combinedData, setCombinedData] = useState<ImportedData | null>(null)
+  const [companyDataset, setCompanyDataset] = useState<CompanyDataset | null>(null)
 
   // Use combined business data, fallback to monthly data for backward compatibility
   const rawImportedData = combinedData || (selectedMonths.length > 0 && monthlyData.length > 0
@@ -118,6 +127,22 @@ export function FinanceRedesign() {
         startDate = subMonths(currentQuarter, 3)
         endDate = endOfQuarter(subMonths(new Date(), 3))
         break
+      case 'quarter':
+        if (selectedQuarter) {
+          // Parse "Q1-2024" format
+          const [qStr, yearStr] = selectedQuarter.split('-')
+          const quarter = parseInt(qStr.replace('Q', ''))
+          const year = parseInt(yearStr)
+
+          // Calculate start and end of quarter
+          const startMonth = (quarter - 1) * 3
+          startDate = new Date(year, startMonth, 1)
+          endDate = new Date(year, startMonth + 3, 0) // Last day of quarter
+        } else {
+          startDate = null
+          endDate = null
+        }
+        break
       case 'custom':
         if (customDateRange?.from && customDateRange?.to) {
           startDate = customDateRange.from
@@ -145,6 +170,71 @@ export function FinanceRedesign() {
   const importedData = rawImportedData
 
   const metrics = filteredData ? calculateMetrics(filteredData) : null
+
+  // Get formatted date range string for current filter
+  const getFilterDateRangeString = (): string => {
+    if (!filteredData?.dateRange.start || !filteredData?.dateRange.end) return ''
+
+    switch (globalFilter) {
+      case 'quarter':
+        if (selectedQuarter) {
+          // For quarters, show like "Q3 2023"
+          return selectedQuarter.replace('-', ' ')
+        }
+        break
+      case 'custom':
+        if (customDateRange?.from && customDateRange?.to) {
+          const startMonth = format(customDateRange.from, 'MMM')
+          const startYear = format(customDateRange.from, 'yyyy')
+          const endMonth = format(customDateRange.to, 'MMM')
+          const endYear = format(customDateRange.to, 'yyyy')
+
+          if (startYear === endYear) {
+            return `${startMonth} — ${endMonth} ${startYear}`
+          }
+          return `${startMonth} ${startYear} — ${endMonth} ${endYear}`
+        }
+        break
+    }
+
+    // For all other cases (all-time, last-day, etc), use the actual data range
+    const start = filteredData.dateRange.start
+    const end = filteredData.dateRange.end
+
+    // Extract month and year from "Thu, 27 Jul" format
+    const startParts = start.split(' ')
+    const endParts = end.split(' ')
+
+    const startMonth = startParts[2] || startParts[1]
+    const endMonth = endParts[2] || endParts[1]
+
+    // Get years from first and last transaction
+    const firstTx = rawImportedData?.bankTransactions?.[0]
+    const lastTx = rawImportedData?.bankTransactions?.[rawImportedData.bankTransactions.length - 1]
+
+    let startYear = '2023'
+    let endYear = '2025'
+
+    if (firstTx?.date) {
+      const parts = firstTx.date.split('/')
+      if (parts.length === 3) {
+        let year = parseInt(parts[2])
+        if (year < 100) year += 2000
+        startYear = year.toString()
+      }
+    }
+
+    if (lastTx?.date) {
+      const parts = lastTx.date.split('/')
+      if (parts.length === 3) {
+        let year = parseInt(parts[2])
+        if (year < 100) year += 2000
+        endYear = year.toString()
+      }
+    }
+
+    return `${startMonth} ${startYear} — ${endMonth} ${endYear}`
+  }
 
   if (isLoading) {
     return (
@@ -175,6 +265,7 @@ export function FinanceRedesign() {
       case 'last-week': return 'Last Week'
       case 'last-month': return 'Last Month'
       case 'last-quarter': return 'Last Quarter'
+      case 'quarter': return selectedQuarter || 'Select Quarter'
       case 'custom': return customDateRange?.from && customDateRange?.to
         ? `${format(customDateRange.from, 'MMM d')} - ${format(customDateRange.to, 'MMM d, yyyy')}`
         : 'Custom Range'
@@ -189,6 +280,71 @@ export function FinanceRedesign() {
       setGlobalFilter('custom')
       setCalendarOpen(false)
     }
+  }
+
+  // Get available quarters from data
+  const getAvailableQuarters = (): string[] => {
+    if (!rawImportedData) return []
+
+    // Parse date in DD/MM/YY format
+    const parseDate = (dateStr: string): Date | null => {
+      const parts = dateStr.split('/')
+      if (parts.length !== 3) return null
+
+      const day = parseInt(parts[0])
+      const month = parseInt(parts[1]) - 1 // JS months are 0-indexed
+      let year = parseInt(parts[2])
+
+      // Convert 2-digit year to 4-digit (23 -> 2023)
+      if (year < 100) {
+        year += 2000
+      }
+
+      return new Date(year, month, day)
+    }
+
+    // Get min/max dates from actual transactions
+    let minDate: Date | null = null
+    let maxDate: Date | null = null
+
+    // Check bank transactions
+    if (rawImportedData.bankTransactions && Array.isArray(rawImportedData.bankTransactions)) {
+      rawImportedData.bankTransactions.forEach(tx => {
+        if (tx.date) {
+          const date = parseDate(tx.date)
+          if (date) {
+            if (!minDate || date < minDate) minDate = date
+            if (!maxDate || date > maxDate) maxDate = date
+          }
+        }
+      })
+    }
+
+    if (!minDate || !maxDate) return []
+
+    console.log('Date range found:', minDate.toLocaleDateString(), 'to', maxDate.toLocaleDateString())
+
+    const quarters: string[] = []
+
+    // Start from the quarter of the start date
+    let currentDate = new Date(minDate.getFullYear(), Math.floor(minDate.getMonth() / 3) * 3, 1)
+
+    while (currentDate <= maxDate) {
+      const year = currentDate.getFullYear()
+      const quarter = Math.floor(currentDate.getMonth() / 3) + 1
+      quarters.push(`Q${quarter}-${year}`)
+
+      // Move to next quarter
+      currentDate.setMonth(currentDate.getMonth() + 3)
+    }
+
+    console.log('Generated quarters:', quarters)
+    return quarters.reverse() // Most recent first
+  }
+
+  const handleQuarterSelect = (quarterStr: string) => {
+    setSelectedQuarter(quarterStr)
+    setGlobalFilter('quarter')
   }
 
   const generateAIReport = () => {
@@ -272,11 +428,6 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="space-y-2">
           <h2 className="text-3xl font-bold tracking-tight">Financial and Product Data</h2>
-          <p className="text-muted-foreground text-lg">
-            {importedData?.dateRange.start && importedData?.dateRange.end
-              ? `${importedData.dateRange.start} - ${importedData.dateRange.end}`
-              : 'Import CSV data to view analytics'}
-          </p>
         </div>
         <div className="flex gap-3 w-full sm:w-auto">
           <Button
@@ -337,6 +488,29 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
                   </DropdownMenuContent>
                 </DropdownMenu>
 
+                {/* Quarter Selector */}
+                {getAvailableQuarters().length > 0 && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        Quarter
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="max-h-[300px] overflow-y-auto">
+                      {getAvailableQuarters().map((quarter) => (
+                        <DropdownMenuItem
+                          key={quarter}
+                          onClick={() => handleQuarterSelect(quarter)}
+                          className={selectedQuarter === quarter ? 'bg-accent' : ''}
+                        >
+                          {quarter}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+
                 {/* Custom Date Range Picker */}
                 <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                   <PopoverTrigger asChild>
@@ -355,12 +529,13 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
                 </Popover>
               </div>
 
-              {/* Date Range Display on Right */}
+              {/* Compact Date Range Display */}
               {filteredData?.dateRange.start && filteredData?.dateRange.end && (
-                <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-                  <span className="font-medium">{filteredData.dateRange.start}</span>
-                  <span>—</span>
-                  <span className="font-medium">{filteredData.dateRange.end}</span>
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20">
+                  <CalendarIcon className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-semibold text-primary">
+                    {getFilterDateRangeString()}
+                  </span>
                 </div>
               )}
             </div>
@@ -546,7 +721,7 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
             <Card className="overflow-hidden lg:w-[320px]">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl">Period Health Score</CardTitle>
+                  <CardTitle className="text-xl">EmojiScore</CardTitle>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -860,35 +1035,10 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
       <Dialog open={showHealthScoreDialog} onOpenChange={setShowHealthScoreDialog}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl">How is the Health Score Calculated?</DialogTitle>
-            <DialogDescription className="text-base pt-2">
-              Your business health score is calculated using a weighted formula based on 3 key metrics from your bank statements
-            </DialogDescription>
+            <DialogTitle className="text-xl">EmojiScore Explanation</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-6 pt-4">
-            {/* Data Sources */}
-            <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
-              <h3 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                <Upload className="h-4 w-4" />
-                Data Sources
-              </h3>
-              <p className="text-sm text-muted-foreground mb-3">
-                The health score is calculated from your uploaded financial data:
-              </p>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-start gap-2">
-                  <span className="font-medium min-w-[140px]">Bank Statements:</span>
-                  <span className="text-muted-foreground">
-                    All metrics calculated from bank transaction data including cash flow, profit margins, and revenue from all sources (POS deposits via EFTPOS, Uber Eats, Delivereasy)
-                  </span>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-blue-500/20">
-                💡 The score updates automatically based on the time period selected in the "Viewing" filter above
-              </p>
-            </div>
-
+          <div className="space-y-6">
             {/* Current Score Display */}
             {metrics && (
               <div className="p-4 bg-muted/30 rounded-lg border">
@@ -914,20 +1064,38 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
             {/* Score Breakdown */}
             {metrics && (
               <div className="space-y-3">
-                <h3 className="font-semibold text-sm">Score Breakdown</h3>
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <h3 className="font-semibold text-sm">Score Breakdown</h3>
+                  {/* Date Range Badge */}
+                  {filteredData?.dateRange.start && filteredData?.dateRange.end && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20">
+                      <CalendarIcon className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-semibold text-primary">
+                        {getFilterDateRangeString()}
+                      </span>
+                    </div>
+                  )}
+                </div>
                 {metrics.healthScore.breakdown.map((item, idx) => (
                   <div key={idx} className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
-                      <div className="flex flex-col">
+                      <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-xl">{item.emoji}</span>
-                          <span className="font-medium">{item.metric}</span>
+                          <span className="text-2xl">{item.emoji}</span>
+                          <div>
+                            <div className="font-medium">{item.metric}</div>
+                            <div className="text-xs text-muted-foreground">Actual: {item.actualValue}</div>
+                          </div>
                         </div>
-                        <span className="text-xs text-muted-foreground ml-8">Actual: {item.actualValue}</span>
                       </div>
-                      <span className="text-muted-foreground text-right">
-                        {item.score.toFixed(1)}/10 × {item.weight}% = {((item.score * item.weight) / 100).toFixed(2)} pts
-                      </span>
+                      <div className="text-right">
+                        <div className="text-lg font-semibold">
+                          {item.score.toFixed(0)}<span className="text-sm text-muted-foreground">/10</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          +{((item.score * item.weight) / 100).toFixed(1)} pts
+                        </div>
+                      </div>
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
                       <div
@@ -940,12 +1108,23 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
               </div>
             )}
 
-            {/* Component Explanations */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-sm">Component Details</h3>
-
-              {/* Profit Margin */}
-              <div className="space-y-2 p-3 bg-muted/30 rounded-lg">
+            {/* Component Explanations - Collapsible */}
+            <div className="border rounded-lg bg-primary/5">
+              <button
+                onClick={() => setComponentDetailsExpanded(!componentDetailsExpanded)}
+                className="w-full flex items-center justify-between px-4 py-3 hover:bg-primary/10 transition-colors rounded-lg"
+              >
+                <h3 className="font-semibold text-sm text-primary">How is EmojiScore calculated</h3>
+                {componentDetailsExpanded ? (
+                  <ChevronUp className="h-4 w-4 text-primary" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-primary" />
+                )}
+              </button>
+              {componentDetailsExpanded && (
+                <div className="px-4 pb-4 space-y-4">
+                  {/* Profit Margin */}
+                  <div className="space-y-2 p-3 bg-muted/30 rounded-lg">
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium text-sm">1. Profit Margin</h4>
                   <Badge variant="outline">40% weight</Badge>
@@ -954,12 +1133,12 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
                   Measures your net cash flow as a percentage of total revenue. Based on actual NZ restaurant industry benchmarks.
                 </p>
                 <div className="text-xs space-y-1 pt-2 border-t">
-                  <p>• 12%+ margin = 9-10 pts 😄 Excellent (well above industry)</p>
-                  <p>• 8-12% margin = 7-9 pts 🙂 Good (industry standard)</p>
-                  <p>• 5-8% margin = 5-7 pts 😐 Fair (below average but viable)</p>
-                  <p>• 3-5% margin = 3-5 pts 😟 Concerning (struggling)</p>
-                  <p>• 0-3% margin = 0-3 pts 😢 Critical (barely surviving)</p>
-                  <p>• Negative margin = 0 pts 😡 Failed</p>
+                  <p>• 12%+ margin = 9-10 pts 😄🤩 Excellent (well above industry)</p>
+                  <p>• 8-12% margin = 7-9 pts 🙂😊 Good (industry standard)</p>
+                  <p>• 5-8% margin = 5-7 pts 😑😐 Fair (below average but viable)</p>
+                  <p>• 3-5% margin = 3-5 pts 😠😒 Concerning (struggling)</p>
+                  <p>• 0-3% margin = 0-3 pts 👿😡😤 Critical (barely surviving)</p>
+                  <p>• Negative margin = 0 pts 👿 Failed</p>
                 </div>
               </div>
 
@@ -974,14 +1153,14 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
                 </p>
                 <div className="text-xs space-y-1 pt-2 border-t">
                   <p>• $4,000+ = 10 pts 🤩 Excellent! ($5,000+ = Legendary but same grade)</p>
-                  <p>• $3,500-4,000 = 9-10 pts 😄 Amazing</p>
-                  <p>• $3,000-3,500 = 8-9 pts 😊 Very Good</p>
-                  <p>• $2,500-3,000 = 7-8 pts 🙂 Good</p>
-                  <p>• $2,000-2,500 = 6-7 pts 😐 Average</p>
-                  <p>• $1,500-2,000 = 5-6 pts 😑 Below Average</p>
-                  <p>• $1,000-1,500 = 4-5 pts 😒 Low</p>
-                  <p>• $600-1,000 = 3-4 pts 😠 Bad</p>
-                  <p>• Below $600 = 0-3 pts 😤 Failed</p>
+                  <p>• $3,500-4,000 = 9-10 pts 😄🤩 Amazing</p>
+                  <p>• $3,000-3,500 = 8-9 pts 😊😄 Very Good</p>
+                  <p>• $2,500-3,000 = 7-8 pts 🙂😊 Good</p>
+                  <p>• $2,000-2,500 = 6-7 pts 😐🙂 Average</p>
+                  <p>• $1,500-2,000 = 5-6 pts 😑😐 Below Average</p>
+                  <p>• $1,000-1,500 = 4-5 pts 😒😑 Low</p>
+                  <p>• $600-1,000 = 3-4 pts 😠😒 Bad</p>
+                  <p>• Below $600 = 0-3 pts 👿😡😤 Failed</p>
                 </div>
               </div>
 
@@ -995,22 +1174,36 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
                   Measures cash flow strength as a percentage of revenue. Cash Flow = All Income - All Expenses.
                 </p>
                 <div className="text-xs space-y-1 pt-2 border-t">
-                  <p>• 15%+ ratio = 10 pts 😄 Excellent</p>
-                  <p>• 10-15% ratio = 9 pts 🙂 Great</p>
+                  <p>• 15%+ ratio = 10 pts 🤩 Excellent</p>
+                  <p>• 10-15% ratio = 9 pts 😄 Great</p>
                   <p>• 8-10% ratio = 8 pts 😊 Good</p>
                   <p>• 5-8% ratio = 7 pts 🙂 Satisfactory</p>
                   <p>• 2-5% ratio = 6 pts 😐 Pass</p>
-                  <p>• 0-2% positive = 5 pts 😔 Failed (barely positive)</p>
-                  <p>• Negative = 0 pts 😢 Critical</p>
+                  <p>• 0-2% positive = 5 pts 😑 Failed (barely positive)</p>
+                  <p>• Negative = 0 pts 👿 Critical</p>
                 </div>
               </div>
+                </div>
+              )}
             </div>
 
-            {/* Status Ranges */}
-            <div className="space-y-3">
-              <h3 className="font-semibold text-sm">Score Guide (Mexican Grading System)</h3>
-              <p className="text-xs text-muted-foreground">0-5 = Failed | 6-10 = Passing</p>
-              <div className="grid grid-cols-2 gap-2 text-sm">
+            {/* Grading Icons - Collapsible */}
+            <div className="border rounded-lg bg-primary/5">
+              <button
+                onClick={() => setGradingIconsExpanded(!gradingIconsExpanded)}
+                className="w-full flex items-center justify-between px-4 py-3 hover:bg-primary/10 transition-colors rounded-lg"
+              >
+                <h3 className="font-semibold text-sm text-primary">Grading Icons</h3>
+                {gradingIconsExpanded ? (
+                  <ChevronUp className="h-4 w-4 text-primary" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-primary" />
+                )}
+              </button>
+              {gradingIconsExpanded && (
+                <div className="px-4 pb-4 space-y-3">
+                  <p className="text-xs text-muted-foreground">0-5 = Failed | 6-10 = Passing</p>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="flex items-center gap-2">
                   <span className="text-xl font-bold text-green-600">10</span>
                   <span className="text-2xl">🤩</span>
@@ -1067,7 +1260,42 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
                   <span className="text-muted-foreground">Failed</span>
                 </div>
               </div>
+                </div>
+              )}
             </div>
+
+            {/* Data Sources Collapsible */}
+            {companyDataset?.files && companyDataset.files.length > 0 && (
+              <div className="border rounded-lg bg-primary/5">
+                <button
+                  onClick={() => setDataSourcesExpanded(!dataSourcesExpanded)}
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-primary/10 transition-colors rounded-lg"
+                >
+                  <div className="flex items-center gap-2">
+                    <Upload className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-primary">
+                      Data from {companyDataset.files.length} file{companyDataset.files.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  {dataSourcesExpanded ? (
+                    <ChevronUp className="h-4 w-4 text-primary" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-primary" />
+                  )}
+                </button>
+                {dataSourcesExpanded && (
+                  <div className="px-4 pb-3">
+                    <ul className="space-y-1 pl-6">
+                      {companyDataset.files.map((file, idx) => (
+                        <li key={idx} className="text-sm text-muted-foreground list-disc">
+                          {file.name}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

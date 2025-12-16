@@ -350,14 +350,14 @@ function calculateHealthScore(params: {
         metric: 'Revenue Strength',
         score: revenueScore,
         weight: 35,
-        actualValue: `$${dailyRevenue.toFixed(0)}/day`,
+        actualValue: `$${dailyRevenue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/day`,
         emoji: getEmojiForScore(revenueScore)
       },
       {
         metric: 'Cash Flow Health',
         score: cashFlowScore,
         weight: 25,
-        actualValue: `${netCashFlow >= 0 ? '+' : '-'}$${Math.abs(netCashFlow).toFixed(0)}`,
+        actualValue: `${netCashFlow >= 0 ? '+' : '-'}$${Math.abs(netCashFlow).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`,
         emoji: getEmojiForScore(cashFlowScore)
       },
     ],
