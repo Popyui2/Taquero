@@ -756,7 +756,7 @@ Please provide a thorough, honest analysis that will help drive business improve
                       </div>
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">eCommerce and Catering</p>
-                        <p className="text-2xl font-bold">{formatCurrency(0)}</p>
+                        <p className="text-2xl font-bold">To be implemented</p>
                       </div>
                     </div>
                     <Badge variant="outline" className="text-base px-3 py-1">
