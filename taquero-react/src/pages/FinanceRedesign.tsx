@@ -361,6 +361,7 @@ export function FinanceRedesign() {
 
     // Get top 10 products
     const top10Products = reportMetrics.topProducts.slice(0, 10)
+    const bottom10Products = reportMetrics.topProducts.slice(-10).reverse()
 
     // Calculate expense categories from bank transactions
     const expensesByCategory = new Map<string, number>()
@@ -371,43 +372,161 @@ export function FinanceRedesign() {
       }
     })
 
+    const totalRevenue = reportMetrics.posRevenue + reportMetrics.uberRevenue + reportMetrics.delivereasyRevenue
     const totalExpenses = Array.from(expensesByCategory.values()).reduce((sum, amt) => sum + amt, 0)
+    const profitMargin = totalRevenue > 0 ? ((totalRevenue - totalExpenses) / totalRevenue * 100) : 0
+    const cashFlowRatio = totalRevenue > 0 ? (reportMetrics.netCashFlow / totalRevenue * 100) : 0
+
     const topExpenseCategories = Array.from(expensesByCategory.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
+      .slice(0, 10)
 
-    // Generate report
-    const report = `# Financial Analysis - Hot Like A Mexican
-**Period:** ${format(aiExportDateRange.from, 'MMM d, yyyy')} - ${format(aiExportDateRange.to, 'MMM d, yyyy')} (${daysDiff} days)
-**Business:** Mexi-Can Limited, Wellington, NZ - Mexican Restaurant
+    // Channel performance
+    const posPercentage = totalRevenue > 0 ? (reportMetrics.posRevenue / totalRevenue * 100) : 0
+    const uberPercentage = totalRevenue > 0 ? (reportMetrics.uberRevenue / totalRevenue * 100) : 0
+    const delivereasyPercentage = totalRevenue > 0 ? (reportMetrics.delivereasyRevenue / totalRevenue * 100) : 0
 
-## Executive Summary
-- Total Revenue: ${formatCurrency(reportMetrics.posRevenue + reportMetrics.uberRevenue + reportMetrics.delivereasyRevenue)}
-- Net Cash Flow: ${formatCurrency(reportMetrics.netCashFlow)}
-- Total Orders: ${reportMetrics.totalOrders.toLocaleString()}
-- Average Order Value: ${formatCurrency(reportMetrics.averageOrderValue)}
-- Daily Average Revenue: ${formatCurrency(reportMetrics.weeklyAverages.dailyRevenue)}
-- Daily Average Orders: ${reportMetrics.weeklyAverages.dailyOrders.toFixed(0)}
+    // Generate comprehensive report
+    const report = `# Comprehensive Financial Analysis for Hot Like A Mexican
+**Analysis Period:** ${format(aiExportDateRange.from, 'MMM d, yyyy')} - ${format(aiExportDateRange.to, 'MMM d, yyyy')} (${daysDiff} days)
+**Business:** Mexi-Can Limited, Wellington, New Zealand
+**Type:** Mexican Restaurant (Dine-in, Takeaway, Delivery)
+**Established:** July 27, 2023
 
-## Revenue Sources
-- POS Sales: ${formatCurrency(reportMetrics.posRevenue)} (${((reportMetrics.posRevenue / (reportMetrics.posRevenue + reportMetrics.uberRevenue + reportMetrics.delivereasyRevenue)) * 100).toFixed(1)}%)
-- Uber Eats: ${formatCurrency(reportMetrics.uberRevenue)} (${((reportMetrics.uberRevenue / (reportMetrics.posRevenue + reportMetrics.uberRevenue + reportMetrics.delivereasyRevenue)) * 100).toFixed(1)}%)
-- Delivereasy: ${formatCurrency(reportMetrics.delivereasyRevenue)} (${((reportMetrics.delivereasyRevenue / (reportMetrics.posRevenue + reportMetrics.uberRevenue + reportMetrics.delivereasyRevenue)) * 100).toFixed(1)}%)
+---
 
-## Top 10 Products
-${top10Products.map((p, i) => `${i + 1}. ${p.product} - ${formatCurrency(p.revenue)} revenue, ${p.quantity} sold (${p.percentOfSales.toFixed(1)}% of sales)`).join('\n')}
+## BUSINESS CONTEXT & ANALYSIS INSTRUCTIONS
 
-## Expense Summary
-- Total Expenses: ${formatCurrency(totalExpenses)}
-${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).join('\n')}
+You are analyzing financial data for Hot Like A Mexican, a Mexican restaurant in Wellington, NZ. This business:
+- Operates dine-in, takeaway, and delivery services
+- Uses multiple revenue channels: In-store POS, Uber Eats, and Delivereasy
+- Sells Mexican food products (tacos, burritos, quesadillas, nachos, etc.)
+- Currency: All amounts in NZD (New Zealand Dollars)
 
-## Questions for AI Analysis
-1. What are the key revenue trends in this period?
-2. Is the profit margin healthy for a restaurant business?
-3. Are there any concerning expense patterns?
-4. Which products should we promote more based on performance?
-5. What recommendations do you have for revenue growth?
-6. Any operational improvements you can suggest?`
+**Your task is to provide:**
+1. **Deep financial health analysis** comparing against NZ restaurant industry benchmarks
+2. **Actionable insights** with specific recommendations (not generic advice)
+3. **Product performance analysis** identifying winners and losers
+4. **Operational efficiency recommendations** based on the data patterns
+5. **Growth opportunities** with concrete next steps
+6. **Risk identification** highlighting any concerning trends
+
+---
+
+## FINANCIAL PERFORMANCE SUMMARY
+
+### Revenue Overview
+- **Total Revenue:** ${formatCurrency(totalRevenue)}
+- **Daily Average Revenue:** ${formatCurrency(reportMetrics.weeklyAverages.dailyRevenue)}
+- **Net Cash Flow:** ${formatCurrency(reportMetrics.netCashFlow)} (${cashFlowRatio >= 0 ? '+' : ''}${cashFlowRatio.toFixed(1)}% of revenue)
+- **Profit Margin:** ${profitMargin >= 0 ? '+' : ''}${profitMargin.toFixed(1)}%
+
+### Revenue Channels
+1. **In-Store POS:** ${formatCurrency(reportMetrics.posRevenue)} (${posPercentage.toFixed(1)}%)
+2. **Uber Eats:** ${formatCurrency(reportMetrics.uberRevenue)} (${uberPercentage.toFixed(1)}%)
+3. **Delivereasy:** ${formatCurrency(reportMetrics.delivereasyRevenue)} (${delivereasyPercentage.toFixed(1)}%)
+
+### Order Metrics
+- **Total Orders:** ${reportMetrics.totalOrders.toLocaleString()}
+- **Average Order Value:** ${formatCurrency(reportMetrics.averageOrderValue)}
+- **Daily Average Orders:** ${reportMetrics.weeklyAverages.dailyOrders.toFixed(0)}
+- **Revenue Per Order:** ${formatCurrency(totalRevenue / reportMetrics.totalOrders)}
+
+---
+
+## EXPENSE ANALYSIS
+
+**Total Expenses:** ${formatCurrency(totalExpenses)} (${totalRevenue > 0 ? ((totalExpenses / totalRevenue) * 100).toFixed(1) : '0'}% of revenue)
+
+### Top 10 Expense Categories (by amount)
+${topExpenseCategories.map(([cat, amt], i) => `${i + 1}. **${cat}:** ${formatCurrency(amt)} (${totalRevenue > 0 ? ((amt / totalRevenue) * 100).toFixed(1) : '0'}% of revenue)`).join('\n')}
+
+---
+
+## PRODUCT PERFORMANCE ANALYSIS
+
+### Top 10 Best-Selling Products
+${top10Products.map((p, i) => `${i + 1}. **${p.product}**
+   - Revenue: ${formatCurrency(p.revenue)} (${p.percentOfSales.toFixed(1)}% of total sales)
+   - Units Sold: ${p.quantity}
+   - Revenue Per Unit: ${formatCurrency(p.revenue / p.quantity)}`).join('\n\n')}
+
+### Bottom 10 Products (Poorest Performance)
+${bottom10Products.length > 0 ? bottom10Products.map((p, i) => `${i + 1}. **${p.product}**
+   - Revenue: ${formatCurrency(p.revenue)} (${p.percentOfSales.toFixed(1)}% of sales)
+   - Units Sold: ${p.quantity}
+   - Revenue Per Unit: ${formatCurrency(p.revenue / p.quantity)}`).join('\n\n') : 'Not enough product data'}
+
+---
+
+## DETAILED ANALYSIS QUESTIONS
+
+Please provide comprehensive, data-driven answers to these questions:
+
+### 1. Financial Health Assessment
+- How does the ${profitMargin.toFixed(1)}% profit margin compare to the 8-12% NZ restaurant benchmark?
+- Is the ${cashFlowRatio.toFixed(1)}% cash flow ratio healthy or concerning?
+- Are we profitable, breaking even, or losing money? What's the severity?
+- What specific financial metrics are red flags that need immediate attention?
+
+### 2. Revenue Channel Performance
+- Which revenue channel (POS ${posPercentage.toFixed(0)}%, Uber ${uberPercentage.toFixed(0)}%, Delivereasy ${delivereasyPercentage.toFixed(0)}%) is performing best?
+- Should we invest more in any particular channel? Why?
+- Are delivery platforms (Uber/Delivereasy at ${(uberPercentage + delivereasyPercentage).toFixed(0)}% combined) cannibalizing in-store revenue or expanding our market?
+- What's the optimal channel mix for maximizing profit?
+
+### 3. Product Strategy
+- Which top-performing products should we promote more aggressively?
+- Which bottom-performing products should we consider removing from the menu?
+- Are there any products with surprisingly low sales despite good revenue potential?
+- Should we introduce product bundles or combo deals? Which products should be bundled?
+
+### 4. Pricing Strategy
+- Is our $${reportMetrics.averageOrderValue.toFixed(2)} average order value competitive for Wellington?
+- Which products appear underpriced (high volume, low revenue share)?
+- Which products appear overpriced (low volume despite being signature items)?
+- Should we implement dynamic pricing or promotional discounts? On which products?
+
+### 5. Operational Efficiency
+- Are there expense categories that seem abnormally high compared to industry standards?
+- What percentage of revenue should ideally go to each major expense category?
+- Are there opportunities to reduce costs without sacrificing quality?
+- Which expenses give the best ROI and should be maintained or increased?
+
+### 6. Growth Opportunities
+- Based on the ${formatCurrency(reportMetrics.weeklyAverages.dailyRevenue)}/day average, what's a realistic revenue growth target?
+- Should we focus on increasing order frequency, average order value, or customer acquisition?
+- Are there untapped revenue streams we should consider (catering, events, alcohol, etc.)?
+- What specific marketing initiatives would have the highest impact?
+
+### 7. Risk Analysis
+- What are the top 3 financial risks this business faces based on this data?
+- Are there any dependency risks (too reliant on one channel, product, or customer segment)?
+- How vulnerable is the business to economic downturns or seasonal fluctuations?
+- What contingency plans should be in place?
+
+### 8. Actionable Recommendations
+Please provide 5-7 specific, prioritized action items we should implement in the next:
+- **This Week:** Immediate quick wins
+- **This Month:** Short-term improvements
+- **This Quarter:** Strategic initiatives
+
+For each recommendation, explain:
+- What to do specifically
+- Why it matters (expected impact)
+- How to measure success
+
+---
+
+## ADDITIONAL DATA NOTES
+
+- This report covers ${daysDiff} days of operations
+- All currency amounts are in NZD
+- Expense categorization is based on transaction payees
+- Product data includes items from all sales channels
+- Industry benchmarks are for NZ casual dining restaurants
+
+Please provide a thorough, honest analysis that will help drive business improvement.`
 
     setGeneratedReport(report)
   }
@@ -942,54 +1061,48 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
 
       {/* AI Export Dialog */}
       <Dialog open={showAIExportDialog} onOpenChange={setShowAIExportDialog}>
-        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle className="text-xl">Export Financial Data for AI Analysis</DialogTitle>
-                <DialogDescription className="text-base pt-2">
-                  Select a date range to generate a formatted report for Claude AI
-                </DialogDescription>
+            <DialogTitle>Export Data for AI Analysis</DialogTitle>
+            <DialogDescription className="text-sm">
+              Select a date range to generate a comprehensive business analysis report for AI system
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 px-1">
+            {/* Date Range Picker and Generate Button - Same Row */}
+            <div className="flex gap-2 items-end">
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <label className="text-sm font-medium">Date Range</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal h-9 text-sm">
+                      <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">
+                        {aiExportDateRange?.from && aiExportDateRange?.to
+                          ? `${format(aiExportDateRange.from, 'MMM d, yyyy')} - ${format(aiExportDateRange.to, 'MMM d, yyyy')}`
+                          : 'Pick a date range'}
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="range"
+                      selectedRange={aiExportDateRange}
+                      onRangeSelect={setAiExportDateRange}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               <Button
                 onClick={generateAIReport}
                 disabled={!aiExportDateRange?.from || !aiExportDateRange?.to}
                 size="sm"
-                className="ml-4"
+                className="whitespace-nowrap h-9 flex-shrink-0"
               >
-                <Bot className="h-4 w-4 mr-2" />
-                Generate Report
+                <Bot className="h-4 w-4 mr-1" />
+                Generate
               </Button>
-            </div>
-          </DialogHeader>
-
-          <div className="space-y-4 pt-4">
-            {/* Date Range Picker */}
-            <div className="flex items-center gap-3 p-4 border rounded-lg bg-muted/30">
-              <CalendarIcon className="h-5 w-5 text-muted-foreground" />
-              <div className="flex-1">
-                <label className="text-sm font-medium">Select Date Range (Required)</label>
-                <p className="text-xs text-muted-foreground">
-                  {aiExportDateRange?.from && aiExportDateRange?.to
-                    ? `${format(aiExportDateRange.from, 'MMM d, yyyy')} - ${format(aiExportDateRange.to, 'MMM d, yyyy')}`
-                    : 'Click to select dates'}
-                </p>
-              </div>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <CalendarIcon className="h-4 w-4 mr-2" />
-                    {aiExportDateRange?.from && aiExportDateRange?.to ? 'Change Dates' : 'Select Dates'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    mode="range"
-                    selectedRange={aiExportDateRange}
-                    onRangeSelect={setAiExportDateRange}
-                  />
-                </PopoverContent>
-              </Popover>
             </div>
 
             {/* Generated Report */}
@@ -1000,22 +1113,23 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
                   <Button
                     onClick={copyReportToClipboard}
                     size="sm"
-                    variant="outline"
+                    variant="ghost"
+                    className="h-7 flex-shrink-0"
                   >
                     {reportCopied ? (
                       <>
-                        <Check className="h-4 w-4 mr-2" />
-                        Copied!
+                        <Check className="h-3 w-3 mr-1" />
+                        Copied
                       </>
                     ) : (
                       <>
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copy to Clipboard
+                        <Copy className="h-3 w-3 mr-1" />
+                        Copy
                       </>
                     )}
                   </Button>
                 </div>
-                <pre className="p-4 bg-muted rounded-lg overflow-x-auto text-xs leading-relaxed max-h-[400px] overflow-y-auto border">
+                <pre className="p-2 bg-muted rounded-md overflow-x-auto overflow-y-auto text-xs leading-relaxed h-40 border font-mono break-all whitespace-pre-wrap">
                   {generatedReport}
                 </pre>
               </div>
@@ -1042,21 +1156,29 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
             {/* Current Score Display */}
             {metrics && (
               <div className="p-4 bg-muted/30 rounded-lg border">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Your Current Score</p>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-4xl">{metrics.healthScore.emoji}</span>
-                      <div>
-                        <p className={`text-3xl font-bold ${metrics.healthScore.color}`}>
-                          {metrics.healthScore.score.toFixed(1)}/10
-                        </p>
-                        <Badge variant="outline" className={`${metrics.healthScore.color} border-current`}>
-                          {metrics.healthScore.status}
-                        </Badge>
-                      </div>
+                <p className="text-sm text-muted-foreground mb-2">Your Current Score</p>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">{metrics.healthScore.emoji}</span>
+                    <div className="flex items-baseline gap-2">
+                      <p className={`text-2xl font-bold ${metrics.healthScore.color}`}>
+                        {metrics.healthScore.score.toFixed(1)}/10
+                      </p>
+                      <Badge variant="outline" className={`${metrics.healthScore.color} border-current`}>
+                        {metrics.healthScore.status}
+                      </Badge>
                     </div>
                   </div>
+                  {metrics.healthScore.insights && metrics.healthScore.insights.length > 0 && (() => {
+                    const topInsight = metrics.healthScore.insights.find(i => i.startsWith('🚨')) ||
+                                      metrics.healthScore.insights.find(i => i.startsWith('⚠️')) ||
+                                      metrics.healthScore.insights[0]
+                    return (
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20">
+                        <span className="text-sm font-semibold text-primary">{topInsight}</span>
+                      </div>
+                    )
+                  })()}
                 </div>
               </div>
             )}
@@ -1079,13 +1201,11 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
                 {metrics.healthScore.breakdown.map((item, idx) => (
                   <div key={idx} className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">{item.emoji}</span>
-                          <div>
-                            <div className="font-medium">{item.metric}</div>
-                            <div className="text-xs text-muted-foreground">Actual: {item.actualValue}</div>
-                          </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">{item.emoji}</span>
+                        <div className="font-medium">{item.metric}</div>
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 border border-primary/20">
+                          <span className="text-xs font-medium text-primary">{item.actualValue}</span>
                         </div>
                       </div>
                       <div className="text-right">
@@ -1133,12 +1253,17 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
                   Measures your net cash flow as a percentage of total revenue. Based on actual NZ restaurant industry benchmarks.
                 </p>
                 <div className="text-xs space-y-1 pt-2 border-t">
-                  <p>• 12%+ margin = 9-10 pts 😄🤩 Excellent (well above industry)</p>
-                  <p>• 8-12% margin = 7-9 pts 🙂😊 Good (industry standard)</p>
-                  <p>• 5-8% margin = 5-7 pts 😑😐 Fair (below average but viable)</p>
-                  <p>• 3-5% margin = 3-5 pts 😠😒 Concerning (struggling)</p>
-                  <p>• 0-3% margin = 0-3 pts 👿😡😤 Critical (barely surviving)</p>
-                  <p>• Negative margin = 0 pts 👿 Failed</p>
+                  <p>• 20%+ margin = 10 pts (🤩 Excellent - exceptional, rarely achieved)</p>
+                  <p>• 12-20% margin = 9 pts (😄 Great - excellent performance)</p>
+                  <p>• 10-12% margin = 8 pts (😊 Good - above standard)</p>
+                  <p>• 8-10% margin = 7 pts (🙂 Good - industry standard)</p>
+                  <p>• 5-8% margin = 6 pts (😐 Pass - below average but viable)</p>
+                  <p>• 3-5% margin = 5 pts (😑 Concerning - struggling)</p>
+                  <p>• 2-3% margin = 4 pts (😒 Failed - critical)</p>
+                  <p>• 1-2% margin = 3 pts (😠 Failed - barely surviving)</p>
+                  <p>• 0.5-1% margin = 2 pts (😤 Failed - essentially broke even)</p>
+                  <p>• 0.01-0.5% = 1 pt (😡 Failed - break even)</p>
+                  <p>• 0% or negative = 0 pts (🍆 Failed - lost money)</p>
                 </div>
               </div>
 
@@ -1152,15 +1277,17 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
                   Evaluates daily revenue performance based on Hot Like A Mexican's actual business targets (NZD).
                 </p>
                 <div className="text-xs space-y-1 pt-2 border-t">
-                  <p>• $4,000+ = 10 pts 🤩 Excellent! ($5,000+ = Legendary but same grade)</p>
-                  <p>• $3,500-4,000 = 9-10 pts 😄🤩 Amazing</p>
-                  <p>• $3,000-3,500 = 8-9 pts 😊😄 Very Good</p>
-                  <p>• $2,500-3,000 = 7-8 pts 🙂😊 Good</p>
-                  <p>• $2,000-2,500 = 6-7 pts 😐🙂 Average</p>
-                  <p>• $1,500-2,000 = 5-6 pts 😑😐 Below Average</p>
-                  <p>• $1,000-1,500 = 4-5 pts 😒😑 Low</p>
-                  <p>• $600-1,000 = 3-4 pts 😠😒 Bad</p>
-                  <p>• Below $600 = 0-3 pts 👿😡😤 Failed</p>
+                  <p>• $4,000+ = 10 pts (🤩 Excellent - $5,000+ is legendary!)</p>
+                  <p>• $3,500-4,000 = 9 pts (😄 Great - amazing day)</p>
+                  <p>• $3,000-3,500 = 8 pts (😊 Good - very good day)</p>
+                  <p>• $2,500-3,000 = 7 pts (🙂 Satisfactory - solid day)</p>
+                  <p>• $2,000-2,500 = 6 pts (😐 Pass - average day)</p>
+                  <p>• $1,500-2,000 = 5 pts (😑 Failed - below average)</p>
+                  <p>• $1,000-1,500 = 4 pts (😒 Failed - low sales)</p>
+                  <p>• $600-1,000 = 3 pts (😠 Failed - bad day)</p>
+                  <p>• $300-600 = 2 pts (😤 Failed - very bad)</p>
+                  <p>• $1-300 = 1 pt (😡 Failed - critical)</p>
+                  <p>• $0 = 0 pts (🍆 Failed - no sales)</p>
                 </div>
               </div>
 
@@ -1174,13 +1301,17 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
                   Measures cash flow strength as a percentage of revenue. Cash Flow = All Income - All Expenses.
                 </p>
                 <div className="text-xs space-y-1 pt-2 border-t">
-                  <p>• 15%+ ratio = 10 pts 🤩 Excellent</p>
-                  <p>• 10-15% ratio = 9 pts 😄 Great</p>
-                  <p>• 8-10% ratio = 8 pts 😊 Good</p>
-                  <p>• 5-8% ratio = 7 pts 🙂 Satisfactory</p>
-                  <p>• 2-5% ratio = 6 pts 😐 Pass</p>
-                  <p>• 0-2% positive = 5 pts 😑 Failed (barely positive)</p>
-                  <p>• Negative = 0 pts 👿 Critical</p>
+                  <p>• 15%+ ratio = 10 pts (🤩 Excellent)</p>
+                  <p>• 10-15% ratio = 9 pts (😄 Great)</p>
+                  <p>• 8-10% ratio = 8 pts (😊 Good)</p>
+                  <p>• 5-8% ratio = 7 pts (🙂 Satisfactory)</p>
+                  <p>• 2-5% ratio = 6 pts (😐 Pass)</p>
+                  <p>• 1-2% ratio = 5 pts (😑 Failed - barely positive)</p>
+                  <p>• 0.5-1% ratio = 4 pts (😒 Failed - concerning)</p>
+                  <p>• 0.1-0.5% ratio = 3 pts (😠 Failed - critical)</p>
+                  <p>• 0.01-0.1% ratio = 2 pts (😤 Failed - barely surviving)</p>
+                  <p>• 0% or tiny positive = 1 pt (😡 Failed - essentially broke even)</p>
+                  <p>• Negative = 0 pts (🍆 Failed - losing money)</p>
                 </div>
               </div>
                 </div>
@@ -1256,7 +1387,7 @@ ${topExpenseCategories.map(([cat, amt]) => `- ${cat}: ${formatCurrency(amt)}`).j
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xl font-bold text-red-700">0</span>
-                  <span className="text-2xl">👿</span>
+                  <span className="text-2xl">🍆</span>
                   <span className="text-muted-foreground">Failed</span>
                 </div>
               </div>

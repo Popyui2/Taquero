@@ -251,9 +251,10 @@ function calculateHealthScore(params: {
   // 3. Cash Flow Health Score (25% weight)
   // More granular scoring based on cash flow strength
   let cashFlowScore = 0
+  const cashFlowRatio = totalRevenue > 0 ? (netCashFlow / totalRevenue) * 100 : 0
+
   if (netCashFlow > 0) {
     cashFlowScore = 6 // Base score for positive cash flow
-    const cashFlowRatio = totalRevenue > 0 ? (netCashFlow / totalRevenue) * 100 : 0
 
     if (cashFlowRatio >= 15) {
       cashFlowScore += 4 // 10 pts total - Excellent
@@ -279,9 +280,9 @@ function calculateHealthScore(params: {
     cashFlowScore * 0.25
 
   // Map score (0-10) to emoji, status, and color (Mexican grading system)
-  // 0-5 = Failed (demonic to neutral), 6-10 = Passing (gradually happier)
+  // 0-5 = Failed (eggplant to neutral), 6-10 = Passing (gradually happier)
   const scoreMapping = [
-    { emoji: '👿', status: 'Failed', color: 'text-red-700' },        // 0 - Demonic/Evil
+    { emoji: '🍆', status: 'Failed', color: 'text-red-700' },        // 0 - Eggplant
     { emoji: '😡', status: 'Failed', color: 'text-red-600' },        // 1 - Very angry
     { emoji: '😤', status: 'Failed', color: 'text-red-600' },        // 2 - Angry
     { emoji: '😠', status: 'Failed', color: 'text-red-500' },        // 3 - Angry
@@ -357,7 +358,7 @@ function calculateHealthScore(params: {
         metric: 'Cash Flow Health',
         score: cashFlowScore,
         weight: 25,
-        actualValue: `${netCashFlow >= 0 ? '+' : '-'}$${Math.abs(netCashFlow).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`,
+        actualValue: `${netCashFlow >= 0 ? '+' : '-'}$${Math.abs(netCashFlow).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} (${cashFlowRatio >= 0 ? '' : '-'}${Math.abs(cashFlowRatio).toFixed(1)}%)`,
         emoji: getEmojiForScore(cashFlowScore)
       },
     ],
