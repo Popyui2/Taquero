@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Upload, TrendingUp, TrendingDown, DollarSign, Utensils, ShoppingBag, ShoppingCart, Loader2, Sparkles, Bot, Copy, Check, Calendar as CalendarIcon, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react'
+import { Upload, TrendingUp, TrendingDown, DollarSign, Utensils, ShoppingBag, ShoppingCart, Loader2, Sparkles, Bot, Copy, Check, Calendar as CalendarIcon, ChevronDown, ChevronUp, HelpCircle, ListFilter, ArrowUpDown, Save, Drumstick, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -20,7 +20,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar'
 import type { ImportedData, MonthlyFinanceData, CompanyDataset } from '@/types/finance'
 import type { DateRange } from 'react-day-picker'
-import { getFinanceData, calculateMetrics, getCombinedDataForMonths, getAvailableMonths, getCombinedBusinessData, getCompanyDataset, filterByDateRange } from '@/lib/finance/storage'
+import { getFinanceData, calculateMetrics, getCombinedDataForMonths, getAvailableMonths, getCombinedBusinessData, getCompanyDataset, filterByDateRange, applyClassifications } from '@/lib/finance/storage'
+import { getCategoryEmoji, EXPENSE_CATEGORIES, PAYEE_CLASSIFICATIONS, type ExpenseCategory } from '@/lib/finance/categories'
+import payeeClassificationsCSV from '@/lib/finance/payee_classifications.csv?raw'
 import { format, subDays, subWeeks, subMonths, startOfQuarter, endOfQuarter } from 'date-fns'
 import { UploadFinanceWizard } from '@/components/finance/UploadFinanceWizard'
 import { TopProductsGallery } from '@/components/finance/TopProductsGallery'
@@ -39,6 +41,7 @@ export function FinanceRedesign() {
   const [globalFilter, setGlobalFilter] = useState<'all-time' | 'last-day' | 'last-week' | 'last-month' | 'last-quarter' | 'quarter' | 'custom'>('all-time')
   const [customDateRange, setCustomDateRange] = useState<DateRange | undefined>()
   const [calendarOpen, setCalendarOpen] = useState(false)
+  const [quarterDropdownOpen, setQuarterDropdownOpen] = useState(false)
   const [selectedQuarter, setSelectedQuarter] = useState<string>('') // Format: "Q1-2024"
 
   // AI Export state
@@ -50,7 +53,24 @@ export function FinanceRedesign() {
   const [showHealthScoreDialog, setShowHealthScoreDialog] = useState(false)
   const [dataSourcesExpanded, setDataSourcesExpanded] = useState(false)
   const [componentDetailsExpanded, setComponentDetailsExpanded] = useState(false)
+  const [scoringLogicExpanded, setScoringLogicExpanded] = useState(false)
   const [gradingIconsExpanded, setGradingIconsExpanded] = useState(false)
+
+  // Transaction Classifications Dialog
+  const [showClassificationsDialog, setShowClassificationsDialog] = useState(false)
+  const [classificationSort, setClassificationSort] = useState<{ field: 'name' | 'date' | 'type' | 'category' | 'total'; direction: 'asc' | 'desc' }>({ field: 'total', direction: 'desc' })
+
+  // Category Detail Dialog (for Important Transactions)
+  const [showCategoryDetailDialog, setShowCategoryDetailDialog] = useState(false)
+  const [selectedExpenseCategory, setSelectedExpenseCategory] = useState<string | null>(null)
+  const [categoryDetailSort, setCategoryDetailSort] = useState<{ field: 'date' | 'payee' | 'amount'; direction: 'asc' | 'desc' }>({ field: 'amount', direction: 'desc' })
+  const [editingPayee, setEditingPayee] = useState<string | null>(null)
+  const [expandedPayee, setExpandedPayee] = useState<string | null>(null)
+  const [userCategoryOverrides, setUserCategoryOverrides] = useState<Record<string, ExpenseCategory>>(() => {
+    // Load from localStorage
+    const saved = localStorage.getItem('taquero-category-overrides')
+    return saved ? JSON.parse(saved) : {}
+  })
 
   useEffect(() => {
     loadFinanceData()
@@ -609,7 +629,10 @@ Please provide a thorough, honest analysis that will help drive business improve
 
                 {/* Quarter Selector */}
                 {getAvailableQuarters().length > 0 && (
-                  <DropdownMenu>
+                  <DropdownMenu open={quarterDropdownOpen} onOpenChange={(open) => {
+                    setQuarterDropdownOpen(open)
+                    if (open) setCalendarOpen(false)
+                  }}>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm">
                         <CalendarIcon className="mr-2 h-4 w-4" />
@@ -631,7 +654,10 @@ Please provide a thorough, honest analysis that will help drive business improve
                 )}
 
                 {/* Custom Date Range Picker */}
-                <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                <Popover open={calendarOpen} onOpenChange={(open) => {
+                  setCalendarOpen(open)
+                  if (open) setQuarterDropdownOpen(false)
+                }}>
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm">
                       <CalendarIcon className="mr-2 h-4 w-4" />
@@ -648,15 +674,27 @@ Please provide a thorough, honest analysis that will help drive business improve
                 </Popover>
               </div>
 
-              {/* Compact Date Range Display */}
-              {filteredData?.dateRange.start && filteredData?.dateRange.end && (
-                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20">
-                  <CalendarIcon className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-semibold text-primary">
-                    {getFilterDateRangeString()}
-                  </span>
-                </div>
-              )}
+              {/* Date Range Display + Transaction Categories */}
+              <div className="hidden sm:flex items-center gap-2">
+                {filteredData?.dateRange.start && filteredData?.dateRange.end && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20">
+                    <CalendarIcon className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-semibold text-primary">
+                      {getFilterDateRangeString()}
+                    </span>
+                  </div>
+                )}
+
+                {filteredData && filteredData.bankTransactions.length > 0 && (
+                  <button
+                    onClick={() => setShowClassificationsDialog(true)}
+                    className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-95 border border-input bg-background hover:bg-accent hover:text-accent-foreground hover:border-accent h-9 w-9 rounded-md"
+                    title="Transaction Categories"
+                  >
+                    <Drumstick className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -777,60 +815,146 @@ Please provide a thorough, honest analysis that will help drive business improve
 
           {/* Period Averages + Business Health Score */}
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6">
-            {/* Period Averages */}
+            {/* Sales Information */}
             <Card className="overflow-hidden">
               <CardHeader className="pb-4">
-                <CardTitle className="text-2xl">Period Averages</CardTitle>
-                <CardDescription>Average daily performance metrics</CardDescription>
+                <CardTitle className="text-2xl">Sales Information</CardTitle>
               </CardHeader>
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Avg Daily Revenue */}
-                  <div className="space-y-3">
+              <CardContent className="pt-0 space-y-6">
+                {/* Net Cash Flow - Hero Card */}
+                <div className={`rounded-xl p-4 ${metrics.netCashFlow < 0 ? 'bg-red-500/10 border border-red-500/30' : 'bg-green-500/10 border border-green-500/30'}`}>
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                        <TrendingUp className="h-6 w-6 text-blue-500" />
+                      <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${metrics.netCashFlow < 0 ? 'bg-red-500/20' : 'bg-green-500/20'}`}>
+                        {metrics.netCashFlow < 0 ? (
+                          <AlertTriangle className="h-6 w-6 text-red-500" />
+                        ) : (
+                          <CheckCircle2 className="h-6 w-6 text-green-500" />
+                        )}
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-muted-foreground">Avg Daily Revenue</p>
-                        <p className="text-2xl font-bold">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Net Cash Flow</p>
+                        <div className="flex items-baseline gap-2">
+                          <p className={`text-2xl font-bold ${metrics.netCashFlow < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                            {formatCurrency(metrics.netCashFlow)}
+                          </p>
+                          <span className={`text-sm font-medium ${metrics.netCashFlow < 0 ? 'text-red-400' : 'text-green-400'}`}>
+                            ({metrics.grossSales > 0 ? ((metrics.netCashFlow / metrics.grossSales) * 100).toFixed(1) : 0}%)
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {metrics.comparisonMetrics && (
+                      <div className={`flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium ${metrics.comparisonMetrics.netCashFlowChange >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                        {metrics.comparisonMetrics.netCashFlowChange >= 0 ? (
+                          <TrendingUp className="h-4 w-4" />
+                        ) : (
+                          <TrendingDown className="h-4 w-4" />
+                        )}
+                        {formatPercentage(metrics.comparisonMetrics.netCashFlowChange)}
+                      </div>
+                    )}
+                  </div>
+                  <p className={`text-xs mt-2 ${metrics.netCashFlow < 0 ? 'text-red-400' : 'text-green-400'}`}>
+                    {metrics.netCashFlow < 0 ? 'Expenses exceeded income this period' : 'Income exceeded expenses this period'}
+                  </p>
+                </div>
+
+                {/* Restaurant Sales Data */}
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-4">Restaurant Sales Data</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Gross Sales */}
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+                          <DollarSign className="h-5 w-5 text-green-500" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted-foreground">Gross Sales</p>
+                          <p className="text-lg font-bold truncate">{formatCurrency(metrics.grossSales)}</p>
+                        </div>
+                      </div>
+                      {metrics.comparisonMetrics && (
+                        <div className={`flex items-center gap-1 text-sm font-medium ${metrics.comparisonMetrics.grossSalesChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {metrics.comparisonMetrics.grossSalesChange >= 0 ? (
+                            <TrendingUp className="h-4 w-4" />
+                          ) : (
+                            <TrendingDown className="h-4 w-4" />
+                          )}
+                          {formatPercentage(metrics.comparisonMetrics.grossSalesChange)}
+                        </div>
+                      )}
+                    </div>
+                    {/* Total Orders */}
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
+                          <ShoppingCart className="h-5 w-5 text-orange-500" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted-foreground">Total Orders</p>
+                          <p className="text-lg font-bold truncate">{metrics.totalOrders.toLocaleString()}</p>
+                        </div>
+                      </div>
+                      {metrics.comparisonMetrics && (
+                        <div className={`flex items-center gap-1 text-sm font-medium ${metrics.comparisonMetrics.ordersChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {metrics.comparisonMetrics.ordersChange >= 0 ? (
+                            <TrendingUp className="h-4 w-4" />
+                          ) : (
+                            <TrendingDown className="h-4 w-4" />
+                          )}
+                          {formatPercentage(metrics.comparisonMetrics.ordersChange)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-border/50" />
+
+                {/* Period Averages */}
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-4">Period Averages</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Avg Daily Revenue */}
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
+                      <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                        <TrendingUp className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">Avg Daily Revenue</p>
+                        <p className="text-lg font-bold">
                           ${metrics.weeklyAverages.dailyRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}
                         </p>
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground ml-15">per day average</p>
-                  </div>
 
-                  {/* Avg Daily Orders */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                        <ShoppingCart className="h-6 w-6 text-orange-500" />
+                    {/* Avg Daily Orders */}
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
+                      <div className="h-10 w-10 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
+                        <ShoppingCart className="h-5 w-5 text-orange-500" />
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-muted-foreground">Avg Daily Orders</p>
-                        <p className="text-2xl font-bold">
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">Avg Daily Orders</p>
+                        <p className="text-lg font-bold">
                           {metrics.weeklyAverages.dailyOrders.toFixed(0)}
                         </p>
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground ml-15">orders per day</p>
-                  </div>
 
-                  {/* Avg Order Value */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                        <DollarSign className="h-6 w-6 text-emerald-500" />
+                    {/* Avg Order Value */}
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
+                      <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                        <DollarSign className="h-5 w-5 text-emerald-500" />
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-muted-foreground">Avg Order Value</p>
-                        <p className="text-2xl font-bold">
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">Avg Order Value</p>
+                        <p className="text-lg font-bold">
                           ${metrics.weeklyAverages.avgOrderValue.toFixed(2)}
                         </p>
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground ml-15">per order average</p>
                   </div>
                 </div>
               </CardContent>
@@ -884,6 +1008,37 @@ Please provide a thorough, honest analysis that will help drive business improve
             </Card>
           </div>
 
+          {/* Important Transactions - All Categories */}
+          {metrics.expensesByCategory && metrics.expensesByCategory.length > 0 && (
+            <Card className="overflow-hidden">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-2xl">Important Transactions</CardTitle>
+                <CardDescription>Expense breakdown by category for this period</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {metrics.expensesByCategory.map((cat) => (
+                    <button
+                      key={cat.category}
+                      onClick={() => {
+                        setSelectedExpenseCategory(cat.category)
+                        setShowCategoryDetailDialog(true)
+                      }}
+                      className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer text-left"
+                    >
+                      <div className="text-2xl">{cat.emoji}</div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground truncate">{cat.category}</p>
+                        <p className="text-sm font-bold">{formatCurrency(cat.amount)}</p>
+                        <p className="text-xs text-muted-foreground">{cat.percentage.toFixed(1)}%</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* NET CASH FLOW - HERO CHART (PC Optimized) */}
           <div className="w-full">
             <FinanceChartsRedesign
@@ -892,136 +1047,6 @@ Please provide a thorough, honest analysis that will help drive business improve
               selectedPeriod={selectedPeriod}
               heroOnly={true}
             />
-          </div>
-
-
-          {/* Top Metric Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Gross Sales */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Gross Sales</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{formatCurrency(metrics.grossSales)}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Total revenue from POS
-                </p>
-                {metrics.comparisonMetrics && (
-                  <Badge
-                    variant="outline"
-                    className={`mt-2 ${
-                      metrics.comparisonMetrics.grossSalesChange >= 0
-                        ? 'text-green-500 border-green-500'
-                        : 'text-red-500 border-red-500'
-                    }`}
-                  >
-                    {metrics.comparisonMetrics.grossSalesChange >= 0 ? (
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3 mr-1" />
-                    )}
-                    {formatPercentage(metrics.comparisonMetrics.grossSalesChange)}
-                  </Badge>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Net Cash Flow */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Net Cash Flow</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className={`text-3xl font-bold ${metrics.netCashFlow < 0 ? 'text-red-500' : ''}`}>
-                  {formatCurrency(metrics.netCashFlow)}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Income - Expenses
-                </p>
-                {metrics.comparisonMetrics && (
-                  <Badge
-                    variant="outline"
-                    className={`mt-2 ${
-                      metrics.comparisonMetrics.netCashFlowChange >= 0
-                        ? 'text-green-500 border-green-500'
-                        : 'text-red-500 border-red-500'
-                    }`}
-                  >
-                    {metrics.comparisonMetrics.netCashFlowChange >= 0 ? (
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3 mr-1" />
-                    )}
-                    {formatPercentage(metrics.comparisonMetrics.netCashFlowChange)}
-                  </Badge>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Total Orders */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-                <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{metrics.totalOrders.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Orders in period
-                </p>
-                {metrics.comparisonMetrics && (
-                  <Badge
-                    variant="outline"
-                    className={`mt-2 ${
-                      metrics.comparisonMetrics.ordersChange >= 0
-                        ? 'text-green-500 border-green-500'
-                        : 'text-red-500 border-red-500'
-                    }`}
-                  >
-                    {metrics.comparisonMetrics.ordersChange >= 0 ? (
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3 mr-1" />
-                    )}
-                    {formatPercentage(metrics.comparisonMetrics.ordersChange)}
-                  </Badge>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Average Order Value */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Avg Order Value</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{formatCurrency(metrics.averageOrderValue)}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Per order average
-                </p>
-                {metrics.comparisonMetrics && (
-                  <Badge
-                    variant="outline"
-                    className={`mt-2 ${
-                      metrics.comparisonMetrics.avgOrderValueChange >= 0
-                        ? 'text-green-500 border-green-500'
-                        : 'text-red-500 border-red-500'
-                    }`}
-                  >
-                    {metrics.comparisonMetrics.avgOrderValueChange >= 0 ? (
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3 mr-1" />
-                    )}
-                    {formatPercentage(metrics.comparisonMetrics.avgOrderValueChange)}
-                  </Badge>
-                )}
-              </CardContent>
-            </Card>
           </div>
 
           {/* TOP PRODUCTS - HERO SECTION */}
@@ -1145,6 +1170,495 @@ Please provide a thorough, honest analysis that will help drive business improve
         </DialogContent>
       </Dialog>
 
+      {/* Transaction Classifications Dialog */}
+      <Dialog open={showClassificationsDialog} onOpenChange={(open) => {
+        setShowClassificationsDialog(open)
+        if (!open) setEditingPayee(null)
+      }}>
+        <DialogContent className="sm:max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <DialogTitle className="text-xl">Transaction Categories</DialogTitle>
+              {Object.keys(userCategoryOverrides).length > 0 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-95 border border-input bg-background hover:bg-accent hover:text-accent-foreground hover:border-accent h-9 rounded-md px-3 gap-2"
+                    title="Copy updated CSV to clipboard - then paste into src/lib/finance/payee_classifications.csv"
+                    onClick={async () => {
+                      // Parse the original CSV line by line and only update lines with overrides
+                      const lines = payeeClassificationsCSV.trim().split('\n')
+                      const updatedLines: string[] = []
+
+                      for (let i = 0; i < lines.length; i++) {
+                        const line = lines[i]
+
+                        // Keep header as-is
+                        if (i === 0) {
+                          updatedLines.push(line)
+                          continue
+                        }
+
+                        // Skip empty lines
+                        if (!line.trim()) continue
+
+                        // Parse the line to get payee name (handles quoted fields)
+                        let payee = ''
+                        if (line.startsWith('"')) {
+                          // Quoted payee name
+                          const endQuote = line.indexOf('"', 1)
+                          payee = line.substring(1, endQuote)
+                        } else {
+                          // Unquoted payee name
+                          payee = line.split(',')[0]
+                        }
+
+                        // Check if this payee has a user override
+                        const override = userCategoryOverrides[payee]
+                        if (override) {
+                          // Parse remaining fields
+                          const parts = line.split(',')
+                          const payeePart = line.startsWith('"')
+                            ? `"${payee}"`
+                            : payee
+                          // Keep confidence from original, clear user correction
+                          const confidence = parts[parts.length - 1] || 'High'
+                          updatedLines.push(`${payeePart},${override},,${confidence}`)
+                        } else {
+                          // Keep original line unchanged
+                          updatedLines.push(line)
+                        }
+                      }
+
+                      const csvContent = updatedLines.join('\n')
+
+                      // Copy to clipboard instead of download
+                      try {
+                        await navigator.clipboard.writeText(csvContent)
+                        alert(`CSV copied to clipboard! (${Object.keys(userCategoryOverrides).length} changes)\n\nPaste it into:\nsrc/lib/finance/payee_classifications.csv\n\nThen click the X button to clear modifications.`)
+                      } catch (err) {
+                        // Fallback: download file
+                        const blob = new Blob([csvContent], { type: 'text/csv' })
+                        const url = URL.createObjectURL(blob)
+                        const a = document.createElement('a')
+                        a.href = url
+                        a.download = 'payee_classifications.csv'
+                        document.body.appendChild(a)
+                        a.click()
+                        document.body.removeChild(a)
+                        URL.revokeObjectURL(url)
+                        alert('CSV downloaded! Replace src/lib/finance/payee_classifications.csv with the downloaded file.\n\nThen click the X button to clear modifications.')
+                      }
+                      // DO NOT clear localStorage here - user must manually clear after confirming save
+                    }}
+                  >
+                    <Save className="h-4 w-4" />
+                    <span>{Object.keys(userCategoryOverrides).length} changes</span>
+                  </button>
+                  <button
+                    className="inline-flex items-center justify-center text-sm font-medium ring-offset-background transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-95 border border-input bg-background hover:bg-destructive hover:text-destructive-foreground hover:border-destructive h-9 w-9 rounded-md"
+                    title="Clear all modifications (cannot be undone!)"
+                    onClick={() => {
+                      if (confirm(`Clear ${Object.keys(userCategoryOverrides).length} modifications? This cannot be undone!`)) {
+                        setUserCategoryOverrides({})
+                        localStorage.removeItem('taquero-category-overrides')
+                      }
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+            </div>
+            <DialogDescription>
+              {(() => {
+                if (!filteredData) return 'No transactions'
+                const classified = applyClassifications(filteredData.bankTransactions)
+                const uniquePayees = new Map<string, typeof classified[0]>()
+                classified.forEach(tx => {
+                  if (!uniquePayees.has(tx.payee)) {
+                    // Apply user override if exists
+                    const category = userCategoryOverrides[tx.payee] || tx.category
+                    uniquePayees.set(tx.payee, { ...tx, category })
+                  }
+                })
+                return `Showing ${uniquePayees.size} unique payees (click emoji to edit category)`
+              })()}
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Sortable Headers */}
+          <div className="flex items-center gap-3 px-2 py-2 border-b bg-muted/30 rounded-t-lg text-sm font-medium">
+            <button
+              onClick={() => setClassificationSort(prev => ({
+                field: 'category',
+                direction: prev.field === 'category' && prev.direction === 'asc' ? 'desc' : 'asc'
+              }))}
+              className="w-10 flex items-center justify-center gap-1 hover:text-primary transition-colors"
+              title="Sort by Category"
+            >
+              <ArrowUpDown className="h-3 w-3" />
+            </button>
+            <button
+              onClick={() => setClassificationSort(prev => ({
+                field: 'name',
+                direction: prev.field === 'name' && prev.direction === 'asc' ? 'desc' : 'asc'
+              }))}
+              className={`flex-1 flex items-center gap-1 hover:text-primary transition-colors ${classificationSort.field === 'name' ? 'text-primary' : ''}`}
+            >
+              Name <ArrowUpDown className="h-3 w-3" />
+            </button>
+            <button
+              onClick={() => setClassificationSort(prev => ({
+                field: 'type',
+                direction: prev.field === 'type' && prev.direction === 'asc' ? 'desc' : 'asc'
+              }))}
+              className={`w-16 flex items-center gap-1 hover:text-primary transition-colors ${classificationSort.field === 'type' ? 'text-primary' : ''}`}
+            >
+              Type <ArrowUpDown className="h-3 w-3" />
+            </button>
+            <button
+              onClick={() => setClassificationSort(prev => ({
+                field: 'total',
+                direction: prev.field === 'total' && prev.direction === 'asc' ? 'desc' : 'asc'
+              }))}
+              className={`w-24 flex items-center justify-end gap-1 hover:text-primary transition-colors ${classificationSort.field === 'total' ? 'text-primary' : ''}`}
+            >
+              Total <ArrowUpDown className="h-3 w-3" />
+            </button>
+            <span className="w-16 text-center text-muted-foreground text-xs">Modified</span>
+          </div>
+
+          <div className="flex-1 overflow-y-auto -mx-6 px-6">
+            {filteredData && filteredData.bankTransactions.length > 0 ? (
+              <div className="space-y-1">
+                {(() => {
+                  const classified = applyClassifications(filteredData.bankTransactions)
+
+                  // Deduplicate by payee and aggregate amounts, but also store individual transactions
+                  const payeeAggregates = new Map<string, {
+                    payee: string
+                    category: ExpenseCategory
+                    type: 'income' | 'expense'
+                    totalAmount: number
+                    count: number
+                    lastDate: string
+                    transactions: typeof classified
+                  }>()
+
+                  classified.forEach(tx => {
+                    const existing = payeeAggregates.get(tx.payee)
+                    const category = (userCategoryOverrides[tx.payee] || tx.category) as ExpenseCategory
+                    if (existing) {
+                      existing.totalAmount += tx.amount
+                      existing.count += 1
+                      existing.transactions.push({ ...tx, category })
+                      // Keep latest date
+                      if (tx.date > existing.lastDate) existing.lastDate = tx.date
+                    } else {
+                      payeeAggregates.set(tx.payee, {
+                        payee: tx.payee,
+                        category,
+                        type: tx.type as 'income' | 'expense',
+                        totalAmount: tx.amount,
+                        count: 1,
+                        lastDate: tx.date,
+                        transactions: [{ ...tx, category }]
+                      })
+                    }
+                  })
+
+                  // Convert to array and sort
+                  let sortedPayees = Array.from(payeeAggregates.values())
+
+                  sortedPayees.sort((a, b) => {
+                    const dir = classificationSort.direction === 'asc' ? 1 : -1
+                    switch (classificationSort.field) {
+                      case 'name':
+                        return a.payee.localeCompare(b.payee) * dir
+                      case 'date':
+                        return a.lastDate.localeCompare(b.lastDate) * dir
+                      case 'type':
+                        return a.type.localeCompare(b.type) * dir
+                      case 'category':
+                        return a.category.localeCompare(b.category) * dir
+                      case 'total':
+                        return (a.totalAmount - b.totalAmount) * dir
+                      default:
+                        return 0
+                    }
+                  })
+
+                  return sortedPayees.map((item) => (
+                    <div key={item.payee} className="border-b border-muted/30 last:border-0">
+                      <div
+                        className={`flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors ${item.count > 1 ? 'cursor-pointer' : ''} ${expandedPayee === item.payee ? 'bg-muted/30' : ''}`}
+                        onClick={() => item.count > 1 && setExpandedPayee(expandedPayee === item.payee ? null : item.payee)}
+                      >
+                        {/* Category Emoji - Clickable for editing */}
+                        <div onClick={(e) => e.stopPropagation()} className="flex-shrink-0">
+                          {editingPayee === item.payee ? (
+                            <DropdownMenu open={true} onOpenChange={(open) => !open && setEditingPayee(null)}>
+                              <DropdownMenuTrigger asChild>
+                                <button className="text-2xl w-10 text-center bg-primary/10 rounded-lg p-1 ring-2 ring-primary">
+                                  {getCategoryEmoji(item.category)}
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="start" className="max-h-[300px] overflow-y-auto">
+                                {Object.values(EXPENSE_CATEGORIES).map((cat) => (
+                                  <DropdownMenuItem
+                                    key={cat}
+                                    onClick={() => {
+                                      const newOverrides = { ...userCategoryOverrides, [item.payee]: cat as ExpenseCategory }
+                                      setUserCategoryOverrides(newOverrides)
+                                      localStorage.setItem('taquero-category-overrides', JSON.stringify(newOverrides))
+                                      setEditingPayee(null)
+                                    }}
+                                    className={item.category === cat ? 'bg-accent' : ''}
+                                  >
+                                    <span className="text-xl mr-2">{getCategoryEmoji(cat as ExpenseCategory)}</span>
+                                    {cat}
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          ) : (
+                            <button
+                              onClick={() => setEditingPayee(item.payee)}
+                              className="text-2xl w-10 text-center hover:bg-primary/10 rounded-lg p-1 transition-colors cursor-pointer"
+                              title="Click to change category"
+                            >
+                              {getCategoryEmoji(item.category)}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Payee Name */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium truncate">{item.payee}</p>
+                            {item.count > 1 && (
+                              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${expandedPayee === item.payee ? 'rotate-180' : ''}`} />
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {item.category} {item.count > 1 && <span className="text-primary">({item.count} transactions)</span>}
+                          </p>
+                        </div>
+
+                        {/* Income/Expense Badge */}
+                        <Badge
+                          variant="outline"
+                          className={item.type === 'income'
+                            ? 'text-green-500 border-green-500/50 w-14 justify-center'
+                            : 'text-red-500 border-red-500/50 w-14 justify-center'
+                          }
+                        >
+                          {item.type === 'income' ? 'IN' : 'OUT'}
+                        </Badge>
+
+                        {/* Total Amount */}
+                        <span className={`text-sm font-bold w-24 text-right ${
+                          item.type === 'income' ? 'text-green-500' : 'text-red-500'
+                        }`}>
+                          {item.type === 'income' ? '+' : '-'}${item.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+
+                        {/* Modified Indicator */}
+                        <div className="w-16 flex justify-center">
+                          {userCategoryOverrides[item.payee] ? (
+                            <Badge variant="outline" className="text-xs py-0 px-1.5 text-amber-500 border-amber-500/50">
+                              Yes
+                            </Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground/50">—</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Expanded Transactions */}
+                      {expandedPayee === item.payee && item.count > 1 && (
+                        <div className="ml-12 mr-2 mb-2 bg-muted/20 rounded-lg border border-muted/40">
+                          <div className="flex items-center gap-3 px-3 py-1.5 border-b border-muted/40 text-xs font-medium text-muted-foreground">
+                            <span className="w-20">Date</span>
+                            <span className="flex-1">Details</span>
+                            <span className="w-14 text-center">Type</span>
+                            <span className="w-24 text-right">Amount</span>
+                          </div>
+                          {item.transactions
+                            .sort((a, b) => b.date.localeCompare(a.date))
+                            .map((tx, idx) => (
+                            <div key={idx} className="flex items-center gap-3 px-3 py-2 border-b border-muted/20 last:border-0 text-sm">
+                              <span className="text-xs text-muted-foreground w-20">{tx.date}</span>
+                              <span className="flex-1 truncate text-xs">{tx.payee}</span>
+                              <Badge
+                                variant="outline"
+                                className={`${tx.type === 'income'
+                                  ? 'text-green-500 border-green-500/50'
+                                  : 'text-red-500 border-red-500/50'
+                                } w-14 justify-center text-xs py-0`}
+                              >
+                                {tx.type === 'income' ? 'IN' : 'OUT'}
+                              </Badge>
+                              <span className={`text-sm font-medium w-24 text-right ${
+                                tx.type === 'income' ? 'text-green-500' : 'text-red-500'
+                              }`}>
+                                {tx.type === 'income' ? '+' : '-'}${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                })()}
+              </div>
+            ) : (
+              <div className="p-12 text-center text-muted-foreground">
+                <ListFilter className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No transactions to display</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Category Detail Dialog (Important Transactions) */}
+      <Dialog open={showCategoryDetailDialog} onOpenChange={(open) => {
+        setShowCategoryDetailDialog(open)
+        if (!open) setSelectedExpenseCategory(null)
+      }}>
+        <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-xl flex items-center gap-2">
+              {selectedExpenseCategory && metrics?.expensesByCategory && (
+                <>
+                  <span className="text-2xl">{metrics.expensesByCategory.find(c => c.category === selectedExpenseCategory)?.emoji}</span>
+                  <span>{selectedExpenseCategory}</span>
+                </>
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              {(() => {
+                if (!filteredData || !selectedExpenseCategory) return 'No transactions'
+                const classified = applyClassifications(filteredData.bankTransactions)
+                const categoryTransactions = classified.filter(tx => {
+                  const txCategory = userCategoryOverrides[tx.payee] || tx.category
+                  return txCategory === selectedExpenseCategory
+                })
+                const total = categoryTransactions.reduce((sum, tx) => sum + tx.amount, 0)
+                return `${categoryTransactions.length} transaction${categoryTransactions.length !== 1 ? 's' : ''} totaling ${formatCurrency(total)}`
+              })()}
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Sortable Headers */}
+          <div className="flex items-center gap-3 px-2 py-2 border-b bg-muted/30 rounded-t-lg text-sm font-medium">
+            <button
+              onClick={() => setCategoryDetailSort(prev => ({
+                field: 'date',
+                direction: prev.field === 'date' && prev.direction === 'asc' ? 'desc' : 'asc'
+              }))}
+              className={`w-24 flex items-center gap-1 hover:text-primary transition-colors ${categoryDetailSort.field === 'date' ? 'text-primary' : ''}`}
+            >
+              Date <ArrowUpDown className="h-3 w-3" />
+            </button>
+            <button
+              onClick={() => setCategoryDetailSort(prev => ({
+                field: 'payee',
+                direction: prev.field === 'payee' && prev.direction === 'asc' ? 'desc' : 'asc'
+              }))}
+              className={`flex-1 flex items-center gap-1 hover:text-primary transition-colors ${categoryDetailSort.field === 'payee' ? 'text-primary' : ''}`}
+            >
+              Payee <ArrowUpDown className="h-3 w-3" />
+            </button>
+            <button
+              onClick={() => setCategoryDetailSort(prev => ({
+                field: 'amount',
+                direction: prev.field === 'amount' && prev.direction === 'asc' ? 'desc' : 'asc'
+              }))}
+              className={`w-28 flex items-center justify-end gap-1 hover:text-primary transition-colors ${categoryDetailSort.field === 'amount' ? 'text-primary' : ''}`}
+            >
+              Amount <ArrowUpDown className="h-3 w-3" />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto -mx-6 px-6">
+            {filteredData && selectedExpenseCategory ? (
+              <div className="space-y-1">
+                {(() => {
+                  const classified = applyClassifications(filteredData.bankTransactions)
+                  const categoryTransactions = classified.filter(tx => {
+                    const txCategory = userCategoryOverrides[tx.payee] || tx.category
+                    return txCategory === selectedExpenseCategory
+                  })
+
+                  // Sort transactions
+                  const sorted = [...categoryTransactions].sort((a, b) => {
+                    const dir = categoryDetailSort.direction === 'asc' ? 1 : -1
+                    switch (categoryDetailSort.field) {
+                      case 'date':
+                        // Parse DD/MM/YY format for sorting
+                        const parseDate = (d: string) => {
+                          const parts = d.split('/')
+                          if (parts.length !== 3) return 0
+                          const day = parseInt(parts[0])
+                          const month = parseInt(parts[1]) - 1
+                          let year = parseInt(parts[2])
+                          if (year < 100) year += 2000
+                          return new Date(year, month, day).getTime()
+                        }
+                        return (parseDate(a.date) - parseDate(b.date)) * dir
+                      case 'payee':
+                        return a.payee.localeCompare(b.payee) * dir
+                      case 'amount':
+                        return (a.amount - b.amount) * dir
+                      default:
+                        return 0
+                    }
+                  })
+
+                  if (sorted.length === 0) {
+                    return (
+                      <div className="p-12 text-center text-muted-foreground">
+                        <ListFilter className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p>No transactions in this category</p>
+                      </div>
+                    )
+                  }
+
+                  return sorted.map((tx, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/30 transition-colors border-b border-muted/20 last:border-0"
+                    >
+                      {/* Date */}
+                      <span className="text-sm text-muted-foreground w-24">{tx.date}</span>
+
+                      {/* Payee */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{tx.payee}</p>
+                      </div>
+
+                      {/* Amount */}
+                      <span className={`text-sm font-bold w-28 text-right ${
+                        tx.type === 'income' ? 'text-green-500' : 'text-red-500'
+                      }`}>
+                        {tx.type === 'income' ? '+' : '-'}${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  ))
+                })()}
+              </div>
+            ) : (
+              <div className="p-12 text-center text-muted-foreground">
+                <ListFilter className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No transactions to display</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Health Score Explanation Dialog */}
       <Dialog open={showHealthScoreDialog} onOpenChange={setShowHealthScoreDialog}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -1212,9 +1726,6 @@ Please provide a thorough, honest analysis that will help drive business improve
                         <div className="text-lg font-semibold">
                           {item.score.toFixed(0)}<span className="text-sm text-muted-foreground">/10</span>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          +{((item.score * item.weight) / 100).toFixed(1)} pts
-                        </div>
                       </div>
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -1243,77 +1754,113 @@ Please provide a thorough, honest analysis that will help drive business improve
               </button>
               {componentDetailsExpanded && (
                 <div className="px-4 pb-4 space-y-4">
+                  {/* Scoring Logic - Collapsible */}
+                  <div className="border rounded-lg bg-muted/30">
+                    <button
+                      onClick={() => setScoringLogicExpanded(!scoringLogicExpanded)}
+                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors rounded-lg"
+                    >
+                      <h4 className="font-medium text-sm">Scoring Logic</h4>
+                      {scoringLogicExpanded ? (
+                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </button>
+                    {scoringLogicExpanded && (
+                      <div className="px-4 pb-4 space-y-3">
+                        {/* Profit Gate */}
+                        <div className="space-y-2 p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                          <h5 className="font-medium text-xs text-red-400">The Profit Gate (Losing Money)</h5>
+                          <p className="text-xs text-muted-foreground">
+                            If you're losing money, max score is 5. Score based on loss severity:
+                          </p>
+                          <div className="text-xs space-y-0.5">
+                            <p>• Lost 0-2% = 5 pts (😑) • Lost 2-5% = 4 pts (😒)</p>
+                            <p>• Lost 5-10% = 3 pts (😠) • Lost 10-15% = 2 pts (😤)</p>
+                            <p>• Lost 15-20% = 1 pt (😡) • Lost 20%+ = 0 pts (🍆)</p>
+                          </div>
+                        </div>
+                        {/* Bonus System */}
+                        <div className="space-y-2 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                          <h5 className="font-medium text-xs text-green-400">Bonus System (Profitable Months)</h5>
+                          <p className="text-xs text-muted-foreground">
+                            If you made money, start at 6 (Pass) and earn bonuses up to 10 based on margin, costs, and revenue.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Profit Margin */}
                   <div className="space-y-2 p-3 bg-muted/30 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-sm">1. Profit Margin</h4>
-                  <Badge variant="outline">40% weight</Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Measures your net cash flow as a percentage of total revenue. Based on actual NZ restaurant industry benchmarks.
-                </p>
-                <div className="text-xs space-y-1 pt-2 border-t">
-                  <p>• 20%+ margin = 10 pts (🤩 Excellent - exceptional, rarely achieved)</p>
-                  <p>• 12-20% margin = 9 pts (😄 Great - excellent performance)</p>
-                  <p>• 10-12% margin = 8 pts (😊 Good - above standard)</p>
-                  <p>• 8-10% margin = 7 pts (🙂 Good - industry standard)</p>
-                  <p>• 5-8% margin = 6 pts (😐 Pass - below average but viable)</p>
-                  <p>• 3-5% margin = 5 pts (😑 Concerning - struggling)</p>
-                  <p>• 2-3% margin = 4 pts (😒 Failed - critical)</p>
-                  <p>• 1-2% margin = 3 pts (😠 Failed - barely surviving)</p>
-                  <p>• 0.5-1% margin = 2 pts (😤 Failed - essentially broke even)</p>
-                  <p>• 0.01-0.5% = 1 pt (😡 Failed - break even)</p>
-                  <p>• 0% or negative = 0 pts (🍆 Failed - lost money)</p>
-                </div>
-              </div>
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium text-sm">1. Profit Margin</h4>
+                      <Badge variant="outline">63% weight</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Your profit as a percentage of revenue. This is the most important metric for profitable months - it shows how much you're actually keeping.
+                    </p>
+                    <div className="text-xs space-y-1 pt-2 border-t">
+                      <p>• 15%+ margin = +2.5 pts (🤩 Outstanding)</p>
+                      <p>• 10-15% margin = +2.0 pts (😄 Excellent)</p>
+                      <p>• 7-10% margin = +1.5 pts (😊 Great)</p>
+                      <p>• 5-7% margin = +1.0 pts (🙂 Good)</p>
+                      <p>• 2-5% margin = +0.5 pts (😐 Okay)</p>
+                      <p>• Under 2% = +0 pts (😑 Break-even)</p>
+                    </div>
+                  </div>
 
-              {/* Revenue Strength */}
-              <div className="space-y-2 p-3 bg-muted/30 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-sm">2. Revenue Strength</h4>
-                  <Badge variant="outline">35% weight</Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Evaluates daily revenue performance based on Hot Like A Mexican's actual business targets (NZD).
-                </p>
-                <div className="text-xs space-y-1 pt-2 border-t">
-                  <p>• $4,000+ = 10 pts (🤩 Excellent - $5,000+ is legendary!)</p>
-                  <p>• $3,500-4,000 = 9 pts (😄 Great - amazing day)</p>
-                  <p>• $3,000-3,500 = 8 pts (😊 Good - very good day)</p>
-                  <p>• $2,500-3,000 = 7 pts (🙂 Satisfactory - solid day)</p>
-                  <p>• $2,000-2,500 = 6 pts (😐 Pass - average day)</p>
-                  <p>• $1,500-2,000 = 5 pts (😑 Failed - below average)</p>
-                  <p>• $1,000-1,500 = 4 pts (😒 Failed - low sales)</p>
-                  <p>• $600-1,000 = 3 pts (😠 Failed - bad day)</p>
-                  <p>• $300-600 = 2 pts (😤 Failed - very bad)</p>
-                  <p>• $1-300 = 1 pt (😡 Failed - critical)</p>
-                  <p>• $0 = 0 pts (🍆 Failed - no sales)</p>
-                </div>
-              </div>
+                  {/* Operational Costs */}
+                  <div className="space-y-2 p-3 bg-muted/30 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium text-sm">2. Operational Costs</h4>
+                      <Badge variant="outline">25% weight</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Your core operating costs as a percentage of revenue. Lower is better - shows operational efficiency.
+                    </p>
+                    <div className="text-xs space-y-1 pt-2 border-t">
+                      <p>• Under 65% = +1.0 pts (🤩 Exceptional - very lean)</p>
+                      <p>• 65-70% = +0.7 pts (😄 Excellent - well managed)</p>
+                      <p>• 70-75% = +0.4 pts (😊 Good - industry standard)</p>
+                      <p>• 75-80% = +0.2 pts (🙂 Acceptable)</p>
+                      <p>• Over 80% = +0 pts (😑 No bonus)</p>
+                    </div>
+                    <div className="text-xs text-muted-foreground pt-2 border-t">
+                      <p className="font-medium">Operational Costs includes:</p>
+                      <p>• 🍖 Food Supplies (ingredients, raw materials)</p>
+                      <p>• 📦 Supplies (packaging, containers)</p>
+                      <p>• 👥 Labor/Payroll (wages, salaries)</p>
+                      <p>• 🏠 Rent/Lease (premises)</p>
+                      <p>• 🏛️ Tax & Govt (taxes, licenses)</p>
+                    </div>
+                  </div>
 
-              {/* Cash Flow Health */}
-              <div className="space-y-2 p-3 bg-muted/30 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-sm">3. Cash Flow Health</h4>
-                  <Badge variant="outline">25% weight</Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Measures cash flow strength as a percentage of revenue. Cash Flow = All Income - All Expenses.
-                </p>
-                <div className="text-xs space-y-1 pt-2 border-t">
-                  <p>• 15%+ ratio = 10 pts (🤩 Excellent)</p>
-                  <p>• 10-15% ratio = 9 pts (😄 Great)</p>
-                  <p>• 8-10% ratio = 8 pts (😊 Good)</p>
-                  <p>• 5-8% ratio = 7 pts (🙂 Satisfactory)</p>
-                  <p>• 2-5% ratio = 6 pts (😐 Pass)</p>
-                  <p>• 1-2% ratio = 5 pts (😑 Failed - barely positive)</p>
-                  <p>• 0.5-1% ratio = 4 pts (😒 Failed - concerning)</p>
-                  <p>• 0.1-0.5% ratio = 3 pts (😠 Failed - critical)</p>
-                  <p>• 0.01-0.1% ratio = 2 pts (😤 Failed - barely surviving)</p>
-                  <p>• 0% or tiny positive = 1 pt (😡 Failed - essentially broke even)</p>
-                  <p>• Negative = 0 pts (🍆 Failed - losing money)</p>
-                </div>
-              </div>
+                  {/* Revenue Strength */}
+                  <div className="space-y-2 p-3 bg-muted/30 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium text-sm">3. Revenue Strength</h4>
+                      <Badge variant="outline">12% weight</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Evaluates daily revenue performance based on Hot Like A Mexican's actual business targets (NZD).
+                    </p>
+                    <div className="text-xs space-y-1 pt-2 border-t">
+                      <p>• $4,000+ = 10 pts (🤩 Excellent - $5,000+ is legendary!)</p>
+                      <p>• $3,500-4,000 = 9 pts (😄 Great - amazing day)</p>
+                      <p>• $3,000-3,500 = 8 pts (😊 Good - very good day)</p>
+                      <p>• $2,500-3,000 = 7 pts (🙂 Satisfactory - solid day)</p>
+                      <p>• $2,000-2,500 = 6 pts (😐 Pass - average day)</p>
+                      <p>• $1,500-2,000 = 5 pts (😑 Failed - below average)</p>
+                      <p>• $1,000-1,500 = 4 pts (😒 Failed - low sales)</p>
+                      <p>• $600-1,000 = 3 pts (😠 Failed - bad day)</p>
+                      <p>• $300-600 = 2 pts (😤 Failed - very bad)</p>
+                      <p>• $1-300 = 1 pt (😡 Failed - critical)</p>
+                      <p>• $0 = 0 pts (🍆 Failed - no sales)</p>
+                    </div>
+                  </div>
+
                 </div>
               )}
             </div>

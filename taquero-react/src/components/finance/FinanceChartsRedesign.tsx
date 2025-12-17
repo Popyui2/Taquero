@@ -41,6 +41,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { FileText, TrendingUp, TrendingDown, DollarSign, ChevronDown } from 'lucide-react'
 import type { DashboardMetrics, ImportedData } from '@/types/finance'
+import { getCategoryEmoji, getPayeeCategory } from '@/lib/finance/categories'
 import { format, startOfWeek, endOfWeek, startOfMonth, startOfQuarter, endOfQuarter, differenceInDays } from 'date-fns'
 
 interface FinanceChartsRedesignProps {
@@ -48,13 +49,14 @@ interface FinanceChartsRedesignProps {
   data: ImportedData
   selectedPeriod?: string
   heroOnly?: boolean
+  onDateRangeSelect?: (startDate: Date, endDate: Date) => void
 }
 
 const CATEGORY_COLORS = ['#ffffff', '#cccccc', '#999999', '#666666', '#444444']
 
 type AggregationType = 'weekly' | 'monthly' | 'quarterly'
 
-export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-month', heroOnly = false }: FinanceChartsRedesignProps) {
+export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-month', heroOnly = false, onDateRangeSelect }: FinanceChartsRedesignProps) {
   // Toggle states for Makings/Losses/Net
   const [showMakings, setShowMakings] = useState(true)
   const [showLosses, setShowLosses] = useState(true)
@@ -512,6 +514,7 @@ export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-mo
               variant="outline"
               size="sm"
               onClick={() => setShowTableDialog(true)}
+              title="📊 Detailed Transactions"
             >
               <FileText className="h-4 w-4" />
             </Button>
@@ -679,6 +682,7 @@ export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-mo
             <Table>
               <TableHeader>
                 <TableRow>
+                  {selectedDateRange && <TableHead className="w-12">Type</TableHead>}
                   <TableHead
                     className="cursor-pointer hover:bg-muted/50 select-none"
                     onClick={() => handleSort('date')}
@@ -687,14 +691,13 @@ export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-mo
                   </TableHead>
                   {selectedDateRange ? (
                     <>
-                      <TableHead>Description</TableHead>
+                      <TableHead>Name</TableHead>
                       <TableHead
                         className="text-right cursor-pointer hover:bg-muted/50 select-none"
                         onClick={() => handleSort('amount')}
                       >
                         Amount <SortIcon column="amount" />
                       </TableHead>
-                      <TableHead className="text-right">Type</TableHead>
                     </>
                   ) : (
                     <>
@@ -723,22 +726,23 @@ export function FinanceChartsRedesign({ metrics, data, selectedPeriod = 'last-mo
               <TableBody>
                 {selectedDateRange ? (
                   // Show individual transactions for selected period
-                  filteredTransactions.map((transaction, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{transaction.displayDate}</TableCell>
-                      <TableCell className="max-w-xs truncate" title={transaction.payee}>
-                        {transaction.payee}
-                      </TableCell>
-                      <TableCell className={`text-right font-semibold ${transaction.type === 'income' ? 'text-green-500' : 'text-red-500'}`}>
-                        {transaction.type === 'income' ? '+' : '-'}${Math.abs(transaction.amount).toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <span className={`px-2 py-1 rounded text-xs ${transaction.type === 'income' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
-                          {transaction.type}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  filteredTransactions.map((transaction, index) => {
+                    const category = getPayeeCategory(transaction.payee)
+                    const emoji = category ? getCategoryEmoji(category) : '❓'
+                    return (
+                      <TableRow key={index}>
+                        <TableCell className="text-center text-2xl">{emoji}</TableCell>
+                        <TableCell className="font-medium">{transaction.displayDate}</TableCell>
+                        <TableCell className="max-w-xs" title={transaction.payee}>
+                          <div className="truncate">{transaction.payee}</div>
+                          <div className="text-xs text-muted-foreground truncate">{category || 'Unclassified'}</div>
+                        </TableCell>
+                        <TableCell className={`text-right font-semibold ${transaction.type === 'income' ? 'text-green-500' : 'text-red-500'}`}>
+                          {transaction.type === 'income' ? '+' : '-'}${Math.abs(transaction.amount).toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
                 ) : (
                   // Show aggregated data
                   sortedTableData.map((row, index) => (

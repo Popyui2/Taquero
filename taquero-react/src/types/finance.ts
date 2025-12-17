@@ -155,7 +155,7 @@ export interface DashboardMetrics {
     emoji: string
     color: string
     insights: string[]
-    breakdown: { metric: string; score: number; weight: number; actualValue: string; emoji: string }[]
+    breakdown: { metric: string; score: number; weight: number; actualValue: string; emoji: string; bonusPoints?: number }[]
   }
   comparisonMetrics?: {
     grossSalesChange: number

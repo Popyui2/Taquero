@@ -4,28 +4,32 @@ export const EXPENSE_CATEGORIES = {
   // Income
   REVENUE: 'Revenue',
 
-  // Operating Expenses
+  // Operating Expenses - COGS (Cost of Goods Sold)
   FOOD_SUPPLIES: 'Food Supplies',
+
+  // Operating Expenses - Labor
   LABOR_PAYROLL: 'Labor/Payroll',
+
+  // Operating Expenses - Fixed Costs
   RENT_LEASE: 'Rent/Lease',
   UTILITIES: 'Utilities',
   EQUIPMENT_RENTAL: 'Equipment Rental',
   INSURANCE: 'Insurance',
+
+  // Operating Expenses - Variable Costs
   MARKETING_TECH: 'Marketing/Tech',
-  DELIVERY_PLATFORM_FEES: 'Delivery Platform Fees',
   BANKING_FEES: 'Banking Fees',
-  LICENSES_COMPLIANCE: 'Licenses/Compliance',
+  LICENSES_COMPLIANCE: 'Tax & Govt',
   PROFESSIONAL_SERVICES: 'Professional Services',
   REPAIRS_MAINTENANCE: 'Repairs/Maintenance',
   SUPPLIES: 'Supplies',
   PARKING_TRANSPORT: 'Parking/Transport',
+  FOODTRUCK_EVENT_COST: 'Foodtruck Event Cost',
 
-  // Special
+  // Special - Excluded from profit calculations
   INTERNAL_TRANSFER: 'Internal Transfer',
   PERSONAL: 'Personal',
-  TAX: 'Tax',
-  OTHER: 'Other',
-  UNKNOWN: 'Unknown',
+  OTHER: 'Other/Unknown',
 } as const
 
 export type ExpenseCategory = typeof EXPENSE_CATEGORIES[keyof typeof EXPENSE_CATEGORIES]
@@ -104,7 +108,55 @@ export function getPayeeCategory(payee: string): ExpenseCategory | null {
 }
 
 /**
+ * Categories to EXCLUDE from profit calculations entirely
+ * These are not real business expenses
+ */
+export const EXCLUDED_CATEGORIES: ExpenseCategory[] = [
+  EXPENSE_CATEGORIES.INTERNAL_TRANSFER,
+  EXPENSE_CATEGORIES.PERSONAL,
+]
+
+/**
+ * Categories that are Cost of Goods Sold (COGS)
+ * Direct costs of producing the food/drinks sold
+ */
+export const COGS_CATEGORIES: ExpenseCategory[] = [
+  EXPENSE_CATEGORIES.FOOD_SUPPLIES,
+]
+
+/**
+ * Check if category should be excluded from profit calculations
+ */
+export function isExcludedCategory(category: ExpenseCategory): boolean {
+  return EXCLUDED_CATEGORIES.includes(category)
+}
+
+/**
+ * Check if category is a business expense (not excluded)
+ */
+export function isBusinessExpense(category: ExpenseCategory): boolean {
+  return !isExcludedCategory(category) &&
+         category !== EXPENSE_CATEGORIES.REVENUE
+}
+
+/**
+ * Check if category is COGS (Cost of Goods Sold)
+ */
+export function isCOGSCategory(category: ExpenseCategory): boolean {
+  return COGS_CATEGORIES.includes(category)
+}
+
+/**
+ * Check if category is an operating expense (business expense excluding COGS and Tax)
+ */
+export function isOperatingExpense(category: ExpenseCategory): boolean {
+  return isBusinessExpense(category) &&
+         !isCOGSCategory(category)
+}
+
+/**
  * Check if category is an expense (not revenue, transfer, or personal)
+ * @deprecated Use isBusinessExpense instead
  */
 export function isExpenseCategory(category: ExpenseCategory): boolean {
   return category !== EXPENSE_CATEGORIES.REVENUE &&
@@ -132,13 +184,15 @@ export function getCategoryColor(category: ExpenseCategory): string {
     [EXPENSE_CATEGORIES.EQUIPMENT_RENTAL]: '#6366f1', // indigo
     [EXPENSE_CATEGORIES.INSURANCE]: '#ec4899', // pink
     [EXPENSE_CATEGORIES.MARKETING_TECH]: '#14b8a6', // teal
-    [EXPENSE_CATEGORIES.DELIVERY_PLATFORM_FEES]: '#f97316', // orange
     [EXPENSE_CATEGORIES.BANKING_FEES]: '#84cc16', // lime
     [EXPENSE_CATEGORIES.LICENSES_COMPLIANCE]: '#a855f7', // violet
     [EXPENSE_CATEGORIES.PROFESSIONAL_SERVICES]: '#0ea5e9', // sky
     [EXPENSE_CATEGORIES.REPAIRS_MAINTENANCE]: '#f43f5e', // rose
     [EXPENSE_CATEGORIES.SUPPLIES]: '#eab308', // yellow
     [EXPENSE_CATEGORIES.PARKING_TRANSPORT]: '#22c55e', // green
+    [EXPENSE_CATEGORIES.FOODTRUCK_EVENT_COST]: '#dc2626', // red-600
+    [EXPENSE_CATEGORIES.PERSONAL]: '#9ca3af', // gray
+    [EXPENSE_CATEGORIES.INTERNAL_TRANSFER]: '#d1d5db', // gray-300
   }
 
   return colors[category] || '#64748b' // slate default
@@ -157,13 +211,16 @@ export function getCategoryEmoji(category: ExpenseCategory): string {
     [EXPENSE_CATEGORIES.EQUIPMENT_RENTAL]: '🔧',
     [EXPENSE_CATEGORIES.INSURANCE]: '🛡️',
     [EXPENSE_CATEGORIES.MARKETING_TECH]: '📱',
-    [EXPENSE_CATEGORIES.DELIVERY_PLATFORM_FEES]: '🚗',
     [EXPENSE_CATEGORIES.BANKING_FEES]: '🏦',
-    [EXPENSE_CATEGORIES.LICENSES_COMPLIANCE]: '📜',
+    [EXPENSE_CATEGORIES.LICENSES_COMPLIANCE]: '🏛️',
     [EXPENSE_CATEGORIES.PROFESSIONAL_SERVICES]: '💼',
     [EXPENSE_CATEGORIES.REPAIRS_MAINTENANCE]: '🔨',
     [EXPENSE_CATEGORIES.SUPPLIES]: '📦',
-    [EXPENSE_CATEGORIES.PARKING_TRANSPORT]: '🅿️',
+    [EXPENSE_CATEGORIES.PARKING_TRANSPORT]: '🚗',
+    [EXPENSE_CATEGORIES.FOODTRUCK_EVENT_COST]: '🎪',
+    [EXPENSE_CATEGORIES.PERSONAL]: '🏠',
+    [EXPENSE_CATEGORIES.INTERNAL_TRANSFER]: '🔄',
+    [EXPENSE_CATEGORIES.OTHER]: '❓',
   }
 
   return emojis[category] || '❓'

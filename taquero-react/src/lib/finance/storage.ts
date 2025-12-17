@@ -11,7 +11,44 @@ import type {
   PeakHours,
   CompanyDataset,
   UploadedFileInfo,
+  BankTransaction,
 } from '@/types/finance'
+import {
+  loadPayeeClassifications,
+  getPayeeCategory,
+  isExcludedCategory,
+  isBusinessExpense,
+  isCOGSCategory,
+  getCategoryEmoji,
+  EXPENSE_CATEGORIES,
+  type ExpenseCategory,
+} from './categories'
+import payeeClassificationsCSV from './payee_classifications.csv?raw'
+
+// Initialize classifications from embedded CSV
+let classificationsLoaded = false
+
+function ensureClassificationsLoaded() {
+  if (!classificationsLoaded) {
+    loadPayeeClassifications(payeeClassificationsCSV)
+    classificationsLoaded = true
+  }
+}
+
+/**
+ * Apply category classifications to bank transactions
+ */
+export function applyClassifications(transactions: BankTransaction[]): BankTransaction[] {
+  ensureClassificationsLoaded()
+
+  return transactions.map(tx => {
+    const category = getPayeeCategory(tx.payee)
+    return {
+      ...tx,
+      category: category || EXPENSE_CATEGORIES.OTHER,
+    }
+  })
+}
 
 const DB_NAME = 'taquero-finance'
 const DB_VERSION = 1
@@ -176,190 +213,269 @@ export async function hasFinanceData(): Promise<boolean> {
 
 /**
  * Calculate business health score (0-10)
- * Uses ONLY bank statement data to avoid issues with incomplete POS data
+ * NEW ALGORITHM: Profit Gate + Bonus System
+ * - If losing money (netCashFlow < 0): Max score is 5 (Failed)
+ * - If profitable: Start at 6 (Pass) and add bonuses for margin, efficiency, revenue
  */
 function calculateHealthScore(params: {
   netCashFlow: number
   totalRevenue: number
   dailyRevenue: number
+  primeCost: number
 }): {
   score: number
   status: string
   emoji: string
   color: string
   insights: string[]
-  breakdown: { metric: string; score: number; weight: number }[]
+  breakdown: { metric: string; score: number; weight: number; actualValue: string; emoji: string; bonusPoints?: number }[]
 } {
-  const { netCashFlow, totalRevenue, dailyRevenue } = params
+  const { netCashFlow, totalRevenue, dailyRevenue, primeCost } = params
 
-  // 1. Profit Margin Score (40% weight) - Most critical
-  // Based on actual NZ restaurant industry benchmarks
-  const profitMargin = totalRevenue > 0 ? (netCashFlow / totalRevenue) * 100 : 0
-  let profitScore = 0
-
-  if (profitMargin < 0) {
-    profitScore = 0 // Failed - negative margin
-  } else if (profitMargin >= 12) {
-    // 12%+: Excellent - well above industry (9-10 pts)
-    profitScore = 9 + Math.min(1, (profitMargin - 12) / 8) // Reaches 10 at 20%+
-  } else if (profitMargin >= 8) {
-    // 8-12%: Good - industry standard (7-9 pts)
-    profitScore = 7 + ((profitMargin - 8) / 4) * 2
-  } else if (profitMargin >= 5) {
-    // 5-8%: Fair - below average but viable (5-7 pts)
-    profitScore = 5 + ((profitMargin - 5) / 3) * 2
-  } else if (profitMargin >= 3) {
-    // 3-5%: Concerning - struggling (3-5 pts)
-    profitScore = 3 + ((profitMargin - 3) / 2) * 2
-  } else {
-    // 0-3%: Critical - barely surviving (0-3 pts)
-    profitScore = (profitMargin / 3) * 3
-  }
-
-  // 2. Revenue Strength Score (35% weight)
-  // Based on Hot Like A Mexican's actual performance targets (NZD)
-  // More lenient scoring with $4,000+ as the ceiling for excellent days
-  let revenueScore = 0
-  if (dailyRevenue >= 4000) {
-    revenueScore = 10 // Excellent/Legendary days! ($5,000+ are rare legendary days but same grade)
-  } else if (dailyRevenue >= 3500) {
-    // 3500-4000: Amazing (9-10 pts)
-    revenueScore = 9 + ((dailyRevenue - 3500) / 500)
-  } else if (dailyRevenue >= 3000) {
-    // 3000-3500: Very Good (8-9 pts)
-    revenueScore = 8 + ((dailyRevenue - 3000) / 500)
-  } else if (dailyRevenue >= 2500) {
-    // 2500-3000: Good (7-8 pts)
-    revenueScore = 7 + ((dailyRevenue - 2500) / 500)
-  } else if (dailyRevenue >= 2000) {
-    // 2000-2500: Average (6-7 pts)
-    revenueScore = 6 + ((dailyRevenue - 2000) / 500)
-  } else if (dailyRevenue >= 1500) {
-    // 1500-2000: Below Average (5-6 pts)
-    revenueScore = 5 + ((dailyRevenue - 1500) / 500)
-  } else if (dailyRevenue >= 1000) {
-    // 1000-1500: Low (4-5 pts)
-    revenueScore = 4 + ((dailyRevenue - 1000) / 500)
-  } else if (dailyRevenue >= 600) {
-    // 600-1000: Bad (3-4 pts)
-    revenueScore = 3 + ((dailyRevenue - 600) / 400)
-  } else {
-    // 0-600: Failed (0-3 pts, scaled)
-    revenueScore = (dailyRevenue / 600) * 3
-  }
-
-  // 3. Cash Flow Health Score (25% weight)
-  // More granular scoring based on cash flow strength
-  let cashFlowScore = 0
-  const cashFlowRatio = totalRevenue > 0 ? (netCashFlow / totalRevenue) * 100 : 0
-
-  if (netCashFlow > 0) {
-    cashFlowScore = 6 // Base score for positive cash flow
-
-    if (cashFlowRatio >= 15) {
-      cashFlowScore += 4 // 10 pts total - Excellent
-    } else if (cashFlowRatio >= 10) {
-      cashFlowScore += 3 // 9 pts total - Great
-    } else if (cashFlowRatio >= 8) {
-      cashFlowScore += 2 // 8 pts total - Good
-    } else if (cashFlowRatio >= 5) {
-      cashFlowScore += 1 // 7 pts total - Satisfactory
-    } else if (cashFlowRatio >= 2) {
-      cashFlowScore += 0 // 6 pts total - Pass
-    } else {
-      cashFlowScore -= 1 // 5 pts total - Failed (barely positive, 0-2%)
-    }
-  } else {
-    cashFlowScore = 0 // Negative cash flow is critical
-  }
-
-  // Calculate weighted final score (3 components only, using bank data)
-  const finalScore =
-    profitScore * 0.40 +
-    revenueScore * 0.35 +
-    cashFlowScore * 0.25
-
-  // Map score (0-10) to emoji, status, and color (Mexican grading system)
-  // 0-5 = Failed (eggplant to neutral), 6-10 = Passing (gradually happier)
+  // Score mapping (0-10)
   const scoreMapping = [
-    { emoji: '🍆', status: 'Failed', color: 'text-red-700' },        // 0 - Eggplant
-    { emoji: '😡', status: 'Failed', color: 'text-red-600' },        // 1 - Very angry
-    { emoji: '😤', status: 'Failed', color: 'text-red-600' },        // 2 - Angry
-    { emoji: '😠', status: 'Failed', color: 'text-red-500' },        // 3 - Angry
-    { emoji: '😒', status: 'Failed', color: 'text-orange-600' },     // 4 - Unamused
-    { emoji: '😑', status: 'Failed', color: 'text-orange-500' },     // 5 - Expressionless
-    { emoji: '😐', status: 'Pass', color: 'text-yellow-600' },       // 6 - Neutral (barely passing)
-    { emoji: '🙂', status: 'Satisfactory', color: 'text-yellow-500' }, // 7 - Slight smile
-    { emoji: '😊', status: 'Good', color: 'text-lime-500' },         // 8 - Smiling (good)
-    { emoji: '😄', status: 'Great', color: 'text-green-500' },       // 9 - Happy (great)
-    { emoji: '🤩', status: 'Excellent', color: 'text-green-600' },   // 10 - Star-struck (excellent)
+    { emoji: '🍆', status: 'Critical', color: 'text-red-700' },      // 0
+    { emoji: '😡', status: 'Critical', color: 'text-red-600' },      // 1
+    { emoji: '😤', status: 'Severe', color: 'text-red-600' },        // 2
+    { emoji: '😠', status: 'Bad', color: 'text-red-500' },           // 3
+    { emoji: '😒', status: 'Poor', color: 'text-orange-600' },       // 4
+    { emoji: '😑', status: 'Barely Failed', color: 'text-orange-500' }, // 5
+    { emoji: '😐', status: 'Pass', color: 'text-yellow-600' },       // 6
+    { emoji: '🙂', status: 'Satisfactory', color: 'text-yellow-500' }, // 7
+    { emoji: '😊', status: 'Good', color: 'text-lime-500' },         // 8
+    { emoji: '😄', status: 'Great', color: 'text-green-500' },       // 9
+    { emoji: '🤩', status: 'Excellent', color: 'text-green-600' },   // 10
   ]
 
-  // Round score and clamp to 0-10
+  // Helper function to get emoji for a score
+  const getEmojiForScore = (score: number): string => {
+    const clampedScore = Math.max(0, Math.min(10, Math.round(score)))
+    return scoreMapping[clampedScore].emoji
+  }
+
+  // Avoid division by zero
+  if (totalRevenue <= 0) {
+    return {
+      score: 0,
+      status: 'No Data',
+      emoji: '🍆',
+      color: 'text-red-700',
+      insights: ['🚨 No revenue data'],
+      breakdown: []
+    }
+  }
+
+  // Calculate key metrics
+  const profitMargin = (netCashFlow / totalRevenue) * 100
+  const primeCostPercent = (primeCost / totalRevenue) * 100
+  const lossRatio = netCashFlow < 0 ? Math.abs(netCashFlow) / totalRevenue : 0
+
+  // ========== PROFIT GATE: NEGATIVE = MAX 5 (Failed) ==========
+  if (netCashFlow < 0) {
+    let finalScore: number
+    let gateStatus: string
+
+    if (lossRatio > 0.20) {
+      finalScore = 0
+      gateStatus = 'Critical'
+    } else if (lossRatio > 0.15) {
+      finalScore = 1
+      gateStatus = 'Critical'
+    } else if (lossRatio > 0.10) {
+      finalScore = 2
+      gateStatus = 'Severe'
+    } else if (lossRatio > 0.05) {
+      finalScore = 3
+      gateStatus = 'Bad'
+    } else if (lossRatio > 0.02) {
+      finalScore = 4
+      gateStatus = 'Poor'
+    } else {
+      finalScore = 5
+      gateStatus = 'Barely Failed'
+    }
+
+    const { emoji, color } = scoreMapping[finalScore]
+
+    // Insights for loss months
+    const insights: string[] = [
+      `🚨 Lost ${(lossRatio * 100).toFixed(1)}% of revenue`,
+      `🚨 Net loss: -$${Math.abs(netCashFlow).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`,
+    ]
+    if (primeCostPercent > 80) {
+      insights.push(`⚠️ High operational costs (${primeCostPercent.toFixed(1)}%)`)
+    }
+
+    return {
+      score: finalScore,
+      status: gateStatus,
+      emoji,
+      color,
+      insights: insights.slice(0, 3),
+      breakdown: [
+        {
+          metric: 'Profit/Loss',
+          score: finalScore,
+          weight: 100,
+          actualValue: `-${(lossRatio * 100).toFixed(1)}% (lost money)`,
+          emoji: getEmojiForScore(finalScore)
+        },
+        {
+          metric: 'Operational Costs',
+          score: primeCostPercent <= 70 ? 8 : primeCostPercent <= 80 ? 5 : 2,
+          weight: 0,
+          actualValue: `${primeCostPercent.toFixed(1)}%`,
+          emoji: getEmojiForScore(primeCostPercent <= 70 ? 8 : primeCostPercent <= 80 ? 5 : 2)
+        },
+        {
+          metric: 'Daily Revenue',
+          score: dailyRevenue >= 3000 ? 8 : dailyRevenue >= 2000 ? 6 : 4,
+          weight: 0,
+          actualValue: `$${dailyRevenue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/day`,
+          emoji: getEmojiForScore(dailyRevenue >= 3000 ? 8 : dailyRevenue >= 2000 ? 6 : 4)
+        },
+      ],
+    }
+  }
+
+  // ========== PROFITABLE: CALCULATE 6-10 ==========
+  let finalScore = 6 // Break-even baseline (Pass)
+
+  // Profit Margin Bonus (max +2.5 points) - 62.5% of available bonus
+  let marginBonus = 0
+  if (profitMargin >= 15) {
+    marginBonus = 2.5
+  } else if (profitMargin >= 10) {
+    marginBonus = 2.0
+  } else if (profitMargin >= 7) {
+    marginBonus = 1.5
+  } else if (profitMargin >= 5) {
+    marginBonus = 1.0
+  } else if (profitMargin >= 2) {
+    marginBonus = 0.5
+  }
+  finalScore += marginBonus
+
+  // Operational Costs Bonus (max +1.0 points) - 25% of available bonus
+  // Stricter thresholds since this includes Food + Supplies + Labor + Rent + Taxes
+  let opCostBonus = 0
+  if (primeCostPercent <= 65) {
+    opCostBonus = 1.0      // Exceptional - very lean operation
+  } else if (primeCostPercent <= 70) {
+    opCostBonus = 0.7      // Excellent - well managed
+  } else if (primeCostPercent <= 75) {
+    opCostBonus = 0.4      // Good - industry standard
+  } else if (primeCostPercent <= 80) {
+    opCostBonus = 0.2      // Acceptable - room for improvement
+  }
+  // Over 80% = no bonus
+  finalScore += opCostBonus
+
+  // Revenue Strength Bonus (max +0.5 points) - 12.5% of available bonus
+  // Uses Hot Like A Mexican's actual business targets (NZD)
+  let revenueBonus = 0
+  if (dailyRevenue >= 4000) {
+    revenueBonus = 0.5       // Excellent - $5,000+ is legendary!
+  } else if (dailyRevenue >= 3500) {
+    revenueBonus = 0.45      // Great - amazing day
+  } else if (dailyRevenue >= 3000) {
+    revenueBonus = 0.4       // Good - very good day
+  } else if (dailyRevenue >= 2500) {
+    revenueBonus = 0.3       // Satisfactory - solid day
+  } else if (dailyRevenue >= 2000) {
+    revenueBonus = 0.2       // Pass - average day
+  } else if (dailyRevenue >= 1500) {
+    revenueBonus = 0.1       // Below average
+  }
+  // Under $1,500 = no bonus
+  finalScore += revenueBonus
+
+  // Cap at 10 and round to 1 decimal
+  finalScore = Math.min(10, Math.round(finalScore * 10) / 10)
   const roundedScore = Math.round(finalScore)
   const clampedScore = Math.max(0, Math.min(10, roundedScore))
 
   const { emoji, status, color } = scoreMapping[clampedScore]
 
-  // Generate insights based on scores
+  // Generate insights for profitable months
   const insights: string[] = []
 
-  if (profitScore >= 7) {
+  if (profitMargin >= 10) {
     insights.push(`✅ Strong profit margin (${profitMargin.toFixed(1)}%)`)
-  } else if (profitScore >= 4) {
-    insights.push(`⚠️ Profit margin needs improvement (${profitMargin.toFixed(1)}%)`)
-  } else {
-    insights.push(`🚨 Critical profit margin (${profitMargin.toFixed(1)}%)`)
+  } else if (profitMargin >= 5) {
+    insights.push(`✅ Healthy profit margin (${profitMargin.toFixed(1)}%)`)
+  } else if (profitMargin >= 0) {
+    insights.push(`⚠️ Thin profit margin (${profitMargin.toFixed(1)}%)`)
   }
 
-  if (netCashFlow > 0) {
-    insights.push('✅ Positive cash flow')
+  if (primeCostPercent <= 70) {
+    insights.push(`✅ Efficient operations (${primeCostPercent.toFixed(1)}% op costs)`)
+  } else if (primeCostPercent <= 80) {
+    insights.push(`⚠️ Operational costs could improve (${primeCostPercent.toFixed(1)}%)`)
   } else {
-    insights.push('🚨 Negative cash flow')
+    insights.push(`🚨 High operational costs (${primeCostPercent.toFixed(1)}%)`)
   }
 
-  if (revenueScore >= 7) {
+  if (dailyRevenue >= 3500) {
     insights.push(`✅ Strong daily revenue ($${dailyRevenue.toFixed(0)}/day)`)
-  } else if (revenueScore >= 4) {
-    insights.push(`⚠️ Revenue below target ($${dailyRevenue.toFixed(0)}/day)`)
+  } else if (dailyRevenue >= 2500) {
+    insights.push(`✅ Solid daily revenue ($${dailyRevenue.toFixed(0)}/day)`)
+  } else if (dailyRevenue >= 2000) {
+    insights.push(`⚠️ Moderate daily revenue ($${dailyRevenue.toFixed(0)}/day)`)
+  } else if (dailyRevenue >= 1500) {
+    insights.push(`⚠️ Below average revenue ($${dailyRevenue.toFixed(0)}/day)`)
   } else {
     insights.push(`🚨 Low daily revenue ($${dailyRevenue.toFixed(0)}/day)`)
   }
 
-  // Helper function to get emoji for a score
-  const getEmojiForScore = (score: number): string => {
-    const roundedScore = Math.round(score)
-    const clampedScore = Math.max(0, Math.min(10, roundedScore))
-    return scoreMapping[clampedScore].emoji
-  }
+  // Calculate individual scores for breakdown display
+  const marginScore = 6 + marginBonus * (4 / 2.5) // Scale to 6-10
+  const opCostScore = opCostBonus > 0 ? 6 + opCostBonus * (4 / 1.0) : 5
+
+  // Revenue score uses original benchmarks (0-10 scale)
+  let revenueScore: number
+  if (dailyRevenue >= 4000) revenueScore = 10
+  else if (dailyRevenue >= 3500) revenueScore = 9
+  else if (dailyRevenue >= 3000) revenueScore = 8
+  else if (dailyRevenue >= 2500) revenueScore = 7
+  else if (dailyRevenue >= 2000) revenueScore = 6
+  else if (dailyRevenue >= 1500) revenueScore = 5
+  else if (dailyRevenue >= 1000) revenueScore = 4
+  else if (dailyRevenue >= 600) revenueScore = 3
+  else if (dailyRevenue >= 300) revenueScore = 2
+  else if (dailyRevenue > 0) revenueScore = 1
+  else revenueScore = 0
 
   return {
     score: finalScore,
     status,
     emoji,
     color,
-    insights: insights.slice(0, 3), // Max 3 insights
+    insights: insights.slice(0, 3),
     breakdown: [
       {
         metric: 'Profit Margin',
-        score: profitScore,
-        weight: 40,
-        actualValue: `${profitMargin >= 0 ? '' : '-'}${Math.abs(profitMargin).toFixed(1)}%`,
-        emoji: getEmojiForScore(profitScore)
+        score: Math.min(10, marginScore),
+        weight: 63,
+        actualValue: `+${profitMargin.toFixed(1)}%`,
+        emoji: getEmojiForScore(marginScore),
+        bonusPoints: marginBonus
       },
       {
-        metric: 'Revenue Strength',
-        score: revenueScore,
-        weight: 35,
-        actualValue: `$${dailyRevenue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/day`,
-        emoji: getEmojiForScore(revenueScore)
-      },
-      {
-        metric: 'Cash Flow Health',
-        score: cashFlowScore,
+        metric: 'Operational Costs',
+        score: Math.min(10, opCostScore),
         weight: 25,
-        actualValue: `${netCashFlow >= 0 ? '+' : '-'}$${Math.abs(netCashFlow).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} (${cashFlowRatio >= 0 ? '' : '-'}${Math.abs(cashFlowRatio).toFixed(1)}%)`,
-        emoji: getEmojiForScore(cashFlowScore)
+        actualValue: `${primeCostPercent.toFixed(1)}%`,
+        emoji: getEmojiForScore(opCostScore),
+        bonusPoints: opCostBonus
+      },
+      {
+        metric: 'Daily Revenue',
+        score: Math.min(10, revenueScore),
+        weight: 12,
+        actualValue: `$${dailyRevenue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/day`,
+        emoji: getEmojiForScore(revenueScore),
+        bonusPoints: revenueBonus
       },
     ],
   }
@@ -369,23 +485,26 @@ function calculateHealthScore(params: {
  * Calculate dashboard metrics from imported data
  */
 export function calculateMetrics(data: ImportedData): DashboardMetrics {
+  // Apply classifications to bank transactions first
+  const classifiedTransactions = applyClassifications(data.bankTransactions)
+
   // 1. Gross Sales from POS
   const grossSales = data.salesByDay.reduce((sum, day) => sum + day.total, 0)
 
   // 2. Calculate Uber Revenue from bank transactions
-  const uberRevenue = data.bankTransactions
+  const uberRevenue = classifiedTransactions
     .filter((tx) => tx.type === 'income' && tx.payee.toUpperCase().includes('UBER'))
     .reduce((sum, tx) => sum + tx.amount, 0)
 
   // 2b. Calculate Delivereasy Revenue from bank transactions
-  const delivereasyRevenue = data.bankTransactions
+  const delivereasyRevenue = classifiedTransactions
     .filter((tx) => tx.type === 'income' && tx.payee.toUpperCase().includes('DELIVEREASY'))
     .reduce((sum, tx) => sum + tx.amount, 0)
 
   // 3. POS Revenue from bank transactions
   // HOT-MEXICAN account: "HOT LIKE A MEXICAN" (EFTPOS processing)
   // MEXI-CAN account: "MEXICAN QBT"
-  const posRevenue = data.bankTransactions
+  const posRevenue = classifiedTransactions
     .filter((tx) =>
       tx.type === 'income' &&
       (tx.payee.toUpperCase().includes('HOT LIKE A MEXICAN') ||
@@ -393,16 +512,64 @@ export function calculateMetrics(data: ImportedData): DashboardMetrics {
     )
     .reduce((sum, tx) => sum + tx.amount, 0)
 
-  // 4. Total Expenses from bank
-  const totalExpenses = data.bankTransactions
+  // 4. Calculate expenses by category (using classifications)
+  // Total ALL expenses (for display)
+  const totalExpenses = classifiedTransactions
     .filter((tx) => tx.type === 'expense')
     .reduce((sum, tx) => sum + tx.amount, 0)
 
-  // 5. Net Cash Flow (Income - Expenses)
-  const totalIncome = data.bankTransactions
+  // Business expenses ONLY (excluding Personal and Internal Transfer)
+  const businessExpenses = classifiedTransactions
+    .filter((tx) => {
+      if (tx.type !== 'expense') return false
+      const category = tx.category as ExpenseCategory
+      return isBusinessExpense(category)
+    })
+    .reduce((sum, tx) => sum + tx.amount, 0)
+
+  // Excluded expenses (Personal + Internal Transfer)
+  const excludedExpenses = classifiedTransactions
+    .filter((tx) => {
+      if (tx.type !== 'expense') return false
+      const category = tx.category as ExpenseCategory
+      return isExcludedCategory(category)
+    })
+    .reduce((sum, tx) => sum + tx.amount, 0)
+
+  // Operational Costs = Food Supplies + Supplies + Labor/Payroll + Rent + Taxes/Govt
+  // This is the key restaurant profitability metric (target: 65-75% of revenue)
+  const primeCost = classifiedTransactions
+    .filter((tx) => {
+      if (tx.type !== 'expense') return false
+      const category = tx.category as ExpenseCategory
+      return category === EXPENSE_CATEGORIES.FOOD_SUPPLIES ||
+             category === EXPENSE_CATEGORIES.SUPPLIES ||
+             category === EXPENSE_CATEGORIES.LABOR_PAYROLL ||
+             category === EXPENSE_CATEGORIES.RENT_LEASE ||
+             category === EXPENSE_CATEGORIES.LICENSES_COMPLIANCE
+    })
+    .reduce((sum, tx) => sum + tx.amount, 0)
+
+  // Calculate expenses by category for breakdown
+  const expensesByCategory = new Map<string, number>()
+  classifiedTransactions
+    .filter((tx) => tx.type === 'expense' && isBusinessExpense(tx.category as ExpenseCategory))
+    .forEach((tx) => {
+      const category = tx.category || EXPENSE_CATEGORIES.OTHER
+      expensesByCategory.set(category, (expensesByCategory.get(category) || 0) + tx.amount)
+    })
+
+  // 5. Net Cash Flow (Revenue - Business Expenses only)
+  // This gives TRUE business profitability
+  const totalIncome = classifiedTransactions
     .filter((tx) => tx.type === 'income')
     .reduce((sum, tx) => sum + tx.amount, 0)
-  const netCashFlow = totalIncome - totalExpenses
+
+  // For display: raw cash flow (all income - all expenses)
+  const rawNetCashFlow = totalIncome - totalExpenses
+
+  // For profit calculation: business cash flow (income - business expenses only)
+  const businessNetCashFlow = totalIncome - businessExpenses
 
   // 6. Total Orders
   const totalOrders = data.salesByDay.reduce((sum, day) => sum + day.orders, 0)
@@ -456,21 +623,13 @@ export function calculateMetrics(data: ImportedData): DashboardMetrics {
     }
   })
 
-  // 12. Weekly Averages
-  const posDaysInPeriod = data.salesByDay.length || 1
-  const weeklyAverages = {
-    dailyRevenue: grossSales / posDaysInPeriod,
-    dailyOrders: totalOrders / posDaysInPeriod,
-    avgOrderValue: averageOrderValue,
-  }
+  // 12. Calculate days in period from bank transaction dates (used for averages)
+  // Use totalIncome (all bank income) for consistency with businessNetCashFlow calculation
+  const totalRevenue = totalIncome
 
-  // 13. Business Health Score (using only bank statement data)
-  const totalRevenue = posRevenue + uberRevenue + delivereasyRevenue
-
-  // Calculate actual days in period from bank transaction dates
   let bankDaysInPeriod = 1
-  if (data.bankTransactions.length > 0) {
-    const dates = data.bankTransactions.map((tx) => {
+  if (classifiedTransactions.length > 0) {
+    const dates = classifiedTransactions.map((tx) => {
       // Parse date format "DD/MM/YY" (e.g., "01/11/25")
       const [day, month, year] = tx.date.split('/')
       const fullYear = parseInt(year) >= 50 ? 1900 + parseInt(year) : 2000 + parseInt(year)
@@ -482,21 +641,58 @@ export function calculateMetrics(data: ImportedData): DashboardMetrics {
   }
 
   const bankDailyRevenue = totalRevenue / bankDaysInPeriod
+
+  // 13. Weekly Averages - use bank-based revenue (includes all income sources)
+  const posDaysInPeriod = data.salesByDay.length || 1
+  const weeklyAverages = {
+    dailyRevenue: bankDailyRevenue, // Use bank-based daily revenue (all income sources)
+    dailyOrders: totalOrders / posDaysInPeriod,
+    avgOrderValue: averageOrderValue,
+  }
+
+  // 14. Business Health Score (using only bank statement data)
+  // Now using BUSINESS expenses only (excluding Personal & Internal Transfer)
+
+  // Use BUSINESS net cash flow for health score (excludes personal expenses)
   const healthScore = calculateHealthScore({
-    netCashFlow,
+    netCashFlow: businessNetCashFlow,
     totalRevenue,
     dailyRevenue: bankDailyRevenue,
+    primeCost,
   })
+
+  // 14. Build expenses by category breakdown for UI
+  const sortedExpenses = Array.from(expensesByCategory.entries())
+    .map(([category, amount]) => ({
+      category,
+      amount,
+      percentage: businessExpenses > 0 ? (amount / businessExpenses) * 100 : 0,
+      emoji: getCategoryEmoji(category as ExpenseCategory),
+    }))
+    .sort((a, b) => b.amount - a.amount)
+
+  // 15. Top expenses (individual transactions, business only)
+  const topExpenses = classifiedTransactions
+    .filter((tx) => tx.type === 'expense' && isBusinessExpense(tx.category as ExpenseCategory))
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 10)
+    .map((tx) => ({
+      payee: tx.payee,
+      category: tx.category || EXPENSE_CATEGORIES.OTHER,
+      amount: tx.amount,
+    }))
 
   return {
     grossSales,
-    netCashFlow,
+    netCashFlow: rawNetCashFlow, // Display raw cash flow (includes personal)
     totalOrders,
     averageOrderValue,
     posRevenue,
     uberRevenue,
     delivereasyRevenue,
-    totalExpenses,
+    totalExpenses, // Total ALL expenses (for display)
+    expensesByCategory: sortedExpenses,
+    topExpenses,
     topProducts,
     topCategories,
     peakHours,
