@@ -1012,7 +1012,7 @@ Please provide a thorough, honest analysis that will help drive business improve
           {metrics.expensesByCategory && metrics.expensesByCategory.length > 0 && (
             <Card className="overflow-hidden">
               <CardHeader className="pb-4">
-                <CardTitle className="text-2xl">Important Transactions</CardTitle>
+                <CardTitle className="text-2xl">Expense Breakdown</CardTitle>
                 <CardDescription>Expense breakdown by category for this period</CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
@@ -1024,13 +1024,25 @@ Please provide a thorough, honest analysis that will help drive business improve
                         setSelectedExpenseCategory(cat.category)
                         setShowCategoryDetailDialog(true)
                       }}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer text-left"
+                      className="flex flex-col p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer text-left"
                     >
-                      <div className="text-2xl">{cat.emoji}</div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs text-muted-foreground truncate">{cat.category}</p>
-                        <p className="text-sm font-bold">{formatCurrency(cat.amount)}</p>
-                        <p className="text-xs text-muted-foreground">{cat.percentage.toFixed(1)}%</p>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="text-4xl">{cat.emoji}</div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs text-muted-foreground truncate">{cat.category}</p>
+                          <p className="text-sm font-bold">{formatCurrency(cat.amount)}</p>
+                        </div>
+                      </div>
+                      <div className="w-full">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs text-muted-foreground">{cat.percentage.toFixed(1)}%</span>
+                        </div>
+                        <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary rounded-full transition-all duration-300"
+                            style={{ width: `${Math.min(cat.percentage, 100)}%` }}
+                          />
+                        </div>
                       </div>
                     </button>
                   ))}
