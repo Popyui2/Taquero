@@ -31,6 +31,7 @@ import { StaffDetail } from '@/components/staff-training/StaffDetail'
 import { AddStaffForm } from '@/components/staff-training/AddStaffForm'
 import { StaffTrainingRecordMPI } from '@/components/staff-training/StaffTrainingRecordMPI'
 import { FinanceRedesign } from '@/pages/FinanceRedesign'
+import CaravanEvents from '@/pages/CaravanEvents'
 import { Toast, ToastContainer } from '@/components/ui/toast'
 
 interface ToastMessage {
@@ -87,15 +88,7 @@ function App() {
             }
           />
           <Route path="/restaurant/financial" element={<FinanceRedesign />} />
-          <Route
-            path="/restaurant/events"
-            element={
-              <ModulePlaceholder
-                title="Caravan Events"
-                description="Event management & scheduling"
-              />
-            }
-          />
+          <Route path="/restaurant/events" element={<CaravanEvents />} />
 
           {/* Manufacturing Routes */}
           <Route path="/manufacturing" element={<ManufacturingDashboard />} />

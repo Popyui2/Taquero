@@ -10,6 +10,7 @@ export type CalendarProps = {
   mode?: 'single' | 'range'
   selectedRange?: { from?: Date; to?: Date }
   onRangeSelect?: (range: { from?: Date; to?: Date } | undefined) => void
+  compact?: boolean
 }
 
 export function Calendar({
@@ -18,7 +19,8 @@ export function Calendar({
   className,
   mode = 'single',
   selectedRange,
-  onRangeSelect
+  onRangeSelect,
+  compact = false
 }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = React.useState(
     selected || selectedRange?.from || new Date()
@@ -162,34 +164,40 @@ export function Calendar({
   }
 
   return (
-    <div className={cn('p-6', className)} style={{ minWidth: '420px' }}>
-      <div className="flex items-center justify-between mb-6">
+    <div
+      className={cn(compact ? 'p-3' : 'p-6', className)}
+      style={{ minWidth: compact ? '280px' : '420px' }}
+    >
+      <div className={cn('flex items-center justify-between', compact ? 'mb-3' : 'mb-6')}>
         <Button
           variant="outline"
           size="icon"
           onClick={handlePrevMonth}
-          className="h-10 w-10"
+          className={compact ? 'h-8 w-8' : 'h-10 w-10'}
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className={compact ? 'h-4 w-4' : 'h-5 w-5'} />
         </Button>
-        <div className="font-semibold text-lg">
+        <div className={cn('font-semibold', compact ? 'text-sm' : 'text-lg')}>
           {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
         </div>
         <Button
           variant="outline"
           size="icon"
           onClick={handleNextMonth}
-          className="h-10 w-10"
+          className={compact ? 'h-8 w-8' : 'h-10 w-10'}
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className={compact ? 'h-4 w-4' : 'h-5 w-5'} />
         </Button>
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
+      <div className={cn('grid grid-cols-7', compact ? 'gap-1' : 'gap-2')}>
         {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
           <div
             key={day}
-            className="flex items-center justify-center text-sm text-muted-foreground font-medium h-12 w-full"
+            className={cn(
+              'flex items-center justify-center text-muted-foreground font-medium w-full',
+              compact ? 'text-xs h-8' : 'text-sm h-12'
+            )}
           >
             {day}
           </div>
@@ -199,8 +207,10 @@ export function Calendar({
             <Button
               key={index}
               variant={isSelected(day) ? 'default' : 'ghost'}
+              size={compact ? 'sm' : 'default'}
               className={cn(
-                'aspect-square w-full p-0 font-normal text-base',
+                'aspect-square w-full p-0 font-normal',
+                compact ? 'text-sm h-8' : 'text-base',
                 isToday(day) && !isSelected(day) && 'border border-primary',
                 isSelected(day) && 'bg-primary text-primary-foreground',
                 mode === 'range' && isInRange(day) && 'bg-accent text-accent-foreground',
@@ -211,7 +221,7 @@ export function Calendar({
               {day}
             </Button>
           ) : (
-            <div key={index} className="aspect-square w-full" />
+            <div key={index} className={cn('aspect-square w-full', compact && 'h-8')} />
           )
         )}
       </div>

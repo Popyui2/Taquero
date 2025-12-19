@@ -384,3 +384,100 @@ export interface ComplaintRecord {
   updatedAt?: string // ISO timestamp when record was last updated
   status: 'active' | 'deleted' // Status of the record
 }
+
+// ============================================================================
+// Caravan Events Types
+// ============================================================================
+
+/**
+ * Event status lifecycle
+ */
+export type CaravanEventStatus =
+  | 'discovered'      // Found out about the event
+  | 'interested'      // Want to participate
+  | 'applied'         // Application submitted
+  | 'accepted'        // Application accepted, pending payment
+  | 'paid'            // Fee paid
+  | 'confirmed'       // Confirmed participation
+  | 'active'          // Event is currently happening
+  | 'completed'       // Event finished
+  | 'denied'          // Application rejected
+  | 'cancelled_by_us' // We cancelled
+  | 'cancelled_by_organizer' // Organizer cancelled
+  | 'postponed'       // Event postponed
+
+/**
+ * Event types
+ */
+export type CaravanEventType = 'festival' | 'recurrent' | 'private'
+
+/**
+ * Recurrence pattern
+ */
+export type RecurrencePattern = 'weekly' | 'monthly' | 'annual' | 'one-off'
+
+/**
+ * Weather conditions for post-event recording
+ */
+export type WeatherCondition = 'sunny' | 'cloudy' | 'rainy' | 'windy' | 'cold' | 'mixed'
+
+/**
+ * Participate again preference
+ */
+export type ParticipateAgain = 'yes' | 'no' | 'maybe'
+
+/**
+ * Caravan Event record
+ * Combines Event and EventInstance for simplicity
+ */
+export interface CaravanEvent {
+  id: string
+
+  // Basic info
+  name: string
+  location: string
+  eventType: CaravanEventType
+  isRecurring: boolean
+  recurrencePattern?: RecurrencePattern
+
+  // Dates (can span multiple days)
+  dates: string[] // ISO format dates
+  year: number
+
+  // Organizer info
+  organizerName?: string
+  organizerEmail?: string
+  organizerPhone?: string
+  websiteUrl?: string
+
+  // Status
+  status: CaravanEventStatus
+
+  // Financials
+  feeAmount?: number
+  feePaid: boolean
+  feePaidDate?: string
+  expectedRevenue?: number
+  actualRevenue?: number
+  expenses?: number
+
+  // Requirements
+  generatorNeeded: boolean
+  generatorNotes?: string
+  powerAvailable?: 'yes' | 'no' | 'unknown'
+  tentProvided: boolean
+  specialNotes?: string
+
+  // Post-event data (filled after completion)
+  weatherConditions?: WeatherCondition
+  footTrafficRating?: number // 1-5
+  overallRating?: number // 1-5
+  participateAgain?: ParticipateAgain
+  lessonsLearned?: string
+
+  // Meta
+  notes?: string
+  typicalRegistrationWindow?: string // e.g., "Opens October for March event"
+  createdAt: string
+  updatedAt?: string
+}
